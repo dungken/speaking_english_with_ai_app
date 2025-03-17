@@ -6,6 +6,9 @@ class CustomLoading extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Lottie.asset('assets/lottie/loading.json', width: 100);
+    return Lottie.asset(
+      'assets/lottie/loading.json', // 🎞️ Loading animation file
+      width: 100, // 📏 Set animation width
+    );
   }
 }

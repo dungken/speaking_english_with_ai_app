@@ -9,70 +9,81 @@ import 'helper/pref.dart';
 import 'screen/splash_screen.dart';
 
 Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+  WidgetsFlutterBinding
+      .ensureInitialized(); // ⚙️ Ensure widgets are initialized before running app
 
-  // init hive
+  // 🗄️ Initialize local storage (Hive)
   await Pref.initialize();
 
-  // for app write initialization
+  // ☁️ Initialize AppWrite SDK for backend services
   AppWrite.init();
 
-  // for initializing facebook ads sdk
+  // 📢 Initialize Facebook Ads SDK
   AdHelper.init();
 
+  // 📱 Set immersive full-screen mode
   await SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+
+  // 🔄 Lock screen orientation to portrait mode only
   await SystemChrome.setPreferredOrientations(
       [DeviceOrientation.portraitUp, DeviceOrientation.portraitDown]);
 
+  // 🚀 Start the app
   runApp(const MyApp());
 }
 
+// 🎨 Main Application Widget
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp(
-      title: appName,
-      debugShowCheckedModeBanner: false,
+      title: appName, // 🏷️ App name from global constants
+      debugShowCheckedModeBanner: false, // 🚫 Hide debug banner
 
-      themeMode: Pref.defaultTheme,
+      themeMode: Pref.defaultTheme, // 🌗 Set default theme mode
 
-      //dark
+      // 🌙 Dark Theme Configuration
       darkTheme: ThemeData(
-          useMaterial3: false,
-          brightness: Brightness.dark,
-          appBarTheme: const AppBarTheme(
-            elevation: 1,
-            centerTitle: true,
-            titleTextStyle:
-                TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
-          )),
+        useMaterial3: false,
+        brightness: Brightness.dark,
+        appBarTheme: const AppBarTheme(
+          elevation: 1, // 🏔️ Slight elevation for depth
+          centerTitle: true, // 🎯 Center align title
+          titleTextStyle: TextStyle(
+            fontSize: 20, fontWeight: FontWeight.w500, // 📝 Stylish font
+          ),
+        ),
+      ),
 
-      //light
+      // ☀️ Light Theme Configuration
       theme: ThemeData(
-          useMaterial3: false,
-          appBarTheme: const AppBarTheme(
-            elevation: 1,
-            centerTitle: true,
-            backgroundColor: Colors.white,
-            iconTheme: IconThemeData(color: Colors.blue),
-            titleTextStyle: TextStyle(
-                color: Colors.blue, fontSize: 20, fontWeight: FontWeight.w500),
-          )),
+        useMaterial3: false,
+        appBarTheme: const AppBarTheme(
+          elevation: 1, // 🏔️ Light shadow effect
+          centerTitle: true,
+          backgroundColor: Colors.white, // 🎨 White app bar background
+          iconTheme: IconThemeData(color: Colors.blue), // 🔵 Blue icons
+          titleTextStyle: TextStyle(
+            color: Colors.blue, fontSize: 20,
+            fontWeight: FontWeight.w500, // 📝 Blue app title
+          ),
+        ),
+      ),
 
-      //
-      home: const SplashScreen(),
+      home: const SplashScreen(), // 🚀 Start with the splash screen
     );
   }
 }
 
+// 🎨 Theme Extension for Custom Colors
 extension AppTheme on ThemeData {
-  //light text color
+  // 🖌️ Define light text color based on theme mode
   Color get lightTextColor =>
       brightness == Brightness.dark ? Colors.white70 : Colors.black54;
 
-  //button color
+  // 🎨 Define button color based on theme mode
   Color get buttonColor =>
       brightness == Brightness.dark ? Colors.cyan.withOpacity(.5) : Colors.blue;
 }

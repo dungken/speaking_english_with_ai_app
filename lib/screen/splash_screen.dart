@@ -19,8 +19,9 @@ class _SplashScreenState extends State<SplashScreen> {
   void initState() {
     super.initState();
 
-    //wait for some time on splash & then move to next screen
+    // ⏳ Wait for 2 seconds and then navigate to the appropriate screen
     Future.delayed(const Duration(seconds: 2), () {
+      // 📌 If onboarding is enabled, show OnboardingScreen, otherwise go to HomeScreen
       Get.off(() =>
           Pref.showOnboarding ? const OnboardingScreen() : const HomeScreen());
     });
@@ -28,38 +29,44 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
-    //initializing device size
+    // 📏 Initialize device size for responsive UI
     mq = MediaQuery.sizeOf(context);
 
     return Scaffold(
-      //body
+      // 🎨 Background color (optional)
+      backgroundColor: Colors.white,
+
+      // 🖥️ Body of the splash screen
       body: SizedBox(
         width: double.maxFinite,
         child: Column(
           children: [
-            //for adding some space
+            // ➖ Adding space at the top
             const Spacer(flex: 2),
 
-            //logo
+            // 🏆 App Logo with Card effect
             Card(
               shape: const RoundedRectangleBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(20))),
+                borderRadius:
+                    BorderRadius.all(Radius.circular(20)), // 🎨 Rounded edges
+              ),
+              elevation: 5, // 🌟 Adds a slight shadow for better UI
               child: Padding(
                 padding: EdgeInsets.all(mq.width * .05),
                 child: Image.asset(
-                  'assets/images/logo.png',
-                  width: mq.width * .4,
+                  'assets/images/logo.png', // 🖼️ App Logo
+                  width: mq.width * .4, // 📏 Responsive sizing
                 ),
               ),
             ),
 
-            //for adding some space
+            // ➖ Adding some space
             const Spacer(),
 
-            //lottie loading
-            const CustomLoading(),
+            // ⏳ Lottie Loading Animation
+            const CustomLoading(), // 🎬 Smooth animated loading effect
 
-            //for adding some space
+            // ➖ Adding some space at the bottom
             const Spacer(),
           ],
         ),

@@ -1,6 +1,5 @@
-import '../main.dart';
 import 'package:flutter/material.dart';
-import 'package:get/route_manager.dart';
+import 'package:get/get.dart';
 import 'package:lottie/lottie.dart';
 
 import '../helper/global.dart';
@@ -8,102 +7,122 @@ import '../model/onboard.dart';
 import '../widget/custom_btn.dart';
 import 'home_screen.dart';
 
-class OnboardingScreen extends StatelessWidget {
+class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
 
   @override
+  State<OnboardingScreen> createState() => _OnboardingScreenState();
+}
+
+class _OnboardingScreenState extends State<OnboardingScreen> {
+  // 📄 PageController to manage page transitions
+  final PageController _controller = PageController();
+
+  // 📜 List of onboarding screens
+  final List<Onboard> _onboardingList = [
+    Onboard(
+      title: '🤖 Ask me Anything',
+      subtitle:
+          'I can be your Best Friend & You can ask me anything & I will help you!',
+      lottie: 'ai_ask_me',
+    ),
+    Onboard(
+      title: '🎨 Imagination to Reality',
+      subtitle:
+          'Just Imagine anything & let me know, I will create something wonderful for you!',
+      lottie: 'ai_play',
+    ),
+  ];
+
+  @override
+  void dispose() {
+    // 🗑️ Dispose the PageController when not in use
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final c = PageController();
-
-    final list = [
-      //onboarding 1
-      Onboard(
-          title: 'Ask me Anything',
-          subtitle:
-              'I can be your Best Friend & You can ask me anything & I will help you!',
-          lottie: 'ai_ask_me'),
-
-      //onboarding 2
-      Onboard(
-        title: 'Imagination to Reality',
-        lottie: 'ai_play',
-        subtitle:
-            'Just Imagine anything & let me know, I will create something wonderful for you!',
-      ),
-    ];
-
     return Scaffold(
+      // 📜 PageView to display each onboarding screen
       body: PageView.builder(
-        controller: c,
-        itemCount: list.length,
-        itemBuilder: (ctx, ind) {
-          final isLast = ind == list.length - 1;
+        controller: _controller,
+        itemCount: _onboardingList.length,
+        itemBuilder: (ctx, index) {
+          final isLastPage = index == _onboardingList.length - 1;
 
           return Column(
             children: [
-              //lottie
-              Lottie.asset('assets/lottie/${list[ind].lottie}.json',
-                  height: mq.height * .6, width: isLast ? mq.width * .7 : null),
-
-              //title
-              Text(
-                list[ind].title,
-                style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: .5),
+              // 🎥 Display Lottie animation
+              Lottie.asset(
+                'assets/lottie/${_onboardingList[index].lottie}.json',
+                height: mq.height * 0.6,
+                width: isLastPage ? mq.width * 0.7 : null,
               ),
 
-              //for adding some space
-              SizedBox(height: mq.height * .015),
+              // 📝 Onboarding title
+              Text(
+                _onboardingList[index].title,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 0.5,
+                ),
+              ),
 
-              //subtitle
+              // ➖ Adding some space
+              SizedBox(height: mq.height * 0.015),
+
+              // 📌 Onboarding subtitle
               SizedBox(
-                width: mq.width * .7,
+                width: mq.width * 0.7,
                 child: Text(
-                  list[ind].subtitle,
+                  _onboardingList[index].subtitle,
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                      fontSize: 13.5,
-                      letterSpacing: .5,
-                      color: Theme.of(context).lightTextColor),
+                    fontSize: 13.5,
+                    letterSpacing: 0.5,
+                    color: Theme.of(context).hintColor,
+                  ),
                 ),
               ),
 
               const Spacer(),
 
-              //dots
-
+              // 🔵 Indicator Dots for current page position
               Wrap(
                 spacing: 10,
                 children: List.generate(
-                    list.length,
-                    (i) => Container(
-                          width: i == ind ? 15 : 10,
-                          height: 8,
-                          decoration: BoxDecoration(
-                              color: i == ind ? Colors.blue : Colors.grey,
-                              borderRadius:
-                                  const BorderRadius.all(Radius.circular(5))),
-                        )),
+                  _onboardingList.length,
+                  (i) => Container(
+                    width: i == index ? 15 : 10,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color: i == index ? Colors.blue : Colors.grey,
+                      borderRadius: BorderRadius.circular(5),
+                    ),
+                  ),
+                ),
               ),
 
               const Spacer(),
 
-              //button
+              // 🔘 "Next" or "Finish" button
               CustomBtn(
-                  onTap: () {
-                    if (isLast) {
-                      Get.off(() => const HomeScreen());
-                      // Navigator.of(context).pushReplacement(MaterialPageRoute(
-                      //     builder: (_) => const HomeScreen()));
-                    } else {
-                      c.nextPage(
-                          duration: const Duration(milliseconds: 600),
-                          curve: Curves.ease);
-                    }
-                  },
-                  text: isLast ? 'Finish' : 'Next'),
+                onTap: () {
+                  if (isLastPage) {
+                    // 🏡 Navigate to HomeScreen if this is the last page
+                    Get.offAll(() => const HomeScreen());
+                  } else {
+                    // ⏭️ Move to the next page
+                    _controller.nextPage(
+                      duration: const Duration(milliseconds: 600),
+                      curve: Curves.ease,
+                    );
+                  }
+                },
+                text: isLastPage ? '🎉 Finish' : '➡️ Next',
+              ),
 
               const Spacer(flex: 2),
             ],

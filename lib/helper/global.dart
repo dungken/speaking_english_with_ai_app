@@ -1,14 +1,28 @@
 import 'package:flutter/material.dart';
 
-//app name
-const appName = 'Ai Assistant';
+/// Application name constant
+const String appName = 'AI Assistant';
 
-//media query to store size of device screen
+/// Media query variable to store the device screen size
 late Size mq;
 
-// TODO Chat Gpt Api key OR
-//  Google Gemini API Key - https://aistudio.google.com/app/apikey
-//  You need to Update it in your Appwrite Project or comment appwrite code and hardcord key here.
+/// TODO: API Key Configuration
+///
+/// ⚠️ **Important:** Never hardcode your API key directly in the source code.
+/// Instead, use one of the following secure methods:
+/// - Store the key in a secure backend (e.g., Appwrite, Firebase, or an environment variable).
+/// - Use Flutter’s `.env` file (with `flutter_dotenv` package) to store API keys securely.
+///
+/// 🔹 **Google Gemini API Key:** Get your key from
+///   👉 https://aistudio.google.com/app/apikey
+///
+/// 🔹 **ChatGPT API Key:** Get your key from
+///   👉 https://platform.openai.com/account/api-keys
+///
+/// 📌 **How to Set Up Secure API Key Handling:**
+/// - If using Appwrite, update your project settings to store the key securely.
+/// - If using a local `.env` file, install `flutter_dotenv` and load the key from there.
+/// - Otherwise, **remove hardcoded keys** and fetch them securely at runtime.
 
-// String apiKey = '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';
-String apiKey = '';
+/// API Key for the AI service (Leave empty if fetching dynamically)
+String apiKey = ''; // Ensure to retrieve this securely

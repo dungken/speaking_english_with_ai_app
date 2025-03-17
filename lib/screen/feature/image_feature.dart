@@ -8,6 +8,10 @@ import '../../helper/global.dart';
 import '../../widget/custom_btn.dart';
 import '../../widget/custom_loading.dart';
 
+/// 📌 **ImageFeature Screen**
+///
+/// This screen allows users to generate AI-powered images by inputting text.
+/// Users can also download, share, and view generated images.
 class ImageFeature extends StatefulWidget {
   const ImageFeature({super.key});
 
@@ -16,84 +20,98 @@ class ImageFeature extends StatefulWidget {
 }
 
 class _ImageFeatureState extends State<ImageFeature> {
+  /// 🔹 **Image Controller Instance**
+  ///
+  /// Manages AI image generation, image list, download, and sharing functionalities.
   final _c = ImageController();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      //app bar
+      // 📌 **App Bar with Share Button**
       appBar: AppBar(
         title: const Text('AI Image Creator'),
 
-        //share btn
+        // 🔄 **Share Button (Visible Only When Image is Ready)**
         actions: [
           Obx(
             () => _c.status.value == Status.complete
                 ? IconButton(
                     padding: const EdgeInsets.only(right: 6),
-                    onPressed: _c.shareImage,
-                    icon: const Icon(Icons.share))
+                    onPressed: _c.shareImage, // Calls share image function
+                    icon: const Icon(Icons.share),
+                  )
                 : const SizedBox(),
-          )
+          ),
         ],
       ),
 
-      //download btn
+      // 📌 **Download Button (Visible When Image is Ready)**
       floatingActionButton: Obx(() => _c.status.value == Status.complete
           ? Padding(
               padding: const EdgeInsets.only(right: 6, bottom: 6),
               child: FloatingActionButton(
-                onPressed: _c.downloadImage,
+                onPressed: _c.downloadImage, // Calls download function
                 shape: const RoundedRectangleBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(15))),
+                  borderRadius: BorderRadius.all(Radius.circular(15)),
+                ),
                 child: const Icon(Icons.save_alt_rounded, size: 26),
               ),
             )
           : const SizedBox()),
 
-      //body
+      // 📌 **Body Section**
       body: ListView(
-        physics: const BouncingScrollPhysics(),
+        physics: const BouncingScrollPhysics(), // Smooth scrolling effect
         padding: EdgeInsets.only(
-            top: mq.height * .02,
-            bottom: mq.height * .1,
-            left: mq.width * .04,
-            right: mq.width * .04),
+          top: mq.height * .02, // Top padding
+          bottom: mq.height * .1, // Bottom padding
+          left: mq.width * .04,
+          right: mq.width * .04,
+        ),
         children: [
-          //text field
+          // 📝 **Text Input Field for Image Prompt**
           TextFormField(
-            controller: _c.textC,
+            controller: _c.textC, // Controller for user input
             textAlign: TextAlign.center,
             minLines: 2,
             maxLines: null,
-            onTapOutside: (e) => FocusScope.of(context).unfocus(),
+            onTapOutside: (e) => FocusScope.of(context)
+                .unfocus(), // Hide keyboard when tapping outside
             decoration: const InputDecoration(
-                hintText:
-                    'Imagine something wonderful & innovative\nType here & I will create for you 😃',
-                hintStyle: TextStyle(fontSize: 13.5),
-                border: OutlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(10)))),
+              hintText:
+                  'Imagine something wonderful & innovative\nType here & I will create for you 😃',
+              hintStyle: TextStyle(fontSize: 13.5),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.all(Radius.circular(10)),
+              ),
+            ),
           ),
 
-          //ai image
+          // 🖼 **Generated AI Image Display**
           Container(
-              height: mq.height * .5,
-              margin: EdgeInsets.symmetric(vertical: mq.height * .015),
-              alignment: Alignment.center,
-              child: Obx(() => _aiImage())),
+            height: mq.height * .5,
+            margin: EdgeInsets.symmetric(vertical: mq.height * .015),
+            alignment: Alignment.center,
+            child:
+                Obx(() => _aiImage()), // Displays AI-generated image or loader
+          ),
 
-          Obx(() => _c.imageList.isEmpty
-              ? const SizedBox()
-              : SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  padding: EdgeInsets.only(bottom: mq.height * .03),
-                  physics: const BouncingScrollPhysics(),
-                  child: Wrap(
-                    spacing: 10,
-                    children: _c.imageList
-                        .map((e) => InkWell(
+          // 🔄 **Horizontal Scrollable Image List (Previously Generated Images)**
+          Obx(
+            () => _c.imageList.isEmpty
+                ? const SizedBox()
+                : SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    padding: EdgeInsets.only(bottom: mq.height * .03),
+                    physics: const BouncingScrollPhysics(),
+                    child: Wrap(
+                      spacing: 10,
+                      children: _c.imageList
+                          .map(
+                            (e) => InkWell(
                               onTap: () {
-                                _c.url.value = e;
+                                _c.url.value = e; // Updates the selected image
                               },
                               child: ClipRRect(
                                 borderRadius:
@@ -102,22 +120,32 @@ class _ImageFeatureState extends State<ImageFeature> {
                                   imageUrl: e,
                                   height: 100,
                                   errorWidget: (context, url, error) =>
-                                      const SizedBox(),
+                                      const SizedBox(), // Handles image load failure
                                 ),
                               ),
-                            ))
-                        .toList(),
+                            ),
+                          )
+                          .toList(),
+                    ),
                   ),
-                )),
+          ),
 
-          //create btn
-          // CustomBtn(onTap: _c.createAIImage, text: 'Create'),
-          CustomBtn(onTap: _c.searchAiImage, text: 'Create'),
+          // 🎨 **Create Image Button**
+          CustomBtn(
+            onTap: _c.searchAiImage, // Calls AI image generation function
+            text: 'Create',
+          ),
         ],
       ),
     );
   }
 
+  /// 🔹 **AI Image Widget**
+  ///
+  /// This widget displays:
+  /// - A Lottie animation before an image is generated
+  /// - A loading indicator while the image is being generated
+  /// - The generated AI image when available
   Widget _aiImage() => ClipRRect(
         borderRadius: const BorderRadius.all(Radius.circular(10)),
         child: switch (_c.status.value) {
@@ -128,7 +156,7 @@ class _ImageFeatureState extends State<ImageFeature> {
               placeholder: (context, url) => const CustomLoading(),
               errorWidget: (context, url, error) => const SizedBox(),
             ),
-          Status.loading => const CustomLoading()
+          Status.loading => const CustomLoading(), // Shows loading indicator
         },
       );
 }
