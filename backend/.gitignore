@@ -1,0 +1,15 @@
+# Python virtual environment
+.venv/
+
+# Environment variables
+.env
+
+# Python bytecode and caches
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Logs and temporary files
+*.log
+*.pid
