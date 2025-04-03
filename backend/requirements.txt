@@ -12,3 +12,5 @@ passlib[bcrypt]
 motor
 requests
 python-multipart
+pyjwt==2.8.0
+google-generativeai==0.7.2
