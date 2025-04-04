@@ -33,3 +33,7 @@ class UserResponse(UserBase):
             # Convert datetime objects to ISO 8601 string format (e.g., "2025-04-01T12:00:00")
             datetime: lambda v: v.isoformat()
         }
+
+class UserLogin(BaseModel):
+    email: EmailStr
+    password: str

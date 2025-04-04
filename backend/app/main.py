@@ -8,4 +8,10 @@ app.include_router(conversation.router, prefix="/api", tags=["conversations"])
 
 @app.get("/")
 async def root():
+    """
+    Root endpoint that returns a welcome message.
+    
+    Returns:
+        dict: A dictionary containing a welcome message for the FastAPI + MongoDB project.
+    """
     return {"message": "FastAPI + MongoDB project"}

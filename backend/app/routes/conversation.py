@@ -12,6 +12,49 @@ router = APIRouter()
 
 @router.post("/conversations", response_model=dict)
 async def create_conversation(convo_data: ConversationCreate, current_user: dict = Depends(get_current_user)):
+    """
+    Create a new conversation and generate an initial AI response.
+    
+    Args:
+        convo_data (ConversationCreate): Conversation creation data containing user_role, ai_role, and situation.
+            Sample input:
+            {
+                "user_role": "a job seeker",
+                "ai_role": "an experienced interviewer",
+                "situation": "preparing for a software engineering job interview"
+            }
+        current_user (dict): The authenticated user's information.
+            Sample input:
+            {
+                "_id": "507f1f77bcf86cd799439011",
+                "name": "John Doe",
+                "email": "john@example.com"
+            }
+        
+    Returns:
+        dict: A dictionary containing the conversation and initial message.
+            Sample output:
+            {
+                "conversation": {
+                    "id": "507f1f77bcf86cd799439012",
+                    "user_id": "507f1f77bcf86cd799439011",
+                    "user_role": "a job seeker",
+                    "ai_role": "an experienced interviewer",
+                    "situation": "preparing for a software engineering job interview",
+                    "created_at": "2024-04-04T12:00:00"
+                },
+                "initial_message": {
+                    "id": "507f1f77bcf86cd799439013",
+                    "conversation_id": "507f1f77bcf86cd799439012",
+                    "role": "ai",
+                    "text": "Hello! I'll be your interviewer today...",
+                    "created_at": "2024-04-04T12:00:00"
+                }
+            }
+            
+    Raises:
+        HTTPException: If there are any errors during conversation creation.
+    """
     new_convo = Conversation(
         user_id=ObjectId(current_user["_id"]),
         user_role=convo_data.user_role,
@@ -52,6 +95,40 @@ async def send_message(
     message_data: MessageCreate,
     current_user: dict = Depends(get_current_user)
 ):
+    """
+    Send a message in an existing conversation and get the AI's response.
+    
+    Args:
+        conversation_id (str): The ID of the conversation to send the message in.
+            Sample input: "507f1f77bcf86cd799439012"
+        message_data (MessageCreate): The message data containing text and optional audio_url.
+            Sample input:
+            {
+                "text": "Tell me about your experience with Python",
+                "audio_url": "https://storage.example.com/audio/123.mp3"  # optional
+            }
+        current_user (dict): The authenticated user's information.
+            Sample input:
+            {
+                "_id": "507f1f77bcf86cd799439011",
+                "name": "John Doe",
+                "email": "john@example.com"
+            }
+        
+    Returns:
+        MessageResponse: The AI's response message.
+            Sample output:
+            {
+                "id": "507f1f77bcf86cd799439014",
+                "conversation_id": "507f1f77bcf86cd799439012",
+                "role": "ai",
+                "text": "I have extensive experience with Python...",
+                "created_at": "2024-04-04T12:05:00"
+            }
+        
+    Raises:
+        HTTPException: If the conversation is not found (404) or other errors occur.
+    """
     # Verify conversation exists and belongs to the user
     conversation = db.conversations.find_one({
         "_id": ObjectId(conversation_id),
