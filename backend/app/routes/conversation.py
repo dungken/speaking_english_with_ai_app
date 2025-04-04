@@ -125,7 +125,7 @@ async def create_conversation(convo_data: ConversationCreate, current_user: dict
 
 
 
-    initial_message = Message(conversation_id=conversation_id, role="ai", text=ai_text)
+    initial_message = Message(conversation_id=conversation_id, role="ai", text=ai_first_response)
     db.messages.insert_one(initial_message.to_dict())
 
     # Fetch the conversation and convert ObjectId fields to strings
