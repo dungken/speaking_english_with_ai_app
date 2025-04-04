@@ -1,24 +1,40 @@
-fastapi_mongodb_project/
-├── app/
+/backend
+│
+├── /app
+│   ├── /config
+│   │   ├── __init__.py
+│   │   └── database.py
+│   │
+│   ├── /models
+│   │   ├── __init__.py
+│   │   ├── conversation.py
+│   │   ├── message.py
+│   │   └── user.py
+│   │
+│   ├── /routes
+│   │   ├── __init__.py
+│   │   ├── conversation.py
+│   │   └── user.py
+│   │
+│   ├── /schemas
+│   │   ├── __init__.py
+│   │   ├── conversation.py
+│   │   ├── message.py
+│   │   └── user.py
+│   │
+│   ├── /utils
+│   │   ├── __init__.py
+│   │   ├── auth.py
+│   │   ├── gemini.py
+│   │   └── security.py
+│   │
 │   ├── __init__.py
-│   ├── main.py              # Entry point
-│   ├── config/
-│   │   ├── __init__.py
-│   │   └── database.py      # Database configuration
-│   ├── models/
-│   │   ├── __init__.py
-│   │   └── user.py         # User model
-│   ├── routes/
-│   │   ├── __init__.py
-│   │   └── user.py         # User API routes
-│   ├── schemas/
-│   │   ├── __init__.py
-│   │   └── user.py         # Pydantic schemas
-│   └── utils/
-│       ├── __init__.py
-│       └── security.py     # Password hashing utilities
-├── requirements.txt         # Project dependencies
-└── .env                     # Environment variables
+│   └── main.py
+│
+├── .env
+├── .gitignore
+├── README.md
+└── requirements.txt
 
 ## For  window os setup (run these using git bash)
 # Create a Virtual Environment (at backend/)
