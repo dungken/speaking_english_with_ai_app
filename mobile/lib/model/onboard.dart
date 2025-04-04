@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+
 /// 📌 **Onboarding Model**
 ///
 /// This class represents an onboarding screen item in the application.
@@ -5,7 +7,8 @@
 /// Each onboarding item consists of:
 /// - `title`: The main heading for the onboarding screen.
 /// - `subtitle`: A short description explaining the feature.
-/// - `lottie`: The filename of the Lottie animation used for this step.
+/// - `icon`: The icon to display for this step.
+/// - `color`: The color to use for the icon.
 class Onboard {
   /// 🏷 **Title**
   ///
@@ -17,15 +20,26 @@ class Onboard {
   /// A short description providing more information about the feature.
   final String subtitle;
 
-  /// 🎥 **Lottie Animation**
+  /// 🎨 **Icon**
   ///
-  /// The file name of the Lottie animation associated with this step.
-  final String lottie;
+  /// The icon to display for this step.
+  final IconData icon;
+
+  /// 🎨 **Color**
+  ///
+  /// The color to use for the icon.
+  final Color color;
 
   /// 🔹 **Constructor**
   ///
   /// - `title`: Required title of the onboarding step.
   /// - `subtitle`: Required subtitle explaining the feature.
-  /// - `lottie`: Required Lottie animation filename.
-  Onboard({required this.title, required this.subtitle, required this.lottie});
+  /// - `icon`: Required icon for this step.
+  /// - `color`: Required color for the icon.
+  Onboard({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.color,
+  });
 }
