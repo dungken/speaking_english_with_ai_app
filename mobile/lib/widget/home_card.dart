@@ -16,73 +16,88 @@ class HomeCard extends StatelessWidget {
         true; // 🔄 Ensures animations reload on hot restart
 
     return Card(
-      color: Colors.blue
-          .withOpacity(.2), // 🎨 Light blue transparent card background
-      elevation: 0, // 🌫️ No shadow for a flat look
+      color: Theme.of(context).brightness == Brightness.dark
+          ? Colors.blue.withOpacity(.1) // 🎨 Dark mode card background
+          : Colors.white, // 🎨 Light mode card background
+      elevation: 2, // 🌫️ Subtle shadow for depth
       margin: EdgeInsets.only(
           bottom: mq.height * .02), // 📏 Adds spacing below each card
-      shape: const RoundedRectangleBorder(
-        borderRadius:
-            BorderRadius.all(Radius.circular(20)), // 🔵 Rounded card corners
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16), // 🔵 Rounded card corners
       ),
       child: InkWell(
-        borderRadius: const BorderRadius.all(
-            Radius.circular(20)), // ✋ Ripple effect within rounded area
+        borderRadius:
+            BorderRadius.circular(16), // ✋ Ripple effect within rounded area
         onTap: homeType.onTap, // 🎯 Navigate or perform action on tap
-
-        // 🔄 Conditional Layout: Left-aligned or Right-aligned content
-        child: homeType.leftAlign
-            ? Row(
-                children: [
-                  // 🎞️ Lottie Animation
-                  Container(
-                    width: mq.width * .35, // 📏 Set animation width
-                    padding: homeType.padding, // 🏞️ Custom padding
-                    child: Lottie.asset('assets/lottie/${homeType.lottie}'),
-                  ),
-
-                  const Spacer(), // 📏 Adds spacing
-
-                  // 📝 Title Text
-                  Text(
-                    homeType.title,
-                    style: const TextStyle(
-                      fontSize: 18, // 🔠 Readable font size
-                      fontWeight: FontWeight.w500, // 🔤 Medium weight
-                      letterSpacing: 1, // 🔡 Improves text appearance
-                    ),
-                  ),
-
-                  const Spacer(flex: 2), // 📏 Extra spacing
-                ],
-              )
-            : Row(
-                children: [
-                  const Spacer(flex: 2), // 📏 Extra spacing
-
-                  // 📝 Title Text (Right-Aligned)
-                  Text(
-                    homeType.title,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w500,
-                      letterSpacing: 1,
-                    ),
-                  ),
-
-                  const Spacer(), // 📏 Adds spacing
-
-                  // 🎞️ Lottie Animation
-                  Container(
-                    width: mq.width * .35,
-                    padding: homeType.padding,
-                    child: Lottie.asset('assets/lottie/${homeType.lottie}'),
-                  ),
-                ],
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Row(
+            children: [
+              // 🎨 Icon Container
+              Container(
+                width: 50,
+                height: 50,
+                decoration: BoxDecoration(
+                  color: Colors.blue.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  homeType.icon,
+                  color: Colors.blue.shade700,
+                  size: 28,
+                ),
               ),
+
+              const SizedBox(width: 16),
+
+              // 📝 Title and Description
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      homeType.title,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      _getDescription(homeType),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // ➡️ Arrow Icon
+              Icon(
+                Icons.arrow_forward_ios,
+                size: 16,
+                color: Colors.grey.shade400,
+              ),
+            ],
+          ),
+        ),
       ),
     ).animate().fade(
         duration: 1.seconds,
         curve: Curves.easeIn); // ✨ Smooth fade-in animation
   }
+
+  // 📝 Get description for each menu item
+  String _getDescription(HomeType type) => switch (type) {
+        HomeType.createSituations =>
+          'Practice conversations in different scenarios',
+        HomeType.chooseTopic => 'Select topics to improve your English skills',
+        HomeType.describeImage => 'Describe images to enhance vocabulary',
+        HomeType.progressTracking =>
+          'Track your learning progress and achievements',
+        HomeType.settings => 'Customize app settings and preferences',
+        HomeType.profile => 'View and edit your profile information',
+      };
 }
