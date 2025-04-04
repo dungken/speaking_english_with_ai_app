@@ -6,6 +6,7 @@ import '../helper/pref.dart';
 import '../widget/custom_loading.dart';
 import 'home_screen.dart';
 import 'onboarding_screen.dart';
+import 'login_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -21,9 +22,9 @@ class _SplashScreenState extends State<SplashScreen> {
 
     // ⏳ Wait for 2 seconds and then navigate to the appropriate screen
     Future.delayed(const Duration(seconds: 2), () {
-      // 📌 If onboarding is enabled, show OnboardingScreen, otherwise go to HomeScreen
+      // 📌 If onboarding is enabled, show OnboardingScreen, otherwise go to LoginScreen
       Get.off(() =>
-          Pref.showOnboarding ? const OnboardingScreen() : const HomeScreen());
+          Pref.showOnboarding ? const OnboardingScreen() : const LoginScreen());
     });
   }
 
