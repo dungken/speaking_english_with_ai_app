@@ -5,7 +5,7 @@ import 'package:lottie/lottie.dart';
 import '../helper/global.dart';
 import '../model/onboard.dart';
 import '../widget/custom_btn.dart';
-import 'home_screen.dart';
+import 'login_screen.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -111,8 +111,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               CustomBtn(
                 onTap: () {
                   if (isLastPage) {
-                    // 🏡 Navigate to HomeScreen if this is the last page
-                    Get.offAll(() => const HomeScreen());
+                    // 🏡 Navigate to LoginScreen if this is the last page
+                    Get.offAll(() => const LoginScreen());
                   } else {
                     // ⏭️ Move to the next page
                     _controller.nextPage(

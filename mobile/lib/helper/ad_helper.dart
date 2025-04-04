@@ -1,6 +1,7 @@
 import 'package:ai_assistant/helper/my_dialog.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart' show kIsWeb; // Import để kiểm tra nền tảng
+import 'package:flutter/foundation.dart'
+    show kIsWeb; // Import để kiểm tra nền tảng
 import 'package:easy_audience_network/easy_audience_network.dart';
 import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
@@ -43,7 +44,8 @@ class AdHelper {
 
   static Widget nativeAd() {
     if (kIsWeb) {
-      return const SizedBox(height: 100); // Trên Web, hiển thị hộp trống để không thay đổi UI
+      return const SizedBox
+          .shrink(); // Return an empty widget instead of fixed height
     }
 
     return SafeArea(
@@ -65,7 +67,8 @@ class AdHelper {
 
   static Widget nativeBannerAd() {
     if (kIsWeb) {
-      return const SizedBox(height: 100); // Giữ UI giống như trên Mobile
+      return const SizedBox
+          .shrink(); // Return an empty widget instead of fixed height
     }
 
     return SafeArea(
@@ -80,7 +83,8 @@ class AdHelper {
           onError: (code, message) => print('Native Banner Ad Error: $message'),
           onLoaded: () => print('Native Banner Ad Loaded'),
           onClicked: () => print('Native Banner Ad Clicked'),
-          onLoggingImpression: () => print('Native Banner Ad Impression Logged'),
+          onLoggingImpression: () =>
+              print('Native Banner Ad Impression Logged'),
           onMediaDownloaded: () => print('Native Banner Ad Media Downloaded'),
         ),
       ),
