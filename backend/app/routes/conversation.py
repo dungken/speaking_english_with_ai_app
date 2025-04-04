@@ -55,21 +55,7 @@ async def create_conversation(convo_data: ConversationCreate, current_user: dict
     Raises:
         HTTPException: If there are any errors during conversation creation.
     """
-    new_convo = Conversation(
-        user_id=ObjectId(current_user["_id"]),
-        user_role=convo_data.user_role,
-        ai_role=convo_data.ai_role,
-        situation=convo_data.situation
-    )
-    result = db.conversations.insert_one(new_convo.to_dict())
-    conversation_id = result.inserted_id
 
-  
-
-    # complete_the_situation_from_user_input = (
-    #     f"You are {convo_data.ai_role}, and the user is {convo_data.user_role}. "
-    #     f"The situation is: {convo_data.situation}( this situation might be insufficient and ambiguous, not enough information, or not complete, just make up a situation that make sense). Start the conversation as {convo_data.ai_role}."
-    # )
     # refine the promt to make it more accurate and complete or make sense
     promt_to_refine_roles_and_situation = f"""
         You are an AI assistant designed to engage in role-playing scenarios to help new, intermediate English learners in a natural, real-life conversation. You will be provided with a user role, an AI role, and a situation. These inputs may be incomplete, vague, or inconsistent. Your task is to:
@@ -103,9 +89,9 @@ async def create_conversation(convo_data: ConversationCreate, current_user: dict
         AI role:  {convo_data.ai_role}
         Situation: {convo_data.situation}
         """
-    
+    # generate the refined response
     refined_reponse = generate_response(promt_to_refine_roles_and_situation)
-
+ 
     # Clean the response text by removing markdown formatting
     cleaned_text = refined_reponse.strip()
     if cleaned_text.startswith("```json"):
@@ -114,16 +100,27 @@ async def create_conversation(convo_data: ConversationCreate, current_user: dict
         cleaned_text = cleaned_text[:-3]  # Remove ``` suffix
     cleaned_text = cleaned_text.strip()
 
+    # parse the json
     data_json = json.loads(cleaned_text)
     
-    convo_data.user_role = data_json["refined_user_role"]
-    convo_data.ai_role = data_json["refined_ai_role"]
-    convo_data.situation = data_json["refined_situation"]
+    refined_user_role = data_json["refined_user_role"]
+    refined_ai_role = data_json["refined_ai_role"]
+    refined_situation = data_json["refined_situation"]
     ai_first_response = data_json["response"]
 
+
+
+    new_convo = Conversation(
+    user_id=ObjectId(current_user["_id"]),
+    user_role=refined_user_role,
+    ai_role=refined_ai_role,
+    situation=ai_first_response
+    )
+    result = db.conversations.insert_one(new_convo.to_dict())
+    conversation_id = result.inserted_id
+
     
-
-
+    # create the initial ai message first
 
     initial_message = Message(conversation_id=conversation_id, role="ai", text=ai_first_response)
     db.messages.insert_one(initial_message.to_dict())
@@ -138,6 +135,13 @@ async def create_conversation(convo_data: ConversationCreate, current_user: dict
     initial_message_dict["id"] = str(initial_message_dict["_id"])
     initial_message_dict["conversation_id"] = str(initial_message_dict["conversation_id"])
     del initial_message_dict["_id"]
+
+    # Fetch conversation history
+    messages = list(db.messages.find({"conversation_id": ObjectId(conversation_id)}).sort("created_at", 1))
+    history = [
+        {"role": "user" if msg["role"] == "user" else "model", "parts": [msg["text"]]}
+        for msg in messages
+    ]
 
     return {
         "conversation": ConversationResponse(**created_convo),
@@ -208,8 +212,17 @@ async def send_message(
         {"role": "user" if msg["role"] == "user" else "model", "parts": [msg["text"]]}
         for msg in messages
     ]
+    # Write to a file
+    with open("conversation_log.txt", "w") as file:
+        file.write("Messages:\n")
+        for message in messages:
+            file.write(f"{message}\n")
+        
+        file.write("\nHistory:\n")
+        for entry in history:
+            file.write(f"{entry}\n")
 
-    # Include context in the prompt
+    # Include context in the prompt 
     prompt = (
         f"You are {conversation['ai_assistant']}, and the user is {conversation['topic'].split(' and ')[0]}. "
         f"The situation is: {conversation['situation_description']}. "
@@ -217,6 +230,7 @@ async def send_message(
         "\n".join([f"{msg['role']}: {msg['text']}" for msg in messages]) +
         f"\nRespond as {conversation['ai_assistant']}."
     )
+
     ai_text = generate_response(prompt)
 
     # Store AI response

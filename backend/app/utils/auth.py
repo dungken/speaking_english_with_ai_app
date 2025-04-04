@@ -43,7 +43,7 @@ def create_access_token(data: dict):
 # Verifies the token and gets the user for protected routes.
 # input: authenticated token from header 
 # ouput: return user object
-def get_current_user(token: str = Depends(oauth2_scheme)):
+def get_current_user(token: str = Depends(oauth2_scheme)):  # oauth2_scheme is a function that returns the token from the header
     """
     Verify the JWT token and retrieve the current user's information.
     
