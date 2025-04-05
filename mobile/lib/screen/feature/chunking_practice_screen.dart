@@ -22,68 +22,7 @@ class ChunkingPracticeScreen extends StatefulWidget {
   State<ChunkingPracticeScreen> createState() => _ChunkingPracticeScreenState();
 }
 
-class _ChunkingPracticeScreenState extends State<ChunkingPracticeScreen>
-    with SingleTickerProviderStateMixin {
-  late TabController _tabController;
-  int _learnedChunks = 0;
-  final AudioPlayer _audioPlayer = AudioPlayer();
-  bool _isLearning = false;
-  int _currentChunkIndex = 0;
-  List<Chunk> _currentChunks = [];
-
-  @override
-  void initState() {
-    super.initState();
-    _tabController = TabController(length: 2, vsync: this);
-    _currentChunks = widget.basicChunks;
-  }
-
-  @override
-  void dispose() {
-    _tabController.dispose();
-    _audioPlayer.dispose();
-    super.dispose();
-  }
-
-  void _onChunkLearned(Chunk chunk) {
-    setState(() {
-      _learnedChunks++;
-    });
-  }
-
-  Future<void> _playAudio(String audioUrl) async {
-    try {
-      await _audioPlayer.setAsset(audioUrl);
-      await _audioPlayer.play();
-    } catch (e) {
-      debugPrint('Error playing audio: $e');
-    }
-  }
-
-  void _startLearning() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => InteractiveLearningScreen(
-          question: widget.question,
-          questionTranslation: widget.questionTranslation,
-          basicChunks: widget.basicChunks,
-          advancedChunks: widget.advancedChunks,
-        ),
-      ),
-    );
-  }
-
-  void _nextChunk() {
-    setState(() {
-      if (_currentChunkIndex < _currentChunks.length - 1) {
-        _currentChunkIndex++;
-      } else {
-        _isLearning = false;
-      }
-    });
-  }
-
+class _ChunkingPracticeScreenState extends State<ChunkingPracticeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -91,6 +30,7 @@ class _ChunkingPracticeScreenState extends State<ChunkingPracticeScreen>
         title: const Text('Chunking Practice'),
         elevation: 0,
         backgroundColor: Colors.transparent,
+        centerTitle: true,
       ),
       body: Container(
         decoration: BoxDecoration(
@@ -98,382 +38,195 @@ class _ChunkingPracticeScreenState extends State<ChunkingPracticeScreen>
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              Theme.of(context).brightness == Brightness.dark
-                  ? Colors.blue.shade900.withOpacity(0.3)
-                  : Colors.blue.shade50,
-              Theme.of(context).brightness == Brightness.dark
-                  ? Colors.purple.shade900.withOpacity(0.3)
-                  : Colors.purple.shade50,
+              Colors.blue.shade50,
+              Colors.purple.shade50,
             ],
           ),
         ),
-        child: Column(
-          children: [
-            // Question Header
-            Card(
-              margin: const EdgeInsets.all(16),
-              elevation: 4,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Container(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      Theme.of(context).primaryColor.withOpacity(0.1),
-                      Theme.of(context).primaryColor.withOpacity(0.05),
-                    ],
-                  ),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        widget.question,
-                        style:
-                            Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: Theme.of(context).primaryColor,
-                                ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        widget.questionTranslation,
-                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                              color: Colors.grey.shade600,
-                            ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-
-            // Progress Indicator
-            Container(
-              margin: const EdgeInsets.symmetric(horizontal: 16),
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 10,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Column(
-                children: [
-                  LinearProgressIndicator(
-                    value: _learnedChunks /
-                        (widget.basicChunks.length +
-                            widget.advancedChunks.length),
-                    backgroundColor: Colors.grey.shade200,
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                      Theme.of(context).primaryColor,
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 2),
                     ),
-                    minHeight: 8,
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    '$_learnedChunks/${widget.basicChunks.length + widget.advancedChunks.length} chunks learned',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Colors.grey.shade600,
-                        ),
-                  ),
-                ],
+                  ],
+                ),
+                child: Text(
+                  'Practice breaking down complex ideas',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w500,
+                      ),
+                ),
               ),
-            ),
-
-            // Tabs
-            Container(
-              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 10,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: TabBar(
-                controller: _tabController,
-                tabs: [
-                  Tab(
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.star_border,
-                            size: 18,
-                            color: _tabController.index == 0
-                                ? Theme.of(context).primaryColor
-                                : Colors.grey,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Basic',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14,
-                              color: _tabController.index == 0
-                                  ? Theme.of(context).primaryColor
-                                  : Colors.grey,
-                            ),
-                          ),
-                        ],
+              const SizedBox(height: 24),
+              _buildLessonCard(
+                context,
+                title: 'First Set of Questions',
+                subtitle: 'Practice expressing preferences and experiences',
+                difficulty: 'Easy',
+                isReview: false,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => InteractiveLearningScreen(
+                        question: "What's your favorite food?",
+                        questionTranslation: "Món ăn yêu thích của bạn là gì?",
+                        basicChunks: [], // Add your chunks here
+                        advancedChunks: [], // Add your chunks here
                       ),
                     ),
-                  ),
-                  Tab(
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.star,
-                            size: 18,
-                            color: _tabController.index == 1
-                                ? Theme.of(context).primaryColor
-                                : Colors.grey,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Advanced',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14,
-                              color: _tabController.index == 1
-                                  ? Theme.of(context).primaryColor
-                                  : Colors.grey,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-                indicator: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      Theme.of(context).primaryColor.withOpacity(0.1),
-                      Theme.of(context).primaryColor.withOpacity(0.05),
-                    ],
-                  ),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                indicatorSize: TabBarIndicatorSize.tab,
-                indicatorPadding:
-                    const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-                labelColor: Theme.of(context).primaryColor,
-                unselectedLabelColor: Colors.grey,
-                labelStyle: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                ),
-                dividerColor: Colors.transparent,
-                dividerHeight: 0,
-                onTap: (index) {
-                  setState(() {
-                    _currentChunks =
-                        index == 0 ? widget.basicChunks : widget.advancedChunks;
-                  });
+                  );
                 },
               ),
-            ),
-
-            // Tab Content
-            Expanded(
-              child: _isLearning
-                  ? _buildLearningView()
-                  : TabBarView(
-                      controller: _tabController,
-                      children: [
-                        _buildChunkList(widget.basicChunks),
-                        _buildChunkList(widget.advancedChunks),
-                      ],
+              const SizedBox(height: 16),
+              _buildLessonCard(
+                context,
+                title: 'First Review Lesson',
+                subtitle: 'Consolidate your learning from the first set',
+                difficulty: 'Easy',
+                isReview: true,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => InteractiveLearningScreen(
+                        question: "What's your favorite food?",
+                        questionTranslation: "Món ăn yêu thích của bạn là gì?",
+                        basicChunks: [], // Add your chunks here
+                        advancedChunks: [], // Add your chunks here
+                      ),
                     ),
-            ),
-          ],
-        ),
-      ),
-      bottomNavigationBar: SafeArea(
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 10,
-                offset: const Offset(0, -2),
+                  );
+                },
+              ),
+              const SizedBox(height: 16),
+              _buildLessonCard(
+                context,
+                title: 'Second Set of Questions',
+                subtitle: 'Practice more complex work-related topics',
+                difficulty: 'Easy',
+                isReview: false,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => InteractiveLearningScreen(
+                        question: "What are your career goals?",
+                        questionTranslation:
+                            "Mục tiêu nghề nghiệp của bạn là gì?",
+                        basicChunks: [], // Add your chunks here
+                        advancedChunks: [], // Add your chunks here
+                      ),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 16),
+              _buildLessonCard(
+                context,
+                title: 'Second Review Lesson',
+                subtitle: 'Consolidate your learning from the second set',
+                difficulty: 'Easy',
+                isReview: true,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => InteractiveLearningScreen(
+                        question: "What are your career goals?",
+                        questionTranslation:
+                            "Mục tiêu nghề nghiệp của bạn là gì?",
+                        basicChunks: [], // Add your chunks here
+                        advancedChunks: [], // Add your chunks here
+                      ),
+                    ),
+                  );
+                },
               ),
             ],
           ),
-          child: ElevatedButton(
-            onPressed: _isLearning ? _nextChunk : _startLearning,
-            style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              backgroundColor: Theme.of(context).primaryColor,
-              foregroundColor: Colors.white,
-            ),
-            child: Text(
-              _isLearning ? 'Next' : 'Start Learning',
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
         ),
       ),
     );
   }
 
-  Widget _buildLearningView() {
-    final currentChunk = _currentChunks[_currentChunkIndex];
-    return Center(
-      child: Card(
-        margin: const EdgeInsets.all(16),
-        elevation: 4,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                Theme.of(context).primaryColor.withOpacity(0.1),
-                Theme.of(context).primaryColor.withOpacity(0.05),
-              ],
-            ),
-            borderRadius: BorderRadius.circular(16),
+  Widget _buildLessonCard(
+    BuildContext context, {
+    required String title,
+    required String subtitle,
+    required String difficulty,
+    required bool isReview,
+    required VoidCallback onTap,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
           ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(20),
           child: Padding(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.all(20),
             child: Column(
-              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                IconButton(
-                  icon: const Icon(Icons.play_circle_outline, size: 48),
-                  color: Theme.of(context).primaryColor,
-                  onPressed: () => _playAudio(currentChunk.audioUrl),
-                ),
-                const SizedBox(height: 24),
-                Text(
-                  currentChunk.phrase,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 24,
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
                   ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  currentChunk.meaning,
-                  style: TextStyle(
-                    color: Colors.grey.shade600,
-                    fontSize: 18,
+                  decoration: BoxDecoration(
+                    color: Colors.green.shade50,
+                    borderRadius: BorderRadius.circular(20),
                   ),
-                  textAlign: TextAlign.center,
+                  child: Text(
+                    difficulty,
+                    style: TextStyle(
+                      color: Colors.green.shade700,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  title,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  subtitle,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Colors.grey.shade600,
+                      ),
                 ),
               ],
             ),
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildChunkList(List<Chunk> chunks) {
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: chunks.length,
-      itemBuilder: (context, index) {
-        final chunk = chunks[index];
-        return Card(
-          margin: const EdgeInsets.only(bottom: 8),
-          elevation: 2,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: InkWell(
-            onTap: () {
-              setState(() {
-                _isLearning = true;
-                _currentChunkIndex = index;
-                _currentChunks = chunks;
-              });
-            },
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).primaryColor.withOpacity(0.1),
-                      shape: BoxShape.circle,
-                    ),
-                    child: IconButton(
-                      icon: const Icon(Icons.play_circle_outline),
-                      color: Theme.of(context).primaryColor,
-                      onPressed: () => _playAudio(chunk.audioUrl),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          chunk.phrase,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          chunk.meaning,
-                          style: TextStyle(
-                            color: Colors.grey.shade600,
-                            fontSize: 14,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  if (chunk.isLearned)
-                    Icon(
-                      Icons.check_circle,
-                      color: Theme.of(context).primaryColor,
-                    ),
-                ],
-              ),
-            ),
-          ),
-        ).animate().fadeIn(duration: 600.ms).slideX(begin: 0.1, end: 0);
-      },
     );
   }
 }

@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../model/topic.dart';
 import '../../model/chunk.dart';
-import '../../widget/topic_card.dart';
-import 'chunking_practice_screen.dart';
+import '../../widgets/topic_card.dart';
+import 'interactive_learning_screen.dart';
 
 class SubtopicsScreen extends StatelessWidget {
   final Topic topic;
@@ -12,6 +12,52 @@ class SubtopicsScreen extends StatelessWidget {
     Key? key,
     required this.topic,
   }) : super(key: key);
+
+  void _navigateToInteractiveLearning(BuildContext context, Topic subtopic) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => InteractiveLearningScreen(
+          question: subtopic.title,
+          questionTranslation: subtopic.description,
+          basicChunks: [
+            Chunk(
+              phrase: 'I prefer ___',
+              meaning: 'Tôi thích ___ hơn',
+              audioUrl: 'assets/audio/i_prefer.mp3',
+            ),
+            Chunk(
+              phrase: 'studying',
+              meaning: 'học tập',
+              audioUrl: 'assets/audio/studying.mp3',
+            ),
+            Chunk(
+              phrase: 'working',
+              meaning: 'làm việc',
+              audioUrl: 'assets/audio/working.mp3',
+            ),
+            Chunk(
+              phrase: 'because ___',
+              meaning: 'bởi vì ___',
+              audioUrl: 'assets/audio/because.mp3',
+            ),
+          ],
+          advancedChunks: [
+            Chunk(
+              phrase: 'I prefer studying because',
+              meaning: 'Tôi thích học tập hơn bởi vì',
+              audioUrl: 'assets/audio/i_prefer_studying.mp3',
+            ),
+            Chunk(
+              phrase: 'I prefer working because',
+              meaning: 'Tôi thích làm việc hơn bởi vì',
+              audioUrl: 'assets/audio/i_prefer_working.mp3',
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -57,65 +103,13 @@ class SubtopicsScreen extends StatelessWidget {
                     .map((subtopic) => TopicCard(
                           topic: subtopic,
                           onStartPractice: () {
-                            // TODO: Implement start practice
+                            if (subtopic.subtopics == null) {
+                              _navigateToInteractiveLearning(context, subtopic);
+                            }
                           },
                           onViewLesson: () {
                             if (subtopic.subtopics == null) {
-                              // This is a question, navigate to chunking practice
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => ChunkingPracticeScreen(
-                                    question: subtopic.title,
-                                    questionTranslation: subtopic.description,
-                                    basicChunks: [
-                                      Chunk(
-                                        phrase: 'I have ___',
-                                        meaning: 'Tôi đã ___',
-                                        audioUrl: 'assets/audio/i_have.mp3',
-                                      ),
-                                      Chunk(
-                                        phrase: 'I have never ___',
-                                        meaning: 'Tôi chưa bao giờ ___',
-                                        audioUrl:
-                                            'assets/audio/i_have_never.mp3',
-                                      ),
-                                      Chunk(
-                                        phrase: 'Missed a deadline',
-                                        meaning: 'Trễ deadline',
-                                        audioUrl:
-                                            'assets/audio/missed_deadline.mp3',
-                                      ),
-                                      Chunk(
-                                        phrase: 'Talked to my boss',
-                                        meaning: 'Nói chuyện với sếp',
-                                        audioUrl:
-                                            'assets/audio/talked_boss.mp3',
-                                      ),
-                                      Chunk(
-                                        phrase: 'Been late for work',
-                                        meaning: 'Đi làm muộn',
-                                        audioUrl: 'assets/audio/late_work.mp3',
-                                      ),
-                                    ],
-                                    advancedChunks: [
-                                      Chunk(
-                                        phrase: 'miss a deadline',
-                                        meaning: 'Trễ deadline',
-                                        audioUrl:
-                                            'assets/audio/miss_deadline.mp3',
-                                      ),
-                                      Chunk(
-                                        phrase: 'finish the task on time',
-                                        meaning:
-                                            'Hoàn thành công việc đúng hạn',
-                                        audioUrl:
-                                            'assets/audio/finish_task.mp3',
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              );
+                              _navigateToInteractiveLearning(context, subtopic);
                             }
                           },
                           onMarkAsDone: () {
@@ -131,6 +125,8 @@ class SubtopicsScreen extends StatelessWidget {
                                   ),
                                 ),
                               );
+                            } else {
+                              _navigateToInteractiveLearning(context, subtopic);
                             }
                           },
                         ))
