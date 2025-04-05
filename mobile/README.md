@@ -148,32 +148,7 @@ mobile/
    - Constants and configuration
    - Theme definitions and styling
 
-#### Development Guidelines
 
-1. **Code Organization**
-   - Follow the feature-first organization within each directory
-   - Keep related files close to each other
-   - Use clear, descriptive file names
-
-2. **State Management**
-   - Use BLoC pattern for complex state management
-   - Keep state logic in controllers
-   - Maintain unidirectional data flow
-
-3. **API Integration**
-   - Implement API calls in dedicated service classes
-   - Use repository pattern for data access
-   - Handle errors and loading states consistently
-
-4. **UI Components**
-   - Create reusable widgets for common UI elements
-   - Follow Material Design guidelines
-   - Maintain consistent styling across the app
-
-5. **Testing**
-   - Write unit tests for business logic
-   - Implement widget tests for UI components
-   - Add integration tests for critical user flows
 
 ## Contributi   flutter pub get  on  
 
