@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
-import 'package:just_audio/just_audio.dart';
 import '../../model/chunk.dart';
 import 'interactive_learning_screen.dart';
 

@@ -4,7 +4,6 @@ import 'package:flutter_animate/flutter_animate.dart';
 
 import '../helper/global.dart';
 import '../model/onboard.dart';
-import '../widgets/custom_btn.dart';
 import 'login_screen.dart';
 
 class OnboardingScreen extends StatefulWidget {
