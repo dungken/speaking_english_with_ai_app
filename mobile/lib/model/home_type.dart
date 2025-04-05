@@ -87,7 +87,7 @@ extension MyHomeType on HomeType {
         HomeType.createSituations => () => Get.to(() => const ChatBotFeature()),
         HomeType.chooseTopic => () =>
             Get.to(() => const TopicSelectionScreen()),
-        HomeType.describeImage => () => Get.to(() => const DescribeImageScreen()),
+        HomeType.describeImage => () => Get.to(() =>  DescribeImageScreen()),
         HomeType.progressTracking => () => Get.to(() => const ChatBotFeature()),
         HomeType.settings => () => Get.to(() => const SettingsFeature()),
         HomeType.profile => () => Get.to(() => const ProfileFeature()),

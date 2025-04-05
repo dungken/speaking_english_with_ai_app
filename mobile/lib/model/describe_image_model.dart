@@ -2,7 +2,7 @@ class ImageDescription {
   final String id;
   final String imageUrl;
   final String? userDescription;
-  final double? aiScore;
+  final double aiScore;
   final DateTime createdAt;
   final bool isLiked;
 
@@ -10,18 +10,18 @@ class ImageDescription {
     required this.id,
     required this.imageUrl,
     this.userDescription,
-    this.aiScore,
+    this.aiScore = 0.0,
     required this.createdAt,
     this.isLiked = false,
   });
 
   factory ImageDescription.fromJson(Map<String, dynamic> json) {
     return ImageDescription(
-      id: json['id'],
-      imageUrl: json['imageUrl'],
-      userDescription: json['userDescription'],
-      aiScore: json['aiScore'],
-      createdAt: DateTime.parse(json['createdAt']),
+      id: json['id'] as String,
+      imageUrl: json['imageUrl'] as String,
+      userDescription: json['userDescription'] as String?,
+      aiScore: (json['aiScore'] as num?)?.toDouble() ?? 0.0,
+      createdAt: DateTime.parse(json['createdAt'] as String),
       isLiked: json['isLiked'] ?? false,
     );
   }
