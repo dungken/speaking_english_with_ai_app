@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 /// Application name constant
-const String appName = 'AI Assistant';
+const String appName = 'Speaking English With AI';
 
 /// Media query variable to store the device screen size
 late Size mq;
@@ -11,7 +11,7 @@ late Size mq;
 /// ⚠️ **Important:** Never hardcode your API key directly in the source code.
 /// Instead, use one of the following secure methods:
 /// - Store the key in a secure backend (e.g., Appwrite, Firebase, or an environment variable).
-/// - Use Flutter’s `.env` file (with `flutter_dotenv` package) to store API keys securely.
+/// - Use Flutter's `.env` file (with `flutter_dotenv` package) to store API keys securely.
 ///
 /// 🔹 **Google Gemini API Key:** Get your key from
 ///   👉 https://aistudio.google.com/app/apikey
