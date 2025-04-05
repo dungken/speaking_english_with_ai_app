@@ -65,8 +65,100 @@ The application is designed for individuals who:
    ```sh
    flutter run  
    ```  
+### Clean Architecture
 
-## Contribution  
+The project follows a clean architecture pattern to ensure maintainability, testability, and separation of concerns.
+
+#### 📂 Directory Structure
+mobile/
+├── lib/                        # Main source code directory
+│   ├── apis/                  # API integration layer
+│   │   └── conversation_api.dart   # Add your API calls here
+│   │
+│   ├── controller/            # Business logic & state management
+│   │   └── conversation_controller.dart   # Add controller here
+│   │
+│   ├── model/                # Data models
+│   │   ├── message.dart      # Existing message model
+│   │   └── conversation.dart  # Add your conversation model here
+│   │
+│   ├── screen/               # UI screens
+│   │   ├── feature/          # Feature-specific screens
+│   │   │   └── conversation/  # Add your screens here
+│   │   │       ├── create_situation_screen.dart
+│   │   │       └── chat_screen.dart
+│   │   ├── home_screen.dart
+│   │   └── [other screens]
+│   │
+│   ├── widget/               # Reusable UI components
+│   │   └── conversation/     # Add conversation-specific widgets here
+│   │
+│   ├── helper/              # Utility functions and helpers
+│   │
+│   └── main.dart            # App entry point
+│
+├── assets/                   # Static assets (images, fonts, etc.)
+├── test/                    # Test files
+└── pubspec.yaml             # Dependencies and app configuration
+
+#### 🏗️ Layer Details
+
+##### 1. Models (`/model`)
+- Purpose: Define data structures and business objects
+- Contents:
+  - Entity classes
+  - Data transfer objects (DTOs)
+  - Business object definitions
+- Example: `conversation.dart`, `message.dart`, `user.dart`
+
+##### 2. Screens (`/screen`)
+- Purpose: Handle UI layouts and screen-specific logic
+- Organization:
+  - Main screens: Directly in `/screen`
+  - Feature screens: In `/screen/feature/{feature_name}/`
+- Naming Convention: `*_screen.dart`
+- Example: `home_screen.dart`, `feature/chat/chat_screen.dart`
+
+##### 3. Widgets (`/widget`)
+- Purpose: House reusable UI components
+- Characteristics:
+  - Modular and reusable
+  - Feature-specific widgets in subdirectories
+  - Stateless when possible
+- Example: `custom_button.dart`, `chat/message_bubble.dart`
+
+##### 4. APIs (`/apis`)
+- Purpose: Handle backend communication
+- Responsibilities:
+  - HTTP requests/responses
+  - API endpoint integration
+  - Response parsing
+  - Error handling
+- Example: `conversation_api.dart`, `auth_api.dart`
+
+##### 5. Controllers (`/controller`)
+- Purpose: Manage business logic and state
+- Responsibilities:
+  - State management
+  - Business logic implementation
+  - UI-Data coordination
+  - Event handling
+- Example: `conversation_controller.dart`
+
+##### 6. Helpers (`/helper`)
+- Purpose: Provide utility functions and common tools
+- Contents:
+  - Constants
+  - Utility functions
+  - Common validators
+  - Shared formatters
+- Example: `date_formatter.dart`, `string_utils.dart`
+
+#### 🔄 Data Flow
+
+
+
+## Contributi   flutter pub get  on  
 
 Contributions are welcome! Feel free to submit issues or pull requests to enhance the application.  
 
@@ -79,3 +171,6 @@ This project is licensed under the MIT License.
 - **Nguyen Minh Nhat**  
 - **Nguyen Nguyen Huy**
 - **Nguyen Viet Ai Nhi**  
+
+
+
