@@ -2,7 +2,7 @@
 
 ## Overview  
 
-This project aims to develop a mobile application that leverages Artificial Intelligence (AI) to help users enhance their English-speaking skills. The app provides a natural conversation environment, real-time feedback, and a personalized learning path based on the user’s proficiency level.  
+This project aims to develop a mobile application that leverages Artificial Intelligence (AI) to help users enhance their English-speaking skills. The app provides a natural conversation environment, real-time feedback, and a personalized learning path based on the user's proficiency level.  
 
 ## Target Users  
 
@@ -65,68 +65,115 @@ The application is designed for individuals who:
    ```sh
    flutter run  
    ```  
-### Clean Architecture
-
-The project follows a clean architecture pattern to ensure maintainability, testability, and separation of concerns.
 
 
+### Project Structure
 
-#### 🏗️ Layer Details
+```
+mobile/
+├── lib/                      # Main source code directory
+│   ├── apis/                # API service implementations
+│   │   ├── auth_api.dart    # Authentication related API calls
+│   │   ├── chat_api.dart    # Chat and conversation API calls
+│   │   └── speech_api.dart  # Speech recognition and analysis API
+│   │
+│   ├── controller/          # Business logic and state management
+│   │   ├── auth_controller.dart
+│   │   ├── chat_controller.dart
+│   │   └── speech_controller.dart
+│   │
+│   ├── model/              # Data models and entities
+│   │   ├── user.dart
+│   │   ├── conversation.dart
+│   │   └── speech_result.dart
+│   │
+│   ├── screen/             # UI screens/pages
+│   │   ├── auth/          # Authentication screens
+│   │   ├── chat/          # Chat and conversation screens
+│   │   └── practice/      # Practice mode screens
+│   │
+│   ├── widget/            # Reusable UI components
+│   │   ├── common/        # Common widgets (buttons, inputs, etc.)
+│   │   └── custom/        # Custom widgets specific to the app
+│   │
+│   ├── helper/            # Utility functions and helpers
+│   │   ├── constants.dart
+│   │   ├── theme.dart
+│   │   └── validators.dart
+│   │
+│   └── main.dart          # Application entry point
+│
+├── assets/                # Static assets
+│   ├── images/           # Image assets
+│   ├── fonts/            # Custom fonts
+│   └── sounds/           # Sound effects and audio files
+│
+├── test/                 # Test files
+│   ├── unit/            # Unit tests
+│   ├── widget/          # Widget tests
+│   └── integration/     # Integration tests
+│
+└── pubspec.yaml          # Flutter dependencies and configurations
+```
 
-##### 1. Models (`/model`)
-- Purpose: Define data structures and business objects
-- Contents:
-  - Entity classes
-  - Data transfer objects (DTOs)
-  - Business object definitions
-- Example: `conversation.dart`, `message.dart`, `user.dart`
+#### Key Directories Explained
 
-##### 2. Screens (`/screen`)
-- Purpose: Handle UI layouts and screen-specific logic
-- Organization:
-  - Main screens: Directly in `/screen`
-  - Feature screens: In `/screen/feature/{feature_name}/`
-- Naming Convention: `*_screen.dart`
-- Example: `home_screen.dart`, `feature/chat/chat_screen.dart`
+1. **apis/**
+   - Contains all API service implementations
+   - Handles network requests and responses
+   - Implements API endpoints for backend communication
 
-##### 3. Widgets (`/widget`)
-- Purpose: House reusable UI components
-- Characteristics:
-  - Modular and reusable
-  - Feature-specific widgets in subdirectories
-  - Stateless when possible
-- Example: `custom_button.dart`, `chat/message_bubble.dart`
+2. **controller/**
+   - Manages business logic and state
+   - Implements BLoC pattern for state management
+   - Handles data flow between UI and services
 
-##### 4. APIs (`/apis`)
-- Purpose: Handle backend communication
-- Responsibilities:
-  - HTTP requests/responses
-  - API endpoint integration
-  - Response parsing
-  - Error handling
-- Example: `conversation_api.dart`, `auth_api.dart`
+3. **model/**
+   - Defines data structures and entities
+   - Contains model classes for API responses
+   - Implements data validation and transformation
 
-##### 5. Controllers (`/controller`)
-- Purpose: Manage business logic and state
-- Responsibilities:
-  - State management
-  - Business logic implementation
-  - UI-Data coordination
-  - Event handling
-- Example: `conversation_controller.dart`
+4. **screen/**
+   - Contains all app screens/pages
+   - Organized by feature modules
+   - Implements UI layouts and navigation
 
-##### 6. Helpers (`/helper`)
-- Purpose: Provide utility functions and common tools
-- Contents:
-  - Constants
-  - Utility functions
-  - Common validators
-  - Shared formatters
-- Example: `date_formatter.dart`, `string_utils.dart`
+5. **widget/**
+   - Reusable UI components
+   - Common widgets used across multiple screens
+   - Custom widgets specific to the app's features
 
-#### 🔄 Data Flow
+6. **helper/**
+   - Utility functions and helper classes
+   - Constants and configuration
+   - Theme definitions and styling
 
+#### Development Guidelines
 
+1. **Code Organization**
+   - Follow the feature-first organization within each directory
+   - Keep related files close to each other
+   - Use clear, descriptive file names
+
+2. **State Management**
+   - Use BLoC pattern for complex state management
+   - Keep state logic in controllers
+   - Maintain unidirectional data flow
+
+3. **API Integration**
+   - Implement API calls in dedicated service classes
+   - Use repository pattern for data access
+   - Handle errors and loading states consistently
+
+4. **UI Components**
+   - Create reusable widgets for common UI elements
+   - Follow Material Design guidelines
+   - Maintain consistent styling across the app
+
+5. **Testing**
+   - Write unit tests for business logic
+   - Implement widget tests for UI components
+   - Add integration tests for critical user flows
 
 ## Contributi   flutter pub get  on  
 
