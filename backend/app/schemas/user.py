@@ -1,28 +1,64 @@
 # Import BaseModel for creating Pydantic models, EmailStr for email validation, and Field for additional field options
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, validator
 # Import Optional from typing to indicate fields that can be None
 from typing import Optional
 # Import datetime to handle timestamp fields
 from datetime import datetime
+import re
+from bson import ObjectId
 
 # Define a base schema for common user fields
 # This is inherited by other schemas to avoid repetition
 class UserBase(BaseModel):
-    name: str          # User's full name, required field
-    email: EmailStr    # User's email address, required and validated as a proper email format
+    name: str = Field(
+        min_length=2,
+        max_length=50,
+        description="User's full name"
+    )
+    email: EmailStr = Field(
+        description="User's email address"
+    )
+
+    @validator('name')
+    def name_must_contain_space(cls, v):
+        if ' ' not in v:
+            raise ValueError('Name must contain a space')
+        return v.title()
 
 # Define a schema for creating a new user
 # Inherits from UserBase and adds a password field
 class UserCreate(UserBase):
-    password: str      # User's plain-text password, required for registration
+    password: str = Field(
+        min_length=8,
+        max_length=100,
+        description="User's password"
+    )
+
+    @validator('password')
+    def password_strength(cls, v):
+        # Updated regex to allow special characters
+        if not re.match(r'^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$', v):
+            raise ValueError('Password must contain at least one letter, one number, and one special character')
+        return v
 
 # Define a schema for user response data
 # Inherits from UserBase and adds additional fields for returning user details
 class UserResponse(UserBase):
-    avatar_url: Optional[str] = None  # Optional URL to the user's avatar, defaults to None
-    role: str = "user"                # User's role, defaults to "user" (could be "admin")
-    created_at: datetime              # Timestamp of when the user was created, required
-    updated_at: datetime              # Timestamp of the last update, required
+    id: str = Field(alias="_id")
+    avatar_url: Optional[str] = Field(
+        default=None,
+        description="URL to the user's avatar image"
+    )
+    role: str = Field(
+        default="user",
+        description="User's role in the system"
+    )
+    created_at: datetime = Field(
+        description="Timestamp of when the user was created"
+    )
+    updated_at: datetime = Field(
+        description="Timestamp of the last update"
+    )
 
     # Configuration class for Pydantic model behavior
     class Config:
@@ -31,9 +67,40 @@ class UserResponse(UserBase):
         # Custom JSON encoders to format specific types
         json_encoders = {
             # Convert datetime objects to ISO 8601 string format (e.g., "2025-04-01T12:00:00")
-            datetime: lambda v: v.isoformat()
+            datetime: lambda v: v.isoformat(),
+            ObjectId: lambda v: str(v)
         }
 
+    @validator("id", pre=True)
+    def convert_objectid_to_str(cls, v):
+        if isinstance(v, ObjectId):
+            return str(v)
+        return v
+
 class UserLogin(BaseModel):
-    email: EmailStr
-    password: str
+    email: EmailStr = Field(
+        description="User's email address"
+    )
+    password: str = Field(
+        min_length=8,
+        max_length=100,
+        description="User's password"
+    )
+
+class UserUpdate(BaseModel):
+    name: Optional[str] = Field(
+        default=None,
+        min_length=2,
+        max_length=50,
+        description="User's full name"
+    )
+    avatar_url: Optional[str] = Field(
+        default=None,
+        description="URL to the user's avatar image"
+    )
+
+    @validator('name')
+    def name_must_contain_space(cls, v):
+        if v and ' ' not in v:
+            raise ValueError('Name must contain a space')
+        return v.title() if v else None
