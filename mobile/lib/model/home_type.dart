@@ -6,6 +6,7 @@ import '../screen/feature/describe_image_screen.dart';
 import '../screen/feature/settings_feature.dart';
 import '../screen/feature/profile_feature.dart';
 import '../screen/feature/topic_selection_screen.dart';
+import '../screen/feature/conversation/create_situation_screen.dart';
 
 /// Enum representing different features of the application.
 enum HomeType {
@@ -84,7 +85,7 @@ extension MyHomeType on HomeType {
   ///
   /// Defines the action to be performed when tapping on a feature.
   VoidCallback get onTap => switch (this) {
-        HomeType.createSituations => () => Get.to(() => const ChatBotFeature()),
+        HomeType.createSituations => () => Get.to(() => const CreateSituationScreen()),
         HomeType.chooseTopic => () =>
             Get.to(() => const TopicSelectionScreen()),
         HomeType.describeImage => () => Get.to(() => const DescribeImageScreen()),
