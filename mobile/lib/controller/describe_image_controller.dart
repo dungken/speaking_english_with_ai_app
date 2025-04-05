@@ -9,6 +9,12 @@ class DescribeImageController extends GetxController {
   final currentImageIndex = 0.obs;
   final isLiked = false.obs;
   
+  // Feedback properties
+  final showFeedback = false.obs;
+  final aiScore = 0.0.obs;
+  final mistakes = ''.obs;
+  final suggestions = ''.obs;
+  
   // Mock data for testing - replace with actual data from backend
   final List<ImageDescription> mockImages = [
     ImageDescription(
@@ -97,35 +103,16 @@ class DescribeImageController extends GetxController {
     }
   }
 
-  void showFeedback() {
-    Get.dialog(
-      AlertDialog(
-        title: const Text('AI Feedback'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Your description:'),
-            const SizedBox(height: 8),
-            Text(descriptionController.text),
-            const SizedBox(height: 16),
-            const Text('AI Score:'),
-            const SizedBox(height: 8),
-            const Text('8.5/10'),
-            const SizedBox(height: 16),
-            const Text('Feedback:'),
-            const SizedBox(height: 8),
-            const Text('Good description! You used appropriate vocabulary and grammar.'),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Get.back(),
-            child: const Text('Close'),
-          ),
-        ],
-      ),
-    );
+  void toggleFeedback() {
+    // Toggle feedback display
+    showFeedback.value = !showFeedback.value;
+    
+    // If showing feedback, populate with mock data
+    if (showFeedback.value) {
+      aiScore.value = 8.5;
+      mistakes.value = 'Minor grammar issues in the third sentence.';
+      suggestions.value = 'Try using more descriptive adjectives and vary your sentence structure.';
+    }
   }
 
   void generateImage() {
