@@ -69,37 +69,7 @@ The application is designed for individuals who:
 
 The project follows a clean architecture pattern to ensure maintainability, testability, and separation of concerns.
 
-#### 📂 Directory Structure
-mobile/
-├── lib/                        # Main source code directory
-│   ├── apis/                  # API integration layer
-│   │   └── conversation_api.dart   # Add your API calls here
-│   │
-│   ├── controller/            # Business logic & state management
-│   │   └── conversation_controller.dart   # Add controller here
-│   │
-│   ├── model/                # Data models
-│   │   ├── message.dart      # Existing message model
-│   │   └── conversation.dart  # Add your conversation model here
-│   │
-│   ├── screen/               # UI screens
-│   │   ├── feature/          # Feature-specific screens
-│   │   │   └── conversation/  # Add your screens here
-│   │   │       ├── create_situation_screen.dart
-│   │   │       └── chat_screen.dart
-│   │   ├── home_screen.dart
-│   │   └── [other screens]
-│   │
-│   ├── widget/               # Reusable UI components
-│   │   └── conversation/     # Add conversation-specific widgets here
-│   │
-│   ├── helper/              # Utility functions and helpers
-│   │
-│   └── main.dart            # App entry point
-│
-├── assets/                   # Static assets (images, fonts, etc.)
-├── test/                    # Test files
-└── pubspec.yaml             # Dependencies and app configuration
+
 
 #### 🏗️ Layer Details
 
