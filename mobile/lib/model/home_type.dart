@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../screen/feature/chatbot_feature.dart';
-import '../screen/feature/image_feature.dart';
+import '../screen/feature/describe_image_screen.dart';
 import '../screen/feature/settings_feature.dart';
 import '../screen/feature/profile_feature.dart';
 import '../screen/feature/topic_selection_screen.dart';
@@ -87,7 +87,7 @@ extension MyHomeType on HomeType {
         HomeType.createSituations => () => Get.to(() => const ChatBotFeature()),
         HomeType.chooseTopic => () =>
             Get.to(() => const TopicSelectionScreen()),
-        HomeType.describeImage => () => Get.to(() => const ImageFeature()),
+        HomeType.describeImage => () => Get.to(() => const DescribeImageScreen()),
         HomeType.progressTracking => () => Get.to(() => const ChatBotFeature()),
         HomeType.settings => () => Get.to(() => const SettingsFeature()),
         HomeType.profile => () => Get.to(() => const ProfileFeature()),
