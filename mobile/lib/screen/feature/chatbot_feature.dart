@@ -4,7 +4,7 @@ import 'package:get/get.dart';
 
 import '../../controller/chat_controller.dart';
 import '../../helper/global.dart';
-import '../../widget/message_card.dart';
+import '../../widgets/message_card.dart';
 
 /// 📌 **ChatBotFeature Screen**
 ///

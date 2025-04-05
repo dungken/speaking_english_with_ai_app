@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import '../widget/custom_loading.dart';
+import '../widgets/custom_loading.dart';
 
 /// A utility class for displaying various types of dialogs and notifications.
 ///

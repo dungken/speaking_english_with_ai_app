@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../helper/global.dart';
 import '../../model/topic.dart';
-import '../../widget/topic_card.dart';
+import '../../widgets/topic_card.dart';
 import 'subtopics_screen.dart';
 
 class TopicSelectionScreen extends StatefulWidget {

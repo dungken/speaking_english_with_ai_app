@@ -188,20 +188,18 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
                     const SizedBox(height: 32),
 
-                    // Reset Button
+                    // Send Instructions Button
                     ElevatedButton(
                       onPressed: _isLoading ? null : _handleResetPassword,
                       style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 20, horizontal: 32),
                         backgroundColor: Colors.blue.shade600,
                         foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 24,
-                          vertical: 16,
-                        ),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        elevation: _isLoading ? 0 : 2,
+                        elevation: _isLoading ? 0 : 3,
                       ),
                       child: _isLoading
                           ? SizedBox(
@@ -217,7 +215,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                           : const Text(
                               'Send Instructions',
                               style: TextStyle(
-                                fontSize: 16,
+                                fontSize: 18,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),

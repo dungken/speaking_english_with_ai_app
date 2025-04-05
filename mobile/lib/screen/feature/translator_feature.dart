@@ -5,9 +5,9 @@ import 'package:get/get.dart';
 import '../../controller/image_controller.dart';
 import '../../controller/translate_controller.dart';
 import '../../helper/global.dart';
-import '../../widget/custom_btn.dart';
-import '../../widget/custom_loading.dart';
-import '../../widget/language_sheet.dart';
+import '../../widgets/custom_btn.dart';
+import '../../widgets/custom_loading.dart';
+import '../../widgets/language_sheet.dart';
 
 /// 📌 **TranslatorFeature Screen**
 ///

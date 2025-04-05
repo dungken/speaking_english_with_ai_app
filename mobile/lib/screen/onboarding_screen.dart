@@ -4,7 +4,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 
 import '../helper/global.dart';
 import '../model/onboard.dart';
-import '../widget/custom_btn.dart';
+import '../widgets/custom_btn.dart';
 import 'login_screen.dart';
 
 class OnboardingScreen extends StatefulWidget {
@@ -74,7 +74,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
             return Column(
               children: [
-                const Spacer(flex: 2),
+                const Spacer(flex: 1),
 
                 // Icon with Animation
                 Container(
@@ -101,7 +101,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     .then()
                     .shake(duration: 400.ms),
 
-                const Spacer(),
+                const SizedBox(height: 32),
 
                 // Title
                 Text(
@@ -129,7 +129,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   ),
                 ).animate().fadeIn(delay: 400.ms),
 
-                const Spacer(),
+                const SizedBox(height: 32),
 
                 // Page Indicators
                 Row(
@@ -149,7 +149,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   ),
                 ).animate().fadeIn(delay: 800.ms),
 
-                const Spacer(),
+                const SizedBox(height: 32),
 
                 // Next/Finish Button
                 Padding(
@@ -166,7 +166,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       }
                     },
                     style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 20, horizontal: 32),
                       backgroundColor: onboard.color,
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
@@ -180,20 +181,20 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         Text(
                           isLastPage ? 'Get Started' : 'Next',
                           style: const TextStyle(
-                            fontSize: 16,
+                            fontSize: 18,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                         if (!isLastPage) ...[
-                          const SizedBox(width: 8),
-                          const Icon(Icons.arrow_forward, size: 20),
+                          const SizedBox(width: 12),
+                          const Icon(Icons.arrow_forward, size: 24),
                         ],
                       ],
                     ),
                   ),
                 ).animate().fadeIn(delay: 1000.ms).scale(delay: 1000.ms),
 
-                const Spacer(flex: 2),
+                const Spacer(flex: 1),
               ],
             );
           },

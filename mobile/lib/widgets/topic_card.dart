@@ -126,36 +126,6 @@ class _TopicCardState extends State<TopicCard> {
                       .toList(),
                 ),
               ),
-            if (widget.topic.subtopics == null)
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    TextButton.icon(
-                      icon: const Icon(Icons.play_circle_outline),
-                      label: const Text('Start Practice'),
-                      onPressed: widget.onStartPractice,
-                    ),
-                    TextButton.icon(
-                      icon: const Icon(Icons.book_outlined),
-                      label: const Text('View Lesson'),
-                      onPressed: widget.onViewLesson,
-                    ),
-                    IconButton(
-                      icon: Icon(
-                        widget.topic.isCompleted
-                            ? Icons.check_circle
-                            : Icons.check_circle_outline,
-                        color: widget.topic.isCompleted
-                            ? Colors.green
-                            : Colors.grey,
-                      ),
-                      onPressed: widget.onMarkAsDone,
-                    ),
-                  ],
-                ),
-              ),
           ],
         ),
       ),
