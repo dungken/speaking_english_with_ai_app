@@ -46,28 +46,60 @@ class MyApp extends StatelessWidget {
 
       // 🌙 Dark Theme Configuration
       darkTheme: ThemeData(
-        useMaterial3: false,
+        useMaterial3: true,
         brightness: Brightness.dark,
+        colorScheme: ColorScheme.dark(
+          primary: Colors.cyan,
+          secondary: Colors.cyanAccent,
+          surface: const Color(0xFF1E1E1E),
+          background: const Color(0xFF121212),
+        ),
         appBarTheme: const AppBarTheme(
-          elevation: 1, // 🏔️ Slight elevation for depth
-          centerTitle: true, // 🎯 Center align title
+          elevation: 0,
+          centerTitle: true,
+          backgroundColor: Color(0xFF1E1E1E),
           titleTextStyle: TextStyle(
-            fontSize: 20, fontWeight: FontWeight.w500, // 📝 Stylish font
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+            color: Colors.white,
+          ),
+        ),
+        scaffoldBackgroundColor: const Color(0xFF121212),
+        cardTheme: CardTheme(
+          color: const Color(0xFF1E1E1E),
+          elevation: 2,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.cyan,
+            foregroundColor: Colors.white,
+            elevation: 2,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
         ),
       ),
 
       // ☀️ Light Theme Configuration
       theme: ThemeData(
-        useMaterial3: false,
+        useMaterial3: true,
+        colorScheme: ColorScheme.light(
+          primary: Colors.blue,
+          secondary: Colors.blueAccent,
+        ),
         appBarTheme: const AppBarTheme(
-          elevation: 1, // 🏔️ Light shadow effect
+          elevation: 0,
           centerTitle: true,
-          backgroundColor: Colors.white, // 🎨 White app bar background
-          iconTheme: IconThemeData(color: Colors.blue), // 🔵 Blue icons
+          backgroundColor: Colors.white,
+          iconTheme: IconThemeData(color: Colors.blue),
           titleTextStyle: TextStyle(
-            color: Colors.blue, fontSize: 20,
-            fontWeight: FontWeight.w500, // 📝 Blue app title
+            color: Colors.blue,
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
           ),
         ),
       ),

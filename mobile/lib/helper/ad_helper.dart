@@ -1,4 +1,4 @@
-import 'package:ai_assistant/helper/my_dialog.dart';
+import 'package:speaking_english_with_ai/helper/my_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart'
     show kIsWeb; // Import để kiểm tra nền tảng

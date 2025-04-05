@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 import '../helper/global.dart';
 import '../helper/pref.dart';
@@ -34,42 +35,78 @@ class _SplashScreenState extends State<SplashScreen> {
     mq = MediaQuery.sizeOf(context);
 
     return Scaffold(
-      // 🎨 Background color (optional)
-      backgroundColor: Colors.white,
-
-      // 🖥️ Body of the splash screen
-      body: SizedBox(
-        width: double.maxFinite,
-        child: Column(
-          children: [
-            // ➖ Adding space at the top
-            const Spacer(flex: 2),
-
-            // 🏆 App Logo with Card effect
-            Card(
-              shape: const RoundedRectangleBorder(
-                borderRadius:
-                    BorderRadius.all(Radius.circular(20)), // 🎨 Rounded edges
-              ),
-              elevation: 5, // 🌟 Adds a slight shadow for better UI
-              child: Padding(
-                padding: EdgeInsets.all(mq.width * .05),
-                child: Image.asset(
-                  'assets/images/logo.png', // 🖼️ App Logo
-                  width: mq.width * .4, // 📏 Responsive sizing
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Colors.blue.shade100,
+              Colors.white,
+              Colors.purple.shade50,
+            ],
+          ),
+        ),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // App Icon with Animation
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.8),
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 10,
+                      spreadRadius: 2,
+                    ),
+                  ],
                 ),
-              ),
-            ),
+                child: const Icon(
+                  Icons.mic,
+                  size: 80,
+                  color: Colors.blue,
+                ),
+              )
+                  .animate()
+                  .scale(duration: 600.ms)
+                  .then()
+                  .shake(duration: 400.ms),
 
-            // ➖ Adding some space
-            const Spacer(),
+              const SizedBox(height: 24),
 
-            // ⏳ Lottie Loading Animation
-            const CustomLoading(), // 🎬 Smooth animated loading effect
+              // App Name with Animation
+              Text(
+                'Speaking English\nWith AI',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.blue.shade800,
+                  height: 1.2,
+                ),
+              ).animate().fadeIn(duration: 600.ms).slideY(begin: 0.3, end: 0),
 
-            // ➖ Adding some space at the bottom
-            const Spacer(),
-          ],
+              const SizedBox(height: 8),
+
+              // Tagline
+              Text(
+                'Practice English with AI',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.grey.shade700,
+                ),
+              ).animate().fadeIn(delay: 400.ms),
+
+              const SizedBox(height: 40),
+
+              // Loading Indicator
+              const CustomLoading(),
+            ],
+          ),
         ),
       ),
     );
