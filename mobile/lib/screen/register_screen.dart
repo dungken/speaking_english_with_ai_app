@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:speaking_english_with_ai/screen/login_screen.dart';
 import 'package:speaking_english_with_ai/screen/home_screen.dart';
 
 class RegisterScreen extends StatefulWidget {

@@ -1,8 +1,17 @@
 import 'package:flutter/material.dart';
-import '../../constants/ui_constants.dart';
 import '../../model/chunk.dart';
 
 class ChunkingStage extends StatelessWidget {
+  static const double defaultPadding = 24.0;
+  static const double smallPadding = 16.0;
+  static const double tinyPadding = 8.0;
+  static const double defaultBorderRadius = 20.0;
+  static const double smallBorderRadius = 16.0;
+  static const double defaultElevation = 3.0;
+  static const double defaultIconSize = 24.0;
+  static const double defaultFontSize = 16.0;
+  static const double largeFontSize = 24.0;
+
   final String questionTranslation;
   final Chunk currentChunk;
   final String userAnswer;
@@ -28,7 +37,7 @@ class ChunkingStage extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildQuestionSection(context),
-        const SizedBox(height: UIConstants.defaultPadding),
+        const SizedBox(height: defaultPadding),
         _buildMultipleChoiceSection(context),
       ],
     );
@@ -36,11 +45,11 @@ class ChunkingStage extends StatelessWidget {
 
   Widget _buildQuestionSection(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(bottom: UIConstants.defaultPadding),
-      padding: const EdgeInsets.all(UIConstants.defaultPadding),
+      margin: const EdgeInsets.only(bottom: defaultPadding),
+      padding: const EdgeInsets.all(defaultPadding),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(UIConstants.defaultBorderRadius),
+        borderRadius: BorderRadius.circular(defaultBorderRadius),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
@@ -59,7 +68,7 @@ class ChunkingStage extends StatelessWidget {
                   color: Theme.of(context).primaryColor,
                 ),
           ),
-          const SizedBox(height: UIConstants.defaultPadding),
+          const SizedBox(height: defaultPadding),
           _buildTranslationBox(context),
         ],
       ),
@@ -68,10 +77,10 @@ class ChunkingStage extends StatelessWidget {
 
   Widget _buildTranslationBox(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(UIConstants.defaultPadding),
+      padding: const EdgeInsets.all(defaultPadding),
       decoration: BoxDecoration(
         color: Colors.grey.shade50,
-        borderRadius: BorderRadius.circular(UIConstants.smallBorderRadius),
+        borderRadius: BorderRadius.circular(smallBorderRadius),
         border: Border.all(
           color: Colors.grey.shade200,
           width: 1,
@@ -83,12 +92,12 @@ class ChunkingStage extends StatelessWidget {
           Text(
             questionTranslation,
             style: const TextStyle(
-              fontSize: UIConstants.largeFontSize,
+              fontSize: largeFontSize,
               fontWeight: FontWeight.bold,
               color: Colors.black87,
             ),
           ),
-          const SizedBox(height: UIConstants.smallPadding),
+          const SizedBox(height: smallPadding),
           InkWell(
             onTap: onPlayAudio,
             child: Row(
@@ -96,14 +105,14 @@ class ChunkingStage extends StatelessWidget {
                 Icon(
                   Icons.volume_up_rounded,
                   color: Theme.of(context).primaryColor,
-                  size: UIConstants.defaultIconSize,
+                  size: defaultIconSize,
                 ),
-                const SizedBox(width: UIConstants.tinyPadding),
+                const SizedBox(width: tinyPadding),
                 Text(
                   'Tap to listen',
                   style: TextStyle(
                     color: Theme.of(context).primaryColor,
-                    fontSize: UIConstants.defaultFontSize,
+                    fontSize: defaultFontSize,
                   ),
                 ),
               ],
@@ -116,10 +125,10 @@ class ChunkingStage extends StatelessWidget {
 
   Widget _buildMultipleChoiceSection(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(UIConstants.defaultPadding),
+      padding: const EdgeInsets.all(defaultPadding),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(UIConstants.defaultBorderRadius),
+        borderRadius: BorderRadius.circular(defaultBorderRadius),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
@@ -138,7 +147,7 @@ class ChunkingStage extends StatelessWidget {
                   color: Theme.of(context).primaryColor,
                 ),
           ),
-          const SizedBox(height: UIConstants.defaultPadding),
+          const SizedBox(height: defaultPadding),
           ..._buildChoiceButtons(context),
         ],
       ),
@@ -151,7 +160,7 @@ class ChunkingStage extends StatelessWidget {
       final bool isCorrectAnswer = text == currentChunk.phrase;
 
       return Padding(
-        padding: const EdgeInsets.only(bottom: UIConstants.smallPadding),
+        padding: const EdgeInsets.only(bottom: smallPadding),
         child: _buildChoiceButton(
           context,
           text,
@@ -180,7 +189,7 @@ class ChunkingStage extends StatelessWidget {
         child: Text(
           text,
           style: TextStyle(
-            fontSize: UIConstants.defaultFontSize,
+            fontSize: defaultFontSize,
             fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
           ),
         ),
@@ -197,17 +206,17 @@ class ChunkingStage extends StatelessWidget {
       backgroundColor: _getChoiceButtonColor(isSelected, isCorrectAnswer),
       foregroundColor: _getChoiceButtonTextColor(isSelected, isCorrectAnswer),
       padding: const EdgeInsets.symmetric(
-        horizontal: UIConstants.defaultPadding,
-        vertical: UIConstants.smallPadding,
+        horizontal: defaultPadding,
+        vertical: smallPadding,
       ),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(UIConstants.smallBorderRadius),
+        borderRadius: BorderRadius.circular(smallBorderRadius),
         side: BorderSide(
           color: _getChoiceButtonBorderColor(isSelected, isCorrectAnswer),
           width: 1,
         ),
       ),
-      elevation: isSelected ? 0 : UIConstants.defaultElevation,
+      elevation: isSelected ? 0 : defaultElevation,
     );
   }
 

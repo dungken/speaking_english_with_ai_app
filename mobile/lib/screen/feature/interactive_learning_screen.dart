@@ -1,18 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:just_audio/just_audio.dart';
-import '../../constants/ui_constants.dart';
-import '../../enums/learning_stage.dart';
 import '../../model/chunk.dart';
 import '../../widgets/learning_stages/chunking_stage.dart';
 import '../../widgets/learning_stages/sentence_building_stage.dart';
 import '../../widgets/learning_stages/reflex_practice_stage.dart';
 import '../../widgets/learning_stages/summary_stage.dart';
-import '../../widgets/common/score_indicator.dart';
-import '../../utils/score_utils.dart';
 
-/// Constants for UI dimensions and values
-class _UIConstants {
+/// Learning stages in the interactive learning process
+enum LearningStage {
+  chunking,
+  sentenceBuilding,
+  reflexPractice,
+  summary,
+}
+
+class InteractiveLearningScreen extends StatefulWidget {
   static const double defaultPadding = 24.0;
   static const double smallPadding = 16.0;
   static const double tinyPadding = 8.0;
@@ -31,17 +34,7 @@ class _UIConstants {
   static const double progressBarHeight = 12.0;
   static const double timelineCircleSize = 32.0;
   static const double timelineConnectorHeight = 3.0;
-}
 
-/// Learning stages in the interactive learning process
-enum LearningStage {
-  chunking,
-  sentenceBuilding,
-  reflexPractice,
-  summary,
-}
-
-class InteractiveLearningScreen extends StatefulWidget {
   final String question;
   final String questionTranslation;
   final List<Chunk> basicChunks;
@@ -67,11 +60,9 @@ class _InteractiveLearningScreenState extends State<InteractiveLearningScreen> {
   bool _isRecording = false;
   String _userAnswer = '';
   bool _showFeedback = false;
-  bool _isCorrect = false;
   double _pronunciationScore = 0.0;
   double _reactionTime = 0.0;
   DateTime? _startTime;
-  int _correctAnswers = 0;
   List<String> _pronunciationFeedback = [];
   List<String> _grammarFeedback = [];
 
@@ -138,25 +129,7 @@ class _InteractiveLearningScreenState extends State<InteractiveLearningScreen> {
     setState(() {
       _showFeedback = true;
       _userAnswer = selectedAnswer;
-      _isCorrect =
-          selectedAnswer == widget.basicChunks[_currentChunkIndex].phrase;
-      if (_isCorrect) {
-        _correctAnswers++;
-        _updateGrammarFeedback(selectedAnswer);
-      }
     });
-  }
-
-  void _updateGrammarFeedback(String answer) {
-    _grammarFeedback.clear();
-    if (answer.contains('I prefer')) {
-      _grammarFeedback.add("Good use of preference structure");
-      _grammarFeedback.add("Try adding reasons using 'because'");
-    }
-    if (answer.contains('because')) {
-      _grammarFeedback.add("Excellent use of cause and effect");
-      _grammarFeedback.add("Practice varying your reasons");
-    }
   }
 
   /// Moves to the next step in the learning process
@@ -245,13 +218,6 @@ class _InteractiveLearningScreenState extends State<InteractiveLearningScreen> {
     }
   }
 
-  /// Gets the appropriate color based on the score
-  Color _getScoreColor(double score) {
-    if (score >= _UIConstants.scoreThresholdHigh) return Colors.green;
-    if (score >= _UIConstants.scoreThresholdMedium) return Colors.orange;
-    return Colors.red;
-  }
-
   void _startReflexPractice() {
     setState(() {
       _startTime = DateTime.now();
@@ -309,18 +275,19 @@ class _InteractiveLearningScreenState extends State<InteractiveLearningScreen> {
   Widget _buildProgressTimeline() {
     return Container(
       margin: const EdgeInsets.fromLTRB(
-        UIConstants.smallPadding,
-        UIConstants.smallPadding,
-        UIConstants.smallPadding,
-        UIConstants.defaultPadding,
+        InteractiveLearningScreen.smallPadding,
+        InteractiveLearningScreen.smallPadding,
+        InteractiveLearningScreen.smallPadding,
+        InteractiveLearningScreen.defaultPadding,
       ),
       padding: const EdgeInsets.symmetric(
-        vertical: UIConstants.smallPadding,
-        horizontal: UIConstants.tinyPadding,
+        vertical: InteractiveLearningScreen.smallPadding,
+        horizontal: InteractiveLearningScreen.tinyPadding,
       ),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(UIConstants.defaultBorderRadius),
+        borderRadius: BorderRadius.circular(
+            InteractiveLearningScreen.defaultBorderRadius),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
@@ -371,8 +338,8 @@ class _InteractiveLearningScreenState extends State<InteractiveLearningScreen> {
       mainAxisSize: MainAxisSize.min,
       children: [
         Container(
-          width: UIConstants.timelineCircleSize,
-          height: UIConstants.timelineCircleSize,
+          width: InteractiveLearningScreen.timelineCircleSize,
+          height: InteractiveLearningScreen.timelineCircleSize,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             color: isActive
@@ -398,12 +365,12 @@ class _InteractiveLearningScreenState extends State<InteractiveLearningScreen> {
                 )
               : null,
         ),
-        const SizedBox(height: UIConstants.tinyPadding),
+        const SizedBox(height: InteractiveLearningScreen.tinyPadding),
         Text(
           label,
           textAlign: TextAlign.center,
           style: TextStyle(
-            fontSize: UIConstants.defaultFontSize,
+            fontSize: InteractiveLearningScreen.defaultFontSize,
             height: 1.2,
             fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
             color: isActive
@@ -419,8 +386,9 @@ class _InteractiveLearningScreenState extends State<InteractiveLearningScreen> {
 
   Widget _buildTimelineConnector(bool isCompleted) {
     return Container(
-      height: UIConstants.timelineConnectorHeight,
-      margin: const EdgeInsets.symmetric(horizontal: UIConstants.tinyPadding),
+      height: InteractiveLearningScreen.timelineConnectorHeight,
+      margin: const EdgeInsets.symmetric(
+          horizontal: InteractiveLearningScreen.tinyPadding),
       decoration: BoxDecoration(
         color: isCompleted
             ? Theme.of(context).primaryColor.withOpacity(0.5)
@@ -430,39 +398,14 @@ class _InteractiveLearningScreenState extends State<InteractiveLearningScreen> {
     );
   }
 
-  Widget _buildMicrophoneButton() {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Theme.of(context).primaryColor.withOpacity(0.1),
-        shape: BoxShape.circle,
-        boxShadow: [
-          BoxShadow(
-            color: Theme.of(context).primaryColor.withOpacity(0.2),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: IconButton(
-        icon: Icon(
-          _isRecording ? Icons.stop_circle : Icons.mic,
-          size: 36,
-          color: Theme.of(context).primaryColor,
-        ),
-        onPressed: _isRecording ? _stopRecording : _startRecording,
-      ),
-    );
-  }
-
   Widget _buildContentArea() {
     return Expanded(
       child: SingleChildScrollView(
-        padding:
-            const EdgeInsets.symmetric(horizontal: UIConstants.smallPadding),
+        padding: const EdgeInsets.symmetric(
+            horizontal: InteractiveLearningScreen.smallPadding),
         child: Column(
           children: [
-            const SizedBox(height: UIConstants.tinyPadding),
+            const SizedBox(height: InteractiveLearningScreen.tinyPadding),
             AnimatedSwitcher(
               duration: const Duration(milliseconds: 300),
               transitionBuilder: (child, animation) {
@@ -479,7 +422,7 @@ class _InteractiveLearningScreenState extends State<InteractiveLearningScreen> {
               },
               child: _buildCurrentStage(),
             ),
-            const SizedBox(height: UIConstants.defaultPadding),
+            const SizedBox(height: InteractiveLearningScreen.defaultPadding),
           ],
         ),
       ),
@@ -488,7 +431,7 @@ class _InteractiveLearningScreenState extends State<InteractiveLearningScreen> {
 
   Widget _buildActionButtons() {
     return Container(
-      padding: const EdgeInsets.all(UIConstants.defaultPadding),
+      padding: const EdgeInsets.all(InteractiveLearningScreen.defaultPadding),
       decoration: BoxDecoration(
         color: Colors.white,
         boxShadow: [
@@ -512,19 +455,21 @@ class _InteractiveLearningScreenState extends State<InteractiveLearningScreen> {
           Expanded(
             child: Padding(
               padding: EdgeInsets.only(
-                left: _shouldShowBackButton ? UIConstants.tinyPadding : 0,
+                left: _shouldShowBackButton
+                    ? InteractiveLearningScreen.tinyPadding
+                    : 0,
               ),
               child: _shouldShowNextButton
                   ? ElevatedButton.icon(
                       onPressed: _nextStep,
                       icon: Icon(
                         _getNextButtonIcon,
-                        size: UIConstants.defaultIconSize,
+                        size: InteractiveLearningScreen.defaultIconSize,
                       ),
                       label: Text(
                         _getNextButtonText,
                         style: const TextStyle(
-                          fontSize: UIConstants.titleFontSize,
+                          fontSize: InteractiveLearningScreen.titleFontSize,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -547,11 +492,12 @@ class _InteractiveLearningScreenState extends State<InteractiveLearningScreen> {
     return TextButton.styleFrom(
       foregroundColor: Theme.of(context).primaryColor,
       padding: const EdgeInsets.symmetric(
-        horizontal: UIConstants.defaultPadding,
-        vertical: UIConstants.smallPadding,
+        horizontal: InteractiveLearningScreen.defaultPadding,
+        vertical: InteractiveLearningScreen.smallPadding,
       ),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(UIConstants.smallBorderRadius),
+        borderRadius:
+            BorderRadius.circular(InteractiveLearningScreen.smallBorderRadius),
         side: BorderSide(
           color: Theme.of(context).primaryColor.withOpacity(0.5),
           width: 1,
@@ -564,15 +510,16 @@ class _InteractiveLearningScreenState extends State<InteractiveLearningScreen> {
   ButtonStyle _getNextButtonStyle() {
     return ElevatedButton.styleFrom(
       padding: const EdgeInsets.symmetric(
-        horizontal: UIConstants.defaultPadding,
-        vertical: UIConstants.defaultPadding,
+        horizontal: InteractiveLearningScreen.defaultPadding,
+        vertical: InteractiveLearningScreen.defaultPadding,
       ),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(UIConstants.smallBorderRadius),
+        borderRadius:
+            BorderRadius.circular(InteractiveLearningScreen.smallBorderRadius),
       ),
       backgroundColor: Theme.of(context).primaryColor,
       foregroundColor: Colors.white,
-      elevation: UIConstants.defaultElevation,
+      elevation: InteractiveLearningScreen.defaultElevation,
     );
   }
 

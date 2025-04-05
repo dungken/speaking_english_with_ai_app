@@ -5,7 +5,6 @@ import 'package:flutter_animate/flutter_animate.dart';
 import '../helper/global.dart';
 import '../helper/pref.dart';
 import '../widgets/custom_loading.dart';
-import 'home_screen.dart';
 import 'onboarding_screen.dart';
 import 'login_screen.dart';
 
