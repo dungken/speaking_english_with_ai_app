@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:get/get.dart';
 import 'package:get/get_navigation/src/root/get_material_app.dart';
 
 import 'apis/app_write.dart';
@@ -7,6 +8,7 @@ import 'helper/ad_helper.dart';
 import 'helper/global.dart';
 import 'helper/pref.dart';
 import 'screen/splash_screen.dart';
+import 'screen/feature/conversation/create_situation_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding
@@ -103,6 +105,14 @@ class MyApp extends StatelessWidget {
           ),
         ),
       ),
+
+      // Define routes
+      getPages: [
+        GetPage(
+          name: '/create-situation',
+          page: () => const CreateSituationScreen(),
+        ),
+      ],
 
       home: const SplashScreen(), // 🚀 Start with the splash screen
     );
