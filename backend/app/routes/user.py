@@ -29,39 +29,37 @@ ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("JWT_ACCESS_TOKEN_EXPIRE_MINUTES", "
 if not SECRET_KEY:
     raise ValueError("JWT_SECRET_KEY environment variable is not set")
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/users/login")
 
-def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
-    to_encode = data.copy()
-    if expires_delta:
-        expire = datetime.utcnow() + expires_delta
-    else:
-        expire = datetime.utcnow() + timedelta(minutes=15)
-    to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-    return encoded_jwt
-
-def get_current_user(token: str = Depends(oauth2_scheme)):
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        email: str = payload.get("sub")
-        if email is None:
-            raise credentials_exception
-    except JWTError:
-        raise credentials_exception
-    
-    user = db.users.find_one({"email": email})
-    if user is None:
-        raise credentials_exception
-    return UserResponse(**user)
 
 @router.post("/register", response_model=UserRegisterResponse, status_code=status.HTTP_201_CREATED)
 async def register_user(user: UserCreate):
+    """
+    Register a new user and return an authentication token.
+    
+    Args:
+        user (UserCreate): User registration data.
+            Sample input:
+            {
+                "name": "John Doe",
+                "email": "john@example.com",
+                "password": "SecurePassword123!"
+            }
+    
+    Returns:
+        UserRegisterResponse: User information and authentication token.
+            Sample output:
+            {
+                "id": "507f1f77bcf86cd799439011",
+                "name": "John Doe",
+                "email": "john@example.com",
+                "role": "user",
+                "created_at": "2024-04-04T12:00:00",
+                "updated_at": "2024-04-04T12:00:00",
+                "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+                "token_type": "bearer"
+            }
+    """
     try:
         # Check if email already exists
         existing_user = db.users.find_one({"email": user.email})
@@ -108,8 +106,36 @@ async def register_user(user: UserCreate):
             detail=str(e)
         )
 
+
 @router.post("/login")
 async def login(login_data: UserLogin):
+    """
+    Authenticate a user and return an access token.
+    
+    Args:
+        login_data (UserLogin): Login credentials.
+            Sample input:
+            {
+                "email": "john@example.com",
+                "password": "SecurePassword123!"
+            }
+    
+    Returns:
+        dict: Authentication token and user information.
+            Sample output:
+            {
+                "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+                "token_type": "bearer",
+                "user": {
+                    "id": "507f1f77bcf86cd799439011",
+                    "name": "John Doe",
+                    "email": "john@example.com",
+                    "role": "user",
+                    "created_at": "2024-04-04T12:00:00",
+                    "updated_at": "2024-04-04T12:00:00"
+                }
+            }
+    """
     try:
         user = db.users.find_one({"email": login_data.email})
         if not user:
@@ -131,10 +157,20 @@ async def login(login_data: UserLogin):
             data={"sub": user["email"]}, expires_delta=access_token_expires
         )
         
+        # Convert user to response model
+        user_response = UserResponse(
+            id=str(user["_id"]),
+            name=user["name"],
+            email=user["email"],
+            role=user.get("role", "user"),
+            created_at=user["created_at"],
+            updated_at=user["updated_at"]
+        )
+        
         return {
             "access_token": access_token,
             "token_type": "bearer",
-            "user": UserResponse(**user)
+            "user": user_response
         }
     except HTTPException:
         raise
@@ -144,26 +180,51 @@ async def login(login_data: UserLogin):
             detail=str(e)
         )
 
+
 @router.get("/me", response_model=UserResponse)
-async def read_users_me(current_user: UserResponse = Depends(get_current_user)):
-    return current_user
+async def get_user_profile(current_user: dict = Depends(get_current_user)):
+    """
+    Get the current user's profile.
+    
+    Args:
+        current_user (dict): The authenticated user's information.
+    
+    Returns:
+        UserResponse: The current user's profile information.
+    """
+    return UserResponse(
+        id=str(current_user["_id"]),
+        name=current_user["name"],
+        email=current_user["email"],
+        role=current_user.get("role", "user"),
+        created_at=current_user["created_at"],
+        updated_at=current_user["updated_at"]
+    )
+
 
 @router.put("/me", response_model=UserResponse)
-async def update_user_me(
+async def update_user_profile(
     user_update: UserUpdate,
-    current_user: UserResponse = Depends(get_current_user)
+    current_user: dict = Depends(get_current_user)
 ):
+    """
+    Update the current user's profile.
+    
+    Args:
+        user_update (UserUpdate): The user profile update data.
+        current_user (dict): The authenticated user's information.
+    
+    Returns:
+        UserResponse: The updated user profile information.
+    """
     try:
+        # Update user document
         update_data = user_update.dict(exclude_unset=True)
-        if not update_data:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="No data provided for update"
-            )
-        
         update_data["updated_at"] = datetime.utcnow()
+        
+        # Update in database
         result = db.users.update_one(
-            {"email": current_user.email},
+            {"_id": current_user["_id"]},
             {"$set": update_data}
         )
         
@@ -173,8 +234,17 @@ async def update_user_me(
                 detail="User not found"
             )
         
-        updated_user = db.users.find_one({"email": current_user.email})
-        return UserResponse(**updated_user)
+        # Get updated user
+        updated_user = db.users.find_one({"_id": current_user["_id"]})
+        
+        return UserResponse(
+            id=str(updated_user["_id"]),
+            name=updated_user["name"],
+            email=updated_user["email"],
+            role=updated_user.get("role", "user"),
+            created_at=updated_user["created_at"],
+            updated_at=updated_user["updated_at"]
+        )
     except HTTPException:
         raise
     except Exception as e:
@@ -183,15 +253,29 @@ async def update_user_me(
             detail=str(e)
         )
 
+
 @router.delete("/me", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_user_me(current_user: UserResponse = Depends(get_current_user)):
+async def delete_user_profile(current_user: dict = Depends(get_current_user)):
+    """
+    Delete the current user's profile.
+    
+    Args:
+        current_user (dict): The authenticated user's information.
+    
+    Returns:
+        None: 204 No Content response.
+    """
     try:
-        result = db.users.delete_one({"email": current_user.email})
+        # Delete user from database
+        result = db.users.delete_one({"_id": current_user["_id"]})
+        
         if result.deleted_count == 0:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="User not found"
             )
+        
+        return None
     except HTTPException:
         raise
     except Exception as e:
