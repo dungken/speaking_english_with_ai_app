@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 import '../../../controller/conversation_controller.dart';
 import '../../../model/message.dart';
+import 'conversation_result_screen.dart';
 
 class FeedbackDialog extends StatelessWidget {
   final String userResponse;
@@ -387,7 +388,7 @@ class _ConversationScreenState extends State<ConversationScreen> {
                   width: double.infinity,
                   child: TextButton(
                     onPressed: () {
-                      // Handle completion
+                      Get.to(() => const ConversationResultScreen());
                     },
                     style: TextButton.styleFrom(
                       backgroundColor: Colors.white,

@@ -25,7 +25,7 @@ extension MyHomeType on HomeType {
   ///
   /// Returns the display title corresponding to the selected feature.
   String get title => switch (this) {
-        HomeType.createSituations => 'Create Situations & Dialogues',
+        HomeType.createSituations => 'Create Conversation & Dialog',
         HomeType.chooseTopic => 'Choose a Topic to Study',
         HomeType.describeImage => 'Describe Image',
         HomeType.progressTracking => 'Progress Tracking',
@@ -87,16 +87,8 @@ extension MyHomeType on HomeType {
   /// Defines the action to be performed when tapping on a feature.
   VoidCallback get onTap => switch (this) {
         HomeType.createSituations => () {
-            final token = Pref.token;
-            if (token != null) {
-              Get.to(() => CreateSituationScreen(token: token));
-            } else {
-              Get.snackbar(
-                'Error',
-                'Please login first',
-                snackPosition: SnackPosition.BOTTOM,
-              );
-            }
+            // Allow direct access with dummy token
+            Get.to(() => const CreateSituationScreen(token: 'dummy_token_123'));
           },
         HomeType.chooseTopic => () =>
             Get.to(() => const TopicSelectionScreen()),
