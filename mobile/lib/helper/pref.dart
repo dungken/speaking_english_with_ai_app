@@ -8,13 +8,15 @@ import 'package:hive_flutter/hive_flutter.dart';
 /// such as onboarding visibility and theme settings.
 class Pref {
   static late Box _box;
+  static const String _themeKey = 'theme_mode';
+  static const String _tokenKey = 'auth_token';
 
   /// Initializes Hive and opens the preferences box.
   ///
   /// This method **must be called** before using any preference-related functions.
   static Future<void> initialize() async {
     await Hive.initFlutter();
-    _box = await Hive.openBox('myData');
+    _box = await Hive.openBox('app_preferences');
   }
 
   /// Whether to show the onboarding screen.
@@ -36,12 +38,30 @@ class Pref {
   /// - If dark mode is enabled, it returns **ThemeMode.dark**.
   /// - Otherwise, it returns **ThemeMode.light**.
   static ThemeMode get defaultTheme {
-    final data = _box.get('isDarkMode');
-    log('Theme mode preference: $data');
-    return (data == true)
-        ? ThemeMode.dark
-        : (data == false)
-            ? ThemeMode.light
-            : ThemeMode.system;
+    final value = _box.get(_themeKey, defaultValue: 'system');
+    return switch (value) {
+      'light' => ThemeMode.light,
+      'dark' => ThemeMode.dark,
+      _ => ThemeMode.system,
+    };
+  }
+
+  static set defaultTheme(ThemeMode mode) {
+    final value = switch (mode) {
+      ThemeMode.light => 'light',
+      ThemeMode.dark => 'dark',
+      ThemeMode.system => 'system',
+    };
+    _box.put(_themeKey, value);
+  }
+
+  static String? get token => _box.get(_tokenKey);
+
+  static set token(String? value) {
+    if (value != null) {
+      _box.put(_tokenKey, value);
+    } else {
+      _box.delete(_tokenKey);
+    }
   }
 }
