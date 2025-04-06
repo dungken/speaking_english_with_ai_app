@@ -104,3 +104,19 @@ class UserUpdate(BaseModel):
         if v and ' ' not in v:
             raise ValueError('Name must contain a space')
         return v.title() if v else None
+
+class UserRegisterResponse(UserResponse):
+    access_token: str = Field(
+        description="JWT access token for authentication"
+    )
+    token_type: str = Field(
+        default="bearer",
+        description="Type of the token"
+    )
+
+    class Config:
+        from_attributes = True
+        json_encoders = {
+            datetime: lambda v: v.isoformat(),
+            ObjectId: lambda v: str(v)
+        }

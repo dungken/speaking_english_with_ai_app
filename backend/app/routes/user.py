@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from app.config.database import db
-from app.schemas.user import UserCreate, UserResponse, UserLogin, UserUpdate
+from app.schemas.user import UserCreate, UserResponse, UserLogin, UserUpdate, UserRegisterResponse
 from app.utils.security import hash_password, verify_password
 from app.models.user import User
 from app.utils.auth import create_access_token, get_current_user
@@ -60,7 +60,7 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
         raise credentials_exception
     return UserResponse(**user)
 
-@router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/register", response_model=UserRegisterResponse, status_code=status.HTTP_201_CREATED)
 async def register_user(user: UserCreate):
     try:
         # Check if email already exists
@@ -88,8 +88,18 @@ async def register_user(user: UserCreate):
         result = db.users.insert_one(user_data)
         user_data["_id"] = result.inserted_id
         
+        # Create access token
+        access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+        access_token = create_access_token(
+            data={"sub": user.email}, expires_delta=access_token_expires
+        )
+        
+        # Add token to response
+        user_data["access_token"] = access_token
+        user_data["token_type"] = "bearer"
+        
         # Convert to response model
-        return UserResponse(**user_data)
+        return UserRegisterResponse(**user_data)
     except HTTPException:
         raise
     except Exception as e:
