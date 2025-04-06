@@ -4,7 +4,7 @@ import 'role_input_field.dart';
 class SituationForm extends StatefulWidget {
   final Function(String, String, String) onSubmit;
 
-  const SituationForm({Key? key, required this.onSubmit}) : super(key: key);
+  const SituationForm({super.key, required this.onSubmit});
 
   @override
   _SituationFormState createState() => _SituationFormState();
@@ -53,10 +53,10 @@ class _SituationFormState extends State<SituationForm> {
                 widget.onSubmit(_userRole, _aiRole, _situation);
               }
             },
-            child: const Text('Create Conversation'),
             style: ElevatedButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 16),
             ),
+            child: const Text('Create Conversation'),
           ),
         ],
       ),

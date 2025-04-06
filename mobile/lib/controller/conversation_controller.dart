@@ -17,6 +17,57 @@ class ConversationController extends GetxController {
 
   ConversationController({required this.token});
 
+  void _initializeFakeConversation(String conversationId) {
+    final now = DateTime.now();
+    messages.addAll([
+      MessageResponse(
+        id: '1',
+        conversationId: conversationId,
+        text:
+            'Hello! Welcome to our company. I\'m excited to learn more about your experience and skills. Can you tell me about a challenging project you worked on and how you handled it?',
+        role: 'ai',
+        audioUrl: 'mock_audio_url',
+        createdAt: now.subtract(const Duration(minutes: 5)),
+      ),
+      MessageResponse(
+        id: '2',
+        conversationId: conversationId,
+        text:
+            'Thank you for having me. In my recent project, I developed a real-time data processing system that handled large volumes of user analytics. The main challenge was optimizing performance while maintaining data accuracy.',
+        role: 'user',
+        audioUrl: null,
+        createdAt: now.subtract(const Duration(minutes: 4)),
+      ),
+      MessageResponse(
+        id: '3',
+        conversationId: conversationId,
+        text:
+            'That\'s interesting! How did you approach the performance optimization? What specific techniques or tools did you use?',
+        role: 'ai',
+        audioUrl: 'mock_audio_url',
+        createdAt: now.subtract(const Duration(minutes: 3)),
+      ),
+      MessageResponse(
+        id: '4',
+        conversationId: conversationId,
+        text:
+            'I implemented a combination of caching strategies and batch processing. Used Redis for hot data and designed a queue system for batch operations. This reduced the processing time by 60%.',
+        role: 'user',
+        audioUrl: null,
+        createdAt: now.subtract(const Duration(minutes: 2)),
+      ),
+      MessageResponse(
+        id: '5',
+        conversationId: conversationId,
+        text:
+            'Excellent approach! I see you have experience with caching and distributed systems. How do you handle potential cache invalidation issues?',
+        role: 'ai',
+        audioUrl: 'mock_audio_url',
+        createdAt: now.subtract(const Duration(minutes: 1)),
+      ),
+    ]);
+  }
+
   /// 📝 Create a new conversation
   Future<void> createConversation(
     String userRole,
@@ -30,10 +81,13 @@ class ConversationController extends GetxController {
       // Mock response for UI testing
       await Future.delayed(const Duration(seconds: 1));
 
+      final conversationId = '123';
+      _initializeFakeConversation(conversationId);
+
       // Navigate to conversation screen
       Get.to(
           () => ConversationScreen(
-                conversationId: '123',
+                conversationId: conversationId,
                 token: token,
               ),
           arguments: {
@@ -65,7 +119,8 @@ class ConversationController extends GetxController {
       final mockAiResponse = MessageResponse(
         id: DateTime.now().toString(),
         conversationId: conversationId,
-        text: 'This is a mock AI response to: $text',
+        text:
+            'That\'s a great point! Could you elaborate more on how you would ensure scalability and maintainability in such scenarios?',
         role: 'ai',
         audioUrl: 'mock_audio_url',
         createdAt: DateTime.now(),
