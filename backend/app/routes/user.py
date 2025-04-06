@@ -9,7 +9,7 @@ from bson import ObjectId
 from typing import List, Optional
 from datetime import datetime, timedelta
 from jose import JWTError, jwt
-from passlib.context import CryptContext
+import bcrypt
 import os
 from dotenv import load_dotenv
 
@@ -17,9 +17,6 @@ from dotenv import load_dotenv
 load_dotenv()
 
 router = APIRouter()
-
-# Password hashing
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # JWT configuration from environment variables
 SECRET_KEY = os.getenv("JWT_SECRET_KEY")
@@ -69,14 +66,15 @@ async def register_user(user: UserCreate):
                 detail="Email already registered"
             )
         
-        # Hash password
-        hashed_password = pwd_context.hash(user.password)
+        # Hash password using bcrypt directly
+        salt = bcrypt.gensalt()
+        hashed_password = bcrypt.hashpw(user.password.encode('utf-8'), salt)
         
         # Create user document
         user_data = {
             "name": user.name,
             "email": user.email,
-            "password": hashed_password,
+            "password": hashed_password.decode('utf-8'),
             "role": "user",
             "created_at": datetime.utcnow(),
             "updated_at": datetime.utcnow()
@@ -145,7 +143,8 @@ async def login(login_data: UserLogin):
                 headers={"WWW-Authenticate": "Bearer"},
             )
         
-        if not pwd_context.verify(login_data.password, user["password"]):
+        # Verify password using bcrypt directly
+        if not bcrypt.checkpw(login_data.password.encode('utf-8'), user["password"].encode('utf-8')):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Incorrect email or password",
