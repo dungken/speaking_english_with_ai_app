@@ -22,12 +22,68 @@ class _CreateSituationScreenState extends State<CreateSituationScreen> {
   final TextEditingController _situationController = TextEditingController();
   String _selectedGender = 'Nam';
 
+  // Popular role suggestions
+  final List<String> _popularMyRoles = [
+    'Nhân viên bán hàng',
+    'Nhân viên lễ tân',
+    'Nhân viên phục vụ',
+    'Nhân viên công ty',
+  ];
+
+  final List<String> _popularAIRoles = [
+    'Khách nước ngoài',
+    'Khách du lịch',
+    'Đồng nghiệp',
+    'Quản lý',
+  ];
+
+  final List<String> _popularSituations = [
+    'Tôi đang tư vấn khách hàng mua áo khoác',
+    'Tôi đang hướng dẫn khách check-in khách sạn',
+    'Tôi đang phỏng vấn xin việc',
+    'Tôi đang thuyết trình dự án',
+  ];
+
   @override
   void dispose() {
     _myRoleController.dispose();
     _aiRoleController.dispose();
     _situationController.dispose();
     super.dispose();
+  }
+
+  void _selectMyRole(String role) {
+    setState(() {
+      _myRoleController.text = role;
+    });
+  }
+
+  void _selectAIRole(String role) {
+    setState(() {
+      _aiRoleController.text = role;
+    });
+  }
+
+  void _selectSituation(String situation) {
+    setState(() {
+      _situationController.text = situation;
+    });
+  }
+
+  Widget _buildSuggestionChips(
+      List<String> suggestions, Function(String) onSelected) {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: suggestions
+          .map((suggestion) => ActionChip(
+                label: Text(suggestion),
+                backgroundColor: Colors.blue.shade50,
+                labelStyle: TextStyle(color: Colors.blue.shade700),
+                onPressed: () => onSelected(suggestion),
+              ))
+          .toList(),
+    );
   }
 
   @override
@@ -78,16 +134,30 @@ class _CreateSituationScreenState extends State<CreateSituationScreen> {
                 child: TextField(
                   controller: _myRoleController,
                   maxLength: 30,
+                  style: const TextStyle(
+                    color: Colors.black87,
+                    fontSize: 16,
+                  ),
                   decoration: InputDecoration(
                     hintText: 'Nhân viên bán hàng',
                     hintStyle: TextStyle(color: Colors.grey[400]),
-                    border: InputBorder.none,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide:
+                          const BorderSide(color: Color(0xFF00BFA5), width: 2),
+                    ),
                     contentPadding: const EdgeInsets.all(16),
                     counterText: '${_myRoleController.text.length}/30',
                     counterStyle: TextStyle(color: Colors.grey[600]),
                   ),
                 ),
               ),
+              const SizedBox(height: 8),
+              _buildSuggestionChips(_popularMyRoles, _selectMyRole),
               const SizedBox(height: 24),
 
               // AI Role Section
@@ -108,16 +178,30 @@ class _CreateSituationScreenState extends State<CreateSituationScreen> {
                 child: TextField(
                   controller: _aiRoleController,
                   maxLength: 30,
+                  style: const TextStyle(
+                    color: Colors.black87,
+                    fontSize: 16,
+                  ),
                   decoration: InputDecoration(
                     hintText: 'Khách nước ngoài',
                     hintStyle: TextStyle(color: Colors.grey[400]),
-                    border: InputBorder.none,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide:
+                          const BorderSide(color: Color(0xFF00BFA5), width: 2),
+                    ),
                     contentPadding: const EdgeInsets.all(16),
                     counterText: '${_aiRoleController.text.length}/30',
                     counterStyle: TextStyle(color: Colors.grey[600]),
                   ),
                 ),
               ),
+              const SizedBox(height: 8),
+              _buildSuggestionChips(_popularAIRoles, _selectAIRole),
               const SizedBox(height: 24),
 
               // AI Gender Section
@@ -158,16 +242,30 @@ class _CreateSituationScreenState extends State<CreateSituationScreen> {
                   controller: _situationController,
                   maxLength: 100,
                   maxLines: 3,
+                  style: const TextStyle(
+                    color: Colors.black87,
+                    fontSize: 16,
+                  ),
                   decoration: InputDecoration(
                     hintText: 'Tôi đang tư vấn khách hàng mua áo khoác',
                     hintStyle: TextStyle(color: Colors.grey[400]),
-                    border: InputBorder.none,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide:
+                          const BorderSide(color: Color(0xFF00BFA5), width: 2),
+                    ),
                     contentPadding: const EdgeInsets.all(16),
                     counterText: '${_situationController.text.length}/100',
                     counterStyle: TextStyle(color: Colors.grey[600]),
                   ),
                 ),
               ),
+              const SizedBox(height: 8),
+              _buildSuggestionChips(_popularSituations, _selectSituation),
               const SizedBox(height: 32),
 
               // Create Button
@@ -175,15 +273,25 @@ class _CreateSituationScreenState extends State<CreateSituationScreen> {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () {
-                    controller.createConversation(
-                      _myRoleController.text,
-                      _aiRoleController.text,
-                      _situationController.text,
-                    );
+                    if (_myRoleController.text.isNotEmpty &&
+                        _aiRoleController.text.isNotEmpty &&
+                        _situationController.text.isNotEmpty) {
+                      controller.createConversation(
+                        _myRoleController.text,
+                        _aiRoleController.text,
+                        _situationController.text,
+                      );
+                    } else {
+                      Get.snackbar(
+                        'Thông báo',
+                        'Vui lòng điền đầy đủ thông tin',
+                        snackPosition: SnackPosition.BOTTOM,
+                      );
+                    }
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.grey[200],
-                    foregroundColor: Colors.grey[400],
+                    backgroundColor: const Color(0xFF00BFA5),
+                    foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -197,23 +305,6 @@ class _CreateSituationScreenState extends State<CreateSituationScreen> {
                     ),
                   ),
                 ),
-              ),
-
-              const SizedBox(height: 32),
-              // Popular Situations Section
-              const Text(
-                'Các tình huống cá nhân hoá\nđược yêu thích nhất',
-                style: TextStyle(
-                  color: Colors.black,
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 16),
-              _buildPopularSituation(
-                'Nhân vật của bạn',
-                'Một nhân viên công ty',
-                Icons.person_outline,
               ),
             ],
           ),
@@ -258,47 +349,6 @@ class _CreateSituationScreenState extends State<CreateSituationScreen> {
               fontSize: 16,
               color: Colors.black87,
             ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPopularSituation(
-      String title, String description, IconData icon) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          CircleAvatar(
-            backgroundColor: Colors.grey[100],
-            child: Icon(icon, color: Colors.grey[600]),
-          ),
-          const SizedBox(width: 16),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: TextStyle(
-                  color: Colors.grey[600],
-                  fontSize: 14,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                description,
-                style: const TextStyle(
-                  color: Colors.black87,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
           ),
         ],
       ),
