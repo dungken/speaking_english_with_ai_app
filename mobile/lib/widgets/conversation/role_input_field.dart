@@ -1,5 +1,3 @@
-// lib/widget/conversation/role_input_field.dart
-
 import 'package:flutter/material.dart';
 
 class RoleInputField extends StatelessWidget {
@@ -20,11 +18,15 @@ class RoleInputField extends StatelessWidget {
       decoration: InputDecoration(
         labelText: label,
         hintText: hint,
-        border: OutlineInputBorder(),
+        border: const OutlineInputBorder(),
       ),
-      validator: (value) =>
-          value?.isEmpty == true ? 'Please enter the $label' : null,
       onChanged: onChanged,
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return 'Please enter the $label';
+        }
+        return null;
+      },
     );
   }
-}
+} 
