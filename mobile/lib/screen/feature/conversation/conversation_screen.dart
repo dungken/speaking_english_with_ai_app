@@ -2,6 +2,143 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 import '../../../controller/conversation_controller.dart';
+import '../../../model/message.dart';
+
+class FeedbackDialog extends StatelessWidget {
+  final String userResponse;
+  final List<String> suggestions;
+  final String feedback;
+
+  const FeedbackDialog({
+    super.key,
+    required this.userResponse,
+    required this.suggestions,
+    required this.feedback,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      backgroundColor: Colors.white,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      child: SingleChildScrollView(
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Cải thiện câu',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close, size: 24),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+              const Text(
+                'BẠN NÓI',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black54,
+                  letterSpacing: 0.5,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                decoration: BoxDecoration(
+                  color: Colors.grey[100],
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.volume_up, color: Colors.grey, size: 24),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        userResponse,
+                        style: const TextStyle(
+                          color: Colors.black87,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+              const Text(
+                'ĐỀ XUẤT KHÁC',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF00BFA5),
+                  letterSpacing: 0.5,
+                ),
+              ),
+              const SizedBox(height: 12),
+              ...suggestions.map((suggestion) => Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 12, horizontal: 16),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[100],
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.volume_up,
+                            color: Colors.grey, size: 24),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            suggestion,
+                            style: const TextStyle(
+                              color: Colors.black87,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  )),
+              const SizedBox(height: 20),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.grey[100],
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  feedback,
+                  style: const TextStyle(
+                    color: Colors.black54,
+                    fontSize: 15,
+                    height: 1.5,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
 
 class ConversationScreen extends StatefulWidget {
   final String conversationId;
@@ -29,7 +166,6 @@ class _ConversationScreenState extends State<ConversationScreen> {
     super.initState();
     controller = Get.put(ConversationController(token: widget.token));
     _initializeSpeech();
-    // Get situation from route arguments
     situation = Get.arguments['situation'] as String;
   }
 
@@ -77,6 +213,94 @@ class _ConversationScreenState extends State<ConversationScreen> {
     }
   }
 
+  Widget _buildMessageBubble(MessageResponse message, bool isUser) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Row(
+        mainAxisAlignment:
+            isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (!isUser)
+            Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: CircleAvatar(
+                backgroundColor: Colors.transparent,
+                child: Image.asset(
+                  'assets/images/ai_avatar.png',
+                  width: 40,
+                  height: 40,
+                ),
+              ),
+            ),
+          Flexible(
+            child: Column(
+              crossAxisAlignment:
+                  isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: isUser
+                        ? const Color(0xFF00BFA5)
+                        : const Color(0xFF424242),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (!isUser && message.audioUrl != null)
+                        const Padding(
+                          padding: EdgeInsets.only(bottom: 8),
+                          child: Icon(Icons.volume_up,
+                              color: Colors.white, size: 20),
+                        ),
+                      Text(
+                        message.text,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (isUser)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: OutlinedButton(
+                      onPressed: () {
+                        showDialog(
+                          context: context,
+                          builder: (context) => FeedbackDialog(
+                            userResponse: message.text,
+                            suggestions: [
+                              'I am most comfortable with Python and Java for backend development.',
+                              'For backend development, I specialize in Python and Java.',
+                            ],
+                            feedback:
+                                'Câu trả lời của bạn không liên quan đến câu hỏi. Bạn cần liệt kê các ngôn ngữ lập trình mà bạn thoải mái sử dụng cho phát triển backend, chẳng hạn như Python, Java, hoặc Node.js.',
+                          ),
+                        );
+                      },
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.white,
+                        side: const BorderSide(color: Colors.white),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                      ),
+                      child: const Text('CẢI THIỆN'),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -91,49 +315,12 @@ class _ConversationScreenState extends State<ConversationScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.info_outline, color: Colors.white),
-            onPressed: () {
-              // Add info action here
-            },
+            onPressed: () {},
           ),
         ],
       ),
       body: Column(
         children: [
-          // Situation Card
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(16.0),
-              decoration: BoxDecoration(
-                color: Colors.brown.withOpacity(0.3),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'TÌNH HUỐNG',
-                    style: TextStyle(
-                      color: Colors.orange,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    situation,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 14,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          // Chat Messages
           Expanded(
             child: Obx(() {
               if (controller.isLoading.value) {
@@ -145,66 +332,12 @@ class _ConversationScreenState extends State<ConversationScreen> {
                 itemCount: controller.messages.length,
                 itemBuilder: (context, index) {
                   final message = controller.messages[index];
-                  final isUser = message.role == 'user';
-
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 16),
-                    child: Row(
-                      mainAxisAlignment: isUser
-                          ? MainAxisAlignment.end
-                          : MainAxisAlignment.start,
-                      children: [
-                        if (!isUser)
-                          CircleAvatar(
-                            backgroundColor: Colors.blue,
-                            child: Image.asset(
-                              'assets/images/ai_avatar.png',
-                              width: 24,
-                              height: 24,
-                            ),
-                          ),
-                        const SizedBox(width: 8),
-                        Flexible(
-                          child: Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: isUser
-                                  ? Colors.blue.withOpacity(0.2)
-                                  : Colors.grey.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                if (!isUser && message.audioUrl != null)
-                                  const Icon(Icons.volume_up,
-                                      color: Colors.white, size: 20),
-                                Text(
-                                  message.text,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 14,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        if (isUser) const SizedBox(width: 8),
-                        if (isUser)
-                          const CircleAvatar(
-                            backgroundColor: Colors.orange,
-                            child: Icon(Icons.person, color: Colors.white),
-                          ),
-                      ],
-                    ),
-                  );
+                  return _buildMessageBubble(message, message.role == 'user');
                 },
               );
             }),
           ),
 
-          // Voice Input Section
           if (_recognizedText.isNotEmpty)
             Padding(
               padding: const EdgeInsets.all(16.0),
@@ -221,38 +354,61 @@ class _ConversationScreenState extends State<ConversationScreen> {
               ),
             ),
 
-          // Bottom Voice Button
+          // Bottom completion status
           Container(
-            padding: const EdgeInsets.all(16),
+            width: double.infinity,
+            padding: const EdgeInsets.all(24),
             child: Column(
               children: [
-                const Text(
-                  'Bấm vào đây để nói',
-                  style: TextStyle(color: Colors.white70),
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFF00BFA5),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.check,
+                    color: Colors.white,
+                    size: 24,
+                  ),
                 ),
-                const SizedBox(height: 8),
-                GestureDetector(
-                  onTapDown: (_) => _startListening(),
-                  onTapUp: (_) => _stopListening(),
-                  onTapCancel: _stopListening,
-                  child: Container(
-                    width: 64,
-                    height: 64,
-                    decoration: BoxDecoration(
-                      color: Colors.teal,
-                      borderRadius: BorderRadius.circular(32),
+                const SizedBox(height: 16),
+                const Text(
+                  'Hoàn thành tình huống',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: TextButton(
+                    onPressed: () {
+                      // Handle completion
+                    },
+                    style: TextButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
-                    child: Icon(
-                      _isListening ? Icons.mic : Icons.mic_none,
-                      color: Colors.white,
-                      size: 32,
+                    child: const Text(
+                      'Hoàn thành',
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 16), // Bottom padding for safe area
         ],
       ),
     );
