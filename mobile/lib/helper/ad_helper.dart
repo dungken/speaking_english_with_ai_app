@@ -4,7 +4,6 @@ import 'package:flutter/foundation.dart'
     show kIsWeb; // Import để kiểm tra nền tảng
 import 'package:easy_audience_network/easy_audience_network.dart';
 import 'package:get/get.dart';
-import 'package:get/get_core/src/get_main.dart';
 
 class AdHelper {
   static void init() {

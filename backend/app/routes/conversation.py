@@ -108,13 +108,16 @@ async def create_conversation(convo_data: ConversationCreate, current_user: dict
     refined_situation = data_json["refined_situation"]
     ai_first_response = data_json["response"]
 
-
+    # Get user ID from the current_user dictionary
+    user_id = current_user.get("_id")
+    if not user_id:
+        raise HTTPException(status_code=500, detail="User ID not found in token")
 
     new_convo = Conversation(
-    user_id=ObjectId(current_user["_id"]),
-    user_role=refined_user_role,
-    ai_role=refined_ai_role,
-    situation=ai_first_response
+        user_id=ObjectId(user_id),
+        user_role=refined_user_role,
+        ai_role=refined_ai_role,
+        situation=ai_first_response
     )
     result = db.conversations.insert_one(new_convo.to_dict())
     conversation_id = result.inserted_id
@@ -189,10 +192,15 @@ async def send_message(
     Raises:
         HTTPException: If the conversation is not found (404) or other errors occur.
     """
+    # Get user ID from the current_user dictionary
+    user_id = current_user.get("_id")
+    if not user_id:
+        raise HTTPException(status_code=500, detail="User ID not found in token")
+    
     # Verify conversation exists and belongs to the user
     conversation = db.conversations.find_one({
         "_id": ObjectId(conversation_id),
-        "user_id": ObjectId(current_user["_id"])
+        "user_id": ObjectId(user_id)
     })
     if not conversation:
         raise HTTPException(status_code=404, detail="Conversation not found")

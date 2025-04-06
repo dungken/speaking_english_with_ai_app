@@ -1,6 +1,7 @@
 # Python virtual environment
 .venv/
 venv/
+venv310/
 # Environment variables
 .env
 
@@ -13,3 +14,4 @@ __pycache__/
 # Logs and temporary files
 *.log
 *.pid
+.coverage

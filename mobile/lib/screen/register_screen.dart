@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:speaking_english_with_ai/screen/login_screen.dart';
 import 'package:speaking_english_with_ai/screen/home_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -380,13 +379,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       backgroundColor: Colors.blue.shade600,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 16,
+                        vertical: 20,
+                        horizontal: 32,
                       ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      elevation: _isLoading ? 0 : 2,
+                      elevation: _isLoading ? 0 : 3,
                     ),
                     child: _isLoading
                         ? SizedBox(
@@ -402,7 +401,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         : const Text(
                             'Create Account',
                             style: TextStyle(
-                              fontSize: 16,
+                              fontSize: 18,
                               fontWeight: FontWeight.bold,
                             ),
                           ),

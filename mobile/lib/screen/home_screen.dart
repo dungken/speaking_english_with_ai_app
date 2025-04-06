@@ -2,12 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'feature/conversation/create_situation_screen.dart';
 
 import '../helper/ad_helper.dart';
 import '../helper/global.dart';
 import '../helper/pref.dart';
 import '../model/home_type.dart';
-import '../widget/home_card.dart';
+import '../widgets/home_card.dart';
 
 /// 📌 **Home Screen**
 ///
@@ -106,138 +107,68 @@ class _HomeScreenState extends State<HomeScreen> {
             vertical: mq.height * .015,
           ),
           children: [
-            // 👤 User Profile Section
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Theme.of(context).brightness == Brightness.dark
-                    ? Colors.white.withOpacity(0.1)
-                    : Colors.white,
+            // User Profile Card
+            Card(
+              elevation: 2,
+              shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 10,
-                    spreadRadius: 1,
-                  ),
-                ],
               ),
-              child: Row(
-                children: [
-                  // Avatar
-                  CircleAvatar(
-                    radius: 30,
-                    backgroundImage: NetworkImage(_userAvatar),
-                  ),
-                  const SizedBox(width: 16),
-                  // User Info
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Welcome back,',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey.shade600,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          _userName,
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          _userEmail,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey.shade600,
-                          ),
-                        ),
-                      ],
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 30,
+                      backgroundImage: NetworkImage(_userAvatar),
                     ),
-                  ),
-                  // Edit Profile Button
-                  IconButton(
-                    onPressed: () {
-                      // Navigate to profile screen
-                      HomeType.profile.onTap();
-                    },
-                    icon: Icon(
-                      Icons.edit_outlined,
-                      color: Colors.blue.shade700,
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Welcome back,',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            _userName,
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            _userEmail,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                    IconButton(
+                      onPressed: () {
+                        HomeType.profile.onTap();
+                      },
+                      icon: Icon(
+                        Icons.edit_outlined,
+                        color: Colors.blue.shade700,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ).animate().fadeIn(duration: 600.ms).slideY(begin: 0.2, end: 0),
 
             const SizedBox(height: 24),
 
-            // 📊 Progress Overview
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Theme.of(context).brightness == Brightness.dark
-                    ? Colors.white.withOpacity(0.1)
-                    : Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 10,
-                    spreadRadius: 1,
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Your Progress',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      _buildProgressItem(
-                        icon: Icons.star_outline,
-                        title: 'Level',
-                        value: '5',
-                        color: Colors.amber,
-                      ),
-                      _buildProgressItem(
-                        icon: Icons.timer_outlined,
-                        title: 'Study Time',
-                        value: '12h',
-                        color: Colors.green,
-                      ),
-                      _buildProgressItem(
-                        icon: Icons.emoji_events_outlined,
-                        title: 'Achievements',
-                        value: '8',
-                        color: Colors.orange,
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            )
-                .animate()
-                .fadeIn(duration: 600.ms, delay: 200.ms)
-                .slideY(begin: 0.2, end: 0),
-
-            const SizedBox(height: 24),
-
-            // 📝 Menu Section Title
+            // Learning Tools Section
             const Padding(
               padding: EdgeInsets.only(left: 4, bottom: 12),
               child: Text(
@@ -249,8 +180,8 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ).animate().fadeIn(duration: 600.ms, delay: 400.ms),
 
-            // 📌 **Menu Items**
-            ...HomeType.values.map((e) => HomeCard(homeType: e)).toList(),
+            // Menu Items
+            ...HomeType.values.map((e) => HomeCard(homeType: e)),
           ],
         ),
       ),

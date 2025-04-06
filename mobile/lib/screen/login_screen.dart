@@ -278,16 +278,14 @@ class _LoginScreenState extends State<LoginScreen> {
                     ElevatedButton(
                       onPressed: _isLoading ? null : _handleLogin,
                       style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 20, horizontal: 32),
                         backgroundColor: Colors.blue.shade600,
                         foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 24,
-                          vertical: 16,
-                        ),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        elevation: _isLoading ? 0 : 2,
+                        elevation: _isLoading ? 0 : 3,
                       ),
                       child: _isLoading
                           ? SizedBox(
@@ -303,7 +301,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           : const Text(
                               'Sign In',
                               style: TextStyle(
-                                fontSize: 16,
+                                fontSize: 18,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),

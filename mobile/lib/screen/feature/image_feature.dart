@@ -5,8 +5,8 @@ import 'package:lottie/lottie.dart';
 
 import '../../controller/image_controller.dart';
 import '../../helper/global.dart';
-import '../../widget/custom_btn.dart';
-import '../../widget/custom_loading.dart';
+import '../../widgets/custom_btn.dart';
+import '../../widgets/custom_loading.dart';
 
 /// 📌 **ImageFeature Screen**
 ///

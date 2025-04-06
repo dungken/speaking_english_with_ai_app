@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:get/get.dart';
 import 'package:get/get_navigation/src/root/get_material_app.dart';
 
 import 'apis/app_write.dart';
@@ -7,6 +8,8 @@ import 'helper/ad_helper.dart';
 import 'helper/global.dart';
 import 'helper/pref.dart';
 import 'screen/splash_screen.dart';
+import 'screen/feature/conversation/create_situation_screen.dart';
+import 'screen/feature/conversation/conversation_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding
@@ -48,11 +51,11 @@ class MyApp extends StatelessWidget {
       darkTheme: ThemeData(
         useMaterial3: true,
         brightness: Brightness.dark,
-        colorScheme: ColorScheme.dark(
+        colorScheme: const ColorScheme.dark(
           primary: Colors.cyan,
           secondary: Colors.cyanAccent,
-          surface: const Color(0xFF1E1E1E),
-          background: const Color(0xFF121212),
+          surface: Color(0xFF1E1E1E),
+          background: Color(0xFF121212),
         ),
         appBarTheme: const AppBarTheme(
           elevation: 0,
@@ -87,7 +90,7 @@ class MyApp extends StatelessWidget {
       // ☀️ Light Theme Configuration
       theme: ThemeData(
         useMaterial3: true,
-        colorScheme: ColorScheme.light(
+        colorScheme: const ColorScheme.light(
           primary: Colors.blue,
           secondary: Colors.blueAccent,
         ),
@@ -103,6 +106,23 @@ class MyApp extends StatelessWidget {
           ),
         ),
       ),
+
+      // Define routes
+      getPages: [
+        GetPage(
+          name: '/create-situation',
+          page: () => CreateSituationScreen(
+            token: Get.arguments['token'],
+          ),
+        ),
+        GetPage(
+          name: '/chat',
+          page: () => ConversationScreen(
+            conversationId: Get.arguments['conversationId'],
+            token: Get.arguments['token'],
+          ),
+        ),
+      ],
 
       home: const SplashScreen(), // 🚀 Start with the splash screen
     );
