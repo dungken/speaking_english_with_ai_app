@@ -12,6 +12,7 @@ from jose import JWTError, jwt
 import bcrypt
 import os
 from dotenv import load_dotenv
+from pydantic import BaseModel
 
 # Load environment variables
 load_dotenv()
@@ -27,7 +28,6 @@ if not SECRET_KEY:
     raise ValueError("JWT_SECRET_KEY environment variable is not set")
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/users/login")
-
 
 @router.post("/register", response_model=UserRegisterResponse, status_code=status.HTTP_201_CREATED)
 async def register_user(user: UserCreate):
@@ -158,9 +158,9 @@ async def login(login_data: UserLogin):
         
         # Convert user to response model
         user_response = UserResponse(
-            id=str(user["_id"]),
-            name=user["name"],
+            _id=str(user["_id"]),
             email=user["email"],
+            name=user["name"],
             role=user.get("role", "user"),
             created_at=user["created_at"],
             updated_at=user["updated_at"]
