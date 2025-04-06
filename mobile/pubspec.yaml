@@ -68,6 +68,12 @@ dependencies:
   # For Audio Playback
   just_audio: ^0.9.36
 
+  # For JSON Serialization
+  json_annotation: ^4.8.1
+
+  # For Speech to Text
+  speech_to_text: ^6.3.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -77,6 +83,10 @@ dev_dependencies:
 
   # For Changing App Icon
   # icons_launcher: ^2.1.7
+
+  # For JSON Serialization
+  build_runner: ^2.4.6
+  json_serializable: ^6.7.1
 
 flutter:
 
