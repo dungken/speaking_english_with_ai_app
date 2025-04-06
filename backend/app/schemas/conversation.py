@@ -11,7 +11,6 @@ class ConversationCreate(BaseModel):
 class ConversationResponse(BaseModel):
     id: str
     user_id: str
-    topic: str
     ai_assistant: str
     situation_description: str
     created_at: datetime

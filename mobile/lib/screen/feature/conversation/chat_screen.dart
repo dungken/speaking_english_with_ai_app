@@ -1,18 +1,25 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
+import 'package:flutter/material.dart';
+import '../../../apis/conversation_api.dart';
 
-class ConversationApi {
-  static const String _baseUrl = 'http://127.0.0.1:8000/';
+class ChatScreen extends StatelessWidget {
+  final String conversationId;
+  final String token;
 
-  Future<void> createConversation(Map<String, dynamic> conversationData) async {
-    final response = await http.post(
-      Uri.parse('$_baseUrl/conversations'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode(conversationData),
+  const ChatScreen({
+    super.key,
+    required this.conversationId,
+    required this.token,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Chat'),
+      ),
+      body: Center(
+        child: Text('Chat Screen - Conversation ID: $conversationId'),
+      ),
     );
-
-    if (response.statusCode != 201) {
-      throw Exception('Failed to create conversation');
-    }
   }
 }

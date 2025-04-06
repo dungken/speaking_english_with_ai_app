@@ -7,6 +7,7 @@ import '../screen/feature/settings_feature.dart';
 import '../screen/feature/profile_feature.dart';
 import '../screen/feature/topic_selection_screen.dart';
 import '../screen/feature/conversation/create_situation_screen.dart';
+import '../helper/pref.dart';
 
 /// Enum representing different features of the application.
 enum HomeType {
@@ -85,10 +86,22 @@ extension MyHomeType on HomeType {
   ///
   /// Defines the action to be performed when tapping on a feature.
   VoidCallback get onTap => switch (this) {
-        HomeType.createSituations => () => Get.to(() => const CreateSituationScreen()),
+        HomeType.createSituations => () {
+            final token = Pref.token;
+            if (token != null) {
+              Get.to(() => CreateSituationScreen(token: token));
+            } else {
+              Get.snackbar(
+                'Error',
+                'Please login first',
+                snackPosition: SnackPosition.BOTTOM,
+              );
+            }
+          },
         HomeType.chooseTopic => () =>
             Get.to(() => const TopicSelectionScreen()),
-        HomeType.describeImage => () => Get.to(() => const DescribeImageScreen()),
+        HomeType.describeImage => () =>
+            Get.to(() => const DescribeImageScreen()),
         HomeType.progressTracking => () => Get.to(() => const ChatBotFeature()),
         HomeType.settings => () => Get.to(() => const SettingsFeature()),
         HomeType.profile => () => Get.to(() => const ProfileFeature()),

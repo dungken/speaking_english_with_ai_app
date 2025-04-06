@@ -9,9 +9,9 @@ class CreateSituationScreen extends StatelessWidget {
   final String token;
 
   const CreateSituationScreen({
-    Key? key,
+    super.key,
     required this.token,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

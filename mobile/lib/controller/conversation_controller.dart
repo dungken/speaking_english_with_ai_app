@@ -1,20 +1,21 @@
 // lib/controller/conversation_controller.dart
 
 import 'package:get/get.dart';
-import '../apis/conversation_api.dart';
-import '../model/conversation.dart';
 import '../model/message.dart';
+import '../screen/feature/conversation/conversation_screen.dart';
 
 /// 🎮 **Conversation Controller**
 ///
 /// Manages conversation state and business logic.
 class ConversationController extends GetxController {
-  final ConversationApi _api = ConversationApi();
-  
+  final String token;
+
   // Observable states
   final isLoading = false.obs;
-  final messages = <Message>[].obs;
+  final messages = <MessageResponse>[].obs;
   final error = Rx<String?>(null);
+
+  ConversationController({required this.token});
 
   /// 📝 Create a new conversation
   Future<void> createConversation(
@@ -26,44 +27,50 @@ class ConversationController extends GetxController {
       isLoading.value = true;
       error.value = null;
 
-      final conversation = Conversation(
-        userRole: userRole,
-        aiRole: aiRole,
-        situation: situation,
-      );
+      // Mock response for UI testing
+      await Future.delayed(const Duration(seconds: 1));
 
-      final result = await _api.createConversation(conversation);
-      
-      // Handle the initial AI message
-      if (result['initial_message'] != null) {
-        messages.add(Message(
-          msg: result['initial_message']['text'],
-          msgType: MessageType.bot,
-        ));
-      }
-
-      // Navigate to chat screen
-      Get.toNamed('/chat', arguments: result['conversation']['id']);
+      // Navigate to conversation screen
+      Get.to(
+          () => ConversationScreen(
+                conversationId: '123',
+                token: token,
+              ),
+          arguments: {
+            'situation': situation,
+          });
     } catch (e) {
-      error.value = e.toString();
+      error.value = 'Failed to create conversation: ${e.toString()}';
     } finally {
       isLoading.value = false;
     }
   }
 
   /// 💬 Send a message
-  Future<void> sendMessage(String conversationId, String message) async {
+  Future<void> sendMessage(String conversationId, String text) async {
     try {
-      // Add user message immediately
-      messages.add(Message(msg: message, msgType: MessageType.user));
+      // Mock message response
+      final mockMessage = MessageResponse(
+        id: DateTime.now().toString(),
+        conversationId: conversationId,
+        text: text,
+        role: 'user',
+        audioUrl: null,
+        createdAt: DateTime.now(),
+      );
+      messages.add(mockMessage);
 
-      final result = await _api.sendMessage(conversationId, message);
-      
-      // Add AI response
-      messages.add(Message(
-        msg: result['text'],
-        msgType: MessageType.bot,
-      ));
+      // Mock AI response after delay
+      await Future.delayed(const Duration(seconds: 1));
+      final mockAiResponse = MessageResponse(
+        id: DateTime.now().toString(),
+        conversationId: conversationId,
+        text: 'This is a mock AI response to: $text',
+        role: 'ai',
+        audioUrl: 'mock_audio_url',
+        createdAt: DateTime.now(),
+      );
+      messages.add(mockAiResponse);
     } catch (e) {
       error.value = e.toString();
     }
