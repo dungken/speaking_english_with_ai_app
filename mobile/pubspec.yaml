@@ -1,7 +1,8 @@
 name: ai_assistant
-description: An AI Assistant (ChatBot, Image Generator & Language Translator) App Based on ChatGPT developed by Harsh H. Rajpurohit 
 
-publish_to: 'none' 
+description: An AI Assistant (ChatBot, Image Generator & Language Translator) App Based on ChatGPT developed by Harsh H. Rajpurohit
+
+publish_to: 'none'
 
 # App Version
 version: 1.0.2+2
@@ -14,16 +15,16 @@ dependencies:
   flutter:
     sdk: flutter
 
-  # App Write Database (For dynamically getting API Key)  
-  appwrite: ^12.0.4
-  # appwrite: 
-  #   path: ./appwrite
+  # App Write Database (For dynamically getting API Key)
+  appwrite: ^15.0.0  # Updated to latest version
+
+  fl_chart: ^0.64.0
 
   # iOS Styled Icons
   cupertino_icons: ^1.0.8
 
   # For using Lottie Animations
-  lottie: ^3.1.2
+  lottie: ^3.3.1  # Updated to latest version
 
   # For Hive Database
   # hive: ^4.0.0-dev.2
@@ -34,43 +35,45 @@ dependencies:
   hive_flutter: ^1.1.0
 
   # For Accessing Storage Path
-  path_provider: ^2.1.3
+  path_provider: ^2.1.5  # Updated to latest version
 
   # For State Management
-  get: ^4.6.6
+  get: ^4.7.2  # Updated to latest version
 
   # For Custom Animation
-  flutter_animate: ^4.5.0
-  animated_text_kit: ^4.2.2
+  flutter_animate: ^4.5.2  # Updated to latest version
+  animated_text_kit: ^4.2.3  # Updated to latest version
 
   # For API Call
-  http: ^1.2.2
+  http: ^1.3.0  # Updated to latest version
 
   # For AI Image Generation
   dart_openai: ^5.1.0
-  cached_network_image: ^3.3.1
-  
+  cached_network_image: ^3.4.1  # Updated to latest version
+
   # Google Gemini Ai Integration
-  google_generative_ai: ^0.4.3
+  google_generative_ai: ^0.4.6  # Updated to latest version
 
   # For Google Language Translate
   translator_plus: ^1.0.1
 
   # For Saving Image to Gallery
+
   gallery_saver_updated: ^3.0.0
 
+
   # For Sharing Image
-  share_plus: ^9.0.0
+  share_plus: ^10.1.4  # Updated to latest version
 
   # Facebook Ads
-  easy_audience_network: ^0.0.6
+  easy_audience_network: ^0.0.7  # Updated to latest version
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
 
   # Encourages Good Practices
-  flutter_lints: ^4.0.0
+  flutter_lints: ^5.0.0  # Updated to latest version
 
   # For Changing App Icon
   # icons_launcher: ^2.1.7

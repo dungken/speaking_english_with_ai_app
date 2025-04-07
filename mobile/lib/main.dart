@@ -7,6 +7,9 @@ import 'helper/ad_helper.dart';
 import 'helper/global.dart';
 import 'helper/pref.dart';
 import 'screen/splash_screen.dart';
+import 'screen/feature/progress_tracking/Streak.dart';
+import 'screen/feature/progress_tracking/Learning_Results.dart';
+
 
 Future<void> main() async {
   WidgetsFlutterBinding
@@ -72,7 +75,7 @@ class MyApp extends StatelessWidget {
         ),
       ),
 
-      home: const SplashScreen(), // 🚀 Start with the splash screen
+      home: const StreakScreen(), // 🚀 Start with the splash screen
     );
   }
 }
