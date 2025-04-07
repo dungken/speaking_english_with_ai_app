@@ -1,7 +1,9 @@
 import jwt
 from datetime import datetime, timedelta
-from fastapi import Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer
+from fastapi import Depends, HTTPException, status, Security
+from fastapi.security import OAuth2PasswordBearer, SecurityScopes
+from jose import JWTError
+from typing import Optional
 from app.config.database import db
 from bson import ObjectId
 import os
@@ -19,10 +21,13 @@ if not SECRET_KEY:
     raise ValueError("JWT_SECRET_KEY environment variable is not set")
 
 # OAuth2 scheme for token authentication (points to the login endpoint)
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/users/login")
+oauth2_scheme = OAuth2PasswordBearer(
+    tokenUrl="/api/users/login",
+    scopes={"user": "Read user information", "admin": "Full access"}
+)
 
 
-def create_access_token(data: dict, expires_delta: timedelta = None):
+def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     """
     Generate a JWT access token with an expiration time.
     
@@ -32,7 +37,7 @@ def create_access_token(data: dict, expires_delta: timedelta = None):
             {
                 "sub": "user@example.com"  # user email
             }
-        expires_delta (timedelta, optional): Custom expiration time for the token.
+        expires_delta (Optional[timedelta], optional): Custom expiration time for the token.
             If not provided, defaults to ACCESS_TOKEN_EXPIRE_MINUTES.
     
     Returns:
@@ -49,45 +54,46 @@ def create_access_token(data: dict, expires_delta: timedelta = None):
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
 
-def get_current_user(token: str = Depends(oauth2_scheme)):
+async def get_current_user(
+    security_scopes: SecurityScopes,
+    token: str = Depends(oauth2_scheme)
+):
     """
     Verify the JWT token and retrieve the current user's information.
+    Also verifies that the user has the required scopes.
     
     Args:
+        security_scopes (SecurityScopes): Required scopes for the endpoint.
         token (str): The JWT token from the request header.
-            Sample input:
-            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyQGV4YW1wbGUuY29tIiwiZXhwIjoxNzEyMjI0MDAwfQ.xyz..."
     
     Returns:
         dict: The current user's information from the database.
-            Sample output:
-            {
-                "_id": "507f1f77bcf86cd799439011",
-                "name": "John Doe",
-                "email": "user@example.com",
-                "role": "user"
-            }
-        
+    
     Raises:
-        HTTPException: If the token is invalid (401) or the user is not found (401).
+        HTTPException: If the token is invalid, expired, or user lacks required scopes.
     """
+    authenticate_value = f'Bearer scope="{security_scopes.scope_str}"'
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
+        headers={"WWW-Authenticate": authenticate_value},
     )
     
     try:
         # Decode the JWT token
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        email = payload.get("sub")
+        email: str = payload.get("sub")
         if email is None:
             raise credentials_exception
+            
+        # Get token scopes
+        token_scopes = payload.get("scopes", [])
+        
     except jwt.ExpiredSignatureError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Token has expired",
-            headers={"WWW-Authenticate": "Bearer"},
+            headers={"WWW-Authenticate": authenticate_value},
         )
     except jwt.JWTError:
         raise credentials_exception
@@ -96,5 +102,14 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
     user = db.users.find_one({"email": email})
     if user is None:
         raise credentials_exception
+        
+    # Check for required scopes
+    for scope in security_scopes.scopes:
+        if scope not in token_scopes:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not enough permissions",
+                headers={"WWW-Authenticate": authenticate_value},
+            )
     
     return user

@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from app.config.database import db
-from app.schemas.user import UserCreate, UserResponse, UserLogin, UserUpdate, UserRegisterResponse
+from app.schemas.user import UserCreate, UserResponse, UserLogin, UserUpdate, UserRegisterResponse, Token
 from app.utils.security import hash_password, verify_password
 from app.models.user import User
 from app.utils.auth import create_access_token, get_current_user
@@ -105,37 +105,19 @@ async def register_user(user: UserCreate):
         )
 
 
-@router.post("/login")
-async def login(login_data: UserLogin):
+@router.post("/login", response_model=Token)
+async def login(form_data: OAuth2PasswordRequestForm = Depends()):
     """
-    Authenticate a user and return an access token.
+    OAuth2 compatible token login, get an access token for future requests.
     
     Args:
-        login_data (UserLogin): Login credentials.
-            Sample input:
-            {
-                "email": "john@example.com",
-                "password": "SecurePassword123!"
-            }
+        form_data (OAuth2PasswordRequestForm): OAuth2 form containing username (email) and password.
     
     Returns:
-        dict: Authentication token and user information.
-            Sample output:
-            {
-                "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-                "token_type": "bearer",
-                "user": {
-                    "id": "507f1f77bcf86cd799439011",
-                    "name": "John Doe",
-                    "email": "john@example.com",
-                    "role": "user",
-                    "created_at": "2024-04-04T12:00:00",
-                    "updated_at": "2024-04-04T12:00:00"
-                }
-            }
+        Token: Access token information including token type and expiration.
     """
     try:
-        user = db.users.find_one({"email": login_data.email})
+        user = db.users.find_one({"email": form_data.username})
         if not user:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
@@ -144,33 +126,30 @@ async def login(login_data: UserLogin):
             )
         
         # Verify password using bcrypt directly
-        if not bcrypt.checkpw(login_data.password.encode('utf-8'), user["password"].encode('utf-8')):
+        if not bcrypt.checkpw(form_data.password.encode('utf-8'), user["password"].encode('utf-8')):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Incorrect email or password",
                 headers={"WWW-Authenticate": "Bearer"},
             )
         
+        # Create token with role-based scope
+        scopes = ["admin"] if user.get("role") == "admin" else ["user"]
         access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
         access_token = create_access_token(
-            data={"sub": user["email"]}, expires_delta=access_token_expires
+            data={
+                "sub": user["email"],
+                "scopes": scopes
+            },
+            expires_delta=access_token_expires
         )
         
-        # Convert user to response model
-        user_response = UserResponse(
-            _id=str(user["_id"]),
-            email=user["email"],
-            name=user["name"],
-            role=user.get("role", "user"),
-            created_at=user["created_at"],
-            updated_at=user["updated_at"]
+        return Token(
+            access_token=access_token,
+            token_type="bearer",
+            expires_in=ACCESS_TOKEN_EXPIRE_MINUTES * 60,  # Convert to seconds
+            scope=" ".join(scopes)
         )
-        
-        return {
-            "access_token": access_token,
-            "token_type": "bearer",
-            "user": user_response
-        }
     except HTTPException:
         raise
     except Exception as e:
@@ -181,20 +160,22 @@ async def login(login_data: UserLogin):
 
 
 @router.get("/me", response_model=UserResponse)
-async def get_user_profile():
+async def get_user_profile(current_user: dict = Depends(get_current_user)):
     """
-    Get user profile (testing version without authentication).
+    Get current user's profile. Requires authentication token.
+    
+    Args:
+        current_user (dict): The authenticated user's information from token.
     
     Returns:
         UserResponse: The user profile information.
     """
     try:
-        # For testing, get the first user from database
-        user = db.users.find_one()
+        user = db.users.find_one({"_id": ObjectId(current_user["_id"])})
         if not user:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="No users found in database"
+                detail="User not found"
             )
             
         return UserResponse(
@@ -214,27 +195,44 @@ async def get_user_profile():
 
 
 @router.put("/me", response_model=UserResponse)
-async def update_user_profile(user_update: UserUpdate):
+async def update_user_profile(
+    user_update: UserUpdate,
+    current_user: dict = Depends(get_current_user)
+):
     """
-    Update user profile (testing version without authentication).
+    Update current user's profile. Requires authentication token.
+    Only allows updating specific fields and validates the changes.
     
     Args:
         user_update (UserUpdate): The user profile update data.
+        current_user (dict): The authenticated user's information.
     
     Returns:
         UserResponse: The updated user profile information.
     """
     try:
-        # For testing, update the first user in database
-        user = db.users.find_one()
+        # Get current user
+        user = db.users.find_one({"_id": ObjectId(current_user["_id"])})
         if not user:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="No users found in database"
+                detail="User not found"
             )
         
-        # Prepare update data
+        # Validate update data
         update_data = user_update.dict(exclude_unset=True)
+        
+        # Only allow updating specific fields
+        allowed_fields = {"name", "avatar_url"}
+        update_data = {k: v for k, v in update_data.items() if k in allowed_fields}
+        
+        if not update_data:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="No valid fields to update"
+            )
+        
+        # Add updated_at timestamp
         update_data["updated_at"] = datetime.utcnow()
         
         # Update user in database
@@ -271,7 +269,8 @@ async def update_user_profile(user_update: UserUpdate):
 @router.delete("/me", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_user_profile(current_user: dict = Depends(get_current_user)):
     """
-    Delete the current user's profile.
+    Soft delete the current user's profile by marking it as deleted.
+    Requires authentication token.
     
     Args:
         current_user (dict): The authenticated user's information.
@@ -280,10 +279,19 @@ async def delete_user_profile(current_user: dict = Depends(get_current_user)):
         None: 204 No Content response.
     """
     try:
-        # Delete user from database
-        result = db.users.delete_one({"_id": current_user["_id"]})
+        # Soft delete by marking user as deleted
+        result = db.users.update_one(
+            {"_id": ObjectId(current_user["_id"])},
+            {
+                "$set": {
+                    "deleted": True,
+                    "deleted_at": datetime.utcnow(),
+                    "updated_at": datetime.utcnow()
+                }
+            }
+        )
         
-        if result.deleted_count == 0:
+        if result.modified_count == 0:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="User not found"
@@ -300,29 +308,27 @@ async def delete_user_profile(current_user: dict = Depends(get_current_user)):
 
 
 @router.get("/list", response_model=List[UserResponse])
-async def get_users():
+async def get_users(current_user: dict = Depends(get_current_user)):
     """
-    Get a list of all users.
+    Get a list of all users. Only accessible by admin users.
+    Requires authentication token and admin role.
+    
+    Args:
+        current_user (dict): The authenticated user's information.
     
     Returns:
         List[UserResponse]: A list of all user objects.
-            Sample output:
-            [
-                {
-                    "id": "507f1f77bcf86cd799439011",
-                    "name": "John Doe",
-                    "email": "john@example.com",
-                    "role": "user",
-                    "avatar_url": null,
-                    "created_at": "2024-04-04T12:00:00",
-                    "updated_at": "2024-04-04T12:00:00"
-                },
-                ...
-            ]
     """
     try:
-        # Fetch all users from the database
-        users = list(db.users.find())
+        # Check if user is admin
+        if current_user.get("role") != "admin":
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Only admin users can access this endpoint"
+            )
+        
+        # Fetch all non-deleted users from the database
+        users = list(db.users.find({"deleted": {"$ne": True}}))
         
         # Convert users to response model format
         user_responses = []
@@ -339,6 +345,8 @@ async def get_users():
             user_responses.append(user_response)
         
         return user_responses
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
