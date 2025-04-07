@@ -6,6 +6,7 @@ from typing import Optional
 from datetime import datetime
 import re
 from bson import ObjectId
+from fastapi.security import OAuth2PasswordRequestForm
 
 # Define a base schema for common user fields
 # This is inherited by other schemas to avoid repetition
@@ -78,26 +79,17 @@ class UserResponse(UserBase):
         return v
 
 class UserLogin(BaseModel):
-    email: EmailStr = Field(
-        description="User's email address"
-    )
-    password: str = Field(
-        min_length=8,
-        max_length=100,
-        description="User's password"
-    )
+    username: str  # Using username instead of email for OAuth2 compatibility
+    password: str
+
+    @classmethod
+    def from_form(cls, form_data: OAuth2PasswordRequestForm):
+        """Create UserLogin from OAuth2 form data."""
+        return cls(username=form_data.username, password=form_data.password)
 
 class UserUpdate(BaseModel):
-    name: Optional[str] = Field(
-        default=None,
-        min_length=2,
-        max_length=50,
-        description="User's full name"
-    )
-    avatar_url: Optional[str] = Field(
-        default=None,
-        description="URL to the user's avatar image"
-    )
+    name: Optional[str] = None
+    avatar_url: Optional[str] = None
 
     @validator('name')
     def name_must_contain_space(cls, v):
@@ -105,14 +97,15 @@ class UserUpdate(BaseModel):
             raise ValueError('Name must contain a space')
         return v.title() if v else None
 
+class Token(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    expires_in: int
+    scope: str
+
 class UserRegisterResponse(UserResponse):
-    access_token: str = Field(
-        description="JWT access token for authentication"
-    )
-    token_type: str = Field(
-        default="bearer",
-        description="Type of the token"
-    )
+    access_token: str
+    token_type: str = "bearer"
 
     class Config:
         from_attributes = True

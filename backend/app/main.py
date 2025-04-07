@@ -1,11 +1,48 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from app.routes import user, conversation
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.openapi.models import SecurityScheme
+from fastapi.security import OAuth2PasswordBearer
+from typing import Dict
 
+# Create FastAPI app with metadata
 app = FastAPI(
     title="Speak AI API",
-    description="API for the Speak AI application",
-    version="1.0.0"
+    description="""
+    API for the Speak AI application.
+    
+    ## Authentication
+    This API uses OAuth2 with JWT tokens for authentication.
+    
+    To authenticate:
+    1. Use the `/api/users/login` endpoint with your email and password
+    2. Use the received token in the Authorize dialog (click the 🔓 button)
+    
+    ## Authorization
+    The API uses role-based access control with two main roles:
+    * **user**: Basic access to own profile and conversations
+    * **admin**: Full access including user management
+    """,
+    version="1.0.0",
+    openapi_tags=[
+        {
+            "name": "users",
+            "description": "Operations with users. Includes registration, authentication, and profile management."
+        },
+        {
+            "name": "conversations",
+            "description": "Operations with conversations. Requires authentication."
+        }
+    ]
+)
+
+# Configure security scheme for Swagger UI
+oauth2_scheme = OAuth2PasswordBearer(
+    tokenUrl="/api/users/login",
+    scopes={
+        "user": "Read/write access to private user data",
+        "admin": "Full access to all operations"
+    }
 )
 
 # Configure CORS middleware
@@ -18,10 +55,22 @@ app.add_middleware(
     expose_headers=["*"],  # Expose all headers to the client
 )
 
-app.include_router(user.router, prefix="/api/users", tags=["users"])
-app.include_router(conversation.router, prefix="/api", tags=["conversations"])
+# Include routers
+app.include_router(
+    user.router,
+    prefix="/api/users",
+    tags=["users"],
+    responses={401: {"description": "Unauthorized"}}
+)
 
-@app.get("/")
+app.include_router(
+    conversation.router,
+    prefix="/api",
+    tags=["conversations"],
+    responses={401: {"description": "Unauthorized"}}
+)
+
+@app.get("/", tags=["root"])
 async def root():
     """
     Root endpoint that returns a welcome message.
@@ -29,4 +78,8 @@ async def root():
     Returns:
         dict: A dictionary containing a welcome message for the FastAPI + MongoDB project.
     """
-    return {"message": "FastAPI + MongoDB project"}
+    return {
+        "message": "Welcome to Speak AI API",
+        "docs_url": "/docs",
+        "openapi_url": "/openapi.json"
+    }
