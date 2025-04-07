@@ -191,14 +191,29 @@ async def get_user_profile(current_user: dict = Depends(get_current_user)):
     Returns:
         UserResponse: The current user's profile information.
     """
-    return UserResponse(
-        id=str(current_user["_id"]),
-        name=current_user["name"],
-        email=current_user["email"],
-        role=current_user.get("role", "user"),
-        created_at=current_user["created_at"],
-        updated_at=current_user["updated_at"]
-    )
+    try:
+        # Get the latest user data from database
+        user = db.users.find_one({"_id": ObjectId(current_user["_id"])})
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found"
+            )
+            
+        return UserResponse(
+            _id=str(user["_id"]),
+            name=user["name"],
+            email=user["email"],
+            role=user.get("role", "user"),
+            created_at=user["created_at"],
+            updated_at=user["updated_at"],
+            avatar_url=user.get("avatar_url")
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e)
+        )
 
 
 @router.put("/me", response_model=UserResponse)
@@ -217,13 +232,13 @@ async def update_user_profile(
         UserResponse: The updated user profile information.
     """
     try:
-        # Update user document
+        # Prepare update data
         update_data = user_update.dict(exclude_unset=True)
         update_data["updated_at"] = datetime.utcnow()
         
-        # Update in database
+        # Update user in database
         result = db.users.update_one(
-            {"_id": current_user["_id"]},
+            {"_id": ObjectId(current_user["_id"])},
             {"$set": update_data}
         )
         
@@ -233,19 +248,18 @@ async def update_user_profile(
                 detail="User not found"
             )
         
-        # Get updated user
-        updated_user = db.users.find_one({"_id": current_user["_id"]})
+        # Get updated user data
+        updated_user = db.users.find_one({"_id": ObjectId(current_user["_id"])})
         
         return UserResponse(
-            id=str(updated_user["_id"]),
+            _id=str(updated_user["_id"]),
             name=updated_user["name"],
             email=updated_user["email"],
             role=updated_user.get("role", "user"),
             created_at=updated_user["created_at"],
-            updated_at=updated_user["updated_at"]
+            updated_at=updated_user["updated_at"],
+            avatar_url=updated_user.get("avatar_url")
         )
-    except HTTPException:
-        raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -277,6 +291,53 @@ async def delete_user_profile(current_user: dict = Depends(get_current_user)):
         return None
     except HTTPException:
         raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e)
+        )
+
+
+@router.get("/list", response_model=List[UserResponse])
+async def get_users():
+    """
+    Get a list of all users.
+    
+    Returns:
+        List[UserResponse]: A list of all user objects.
+            Sample output:
+            [
+                {
+                    "id": "507f1f77bcf86cd799439011",
+                    "name": "John Doe",
+                    "email": "john@example.com",
+                    "role": "user",
+                    "avatar_url": null,
+                    "created_at": "2024-04-04T12:00:00",
+                    "updated_at": "2024-04-04T12:00:00"
+                },
+                ...
+            ]
+    """
+    try:
+        # Fetch all users from the database
+        users = list(db.users.find())
+        
+        # Convert users to response model format
+        user_responses = []
+        for user in users:
+            user_response = UserResponse(
+                _id=str(user["_id"]),
+                name=user["name"],
+                email=user["email"],
+                role=user.get("role", "user"),
+                created_at=user["created_at"],
+                updated_at=user["updated_at"],
+                avatar_url=user.get("avatar_url")
+            )
+            user_responses.append(user_response)
+        
+        return user_responses
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
