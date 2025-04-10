@@ -7,9 +7,7 @@ import 'apis/app_write.dart';
 import 'helper/ad_helper.dart';
 import 'helper/global.dart';
 import 'helper/pref.dart';
-import 'screen/splash_screen.dart';
-import 'screen/feature/conversation/create_situation_screen.dart';
-import 'screen/feature/conversation/conversation_screen.dart';
+import 'routes/app_routes.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding
@@ -107,24 +105,8 @@ class MyApp extends StatelessWidget {
         ),
       ),
 
-      // Define routes
-      getPages: [
-        GetPage(
-          name: '/create-situation',
-          page: () => CreateSituationScreen(
-            token: Get.arguments['token'],
-          ),
-        ),
-        GetPage(
-          name: '/chat',
-          page: () => ConversationScreen(
-            conversationId: Get.arguments['conversationId'],
-            token: Get.arguments['token'],
-          ),
-        ),
-      ],
-
-      home: const SplashScreen(), // 🚀 Start with the splash screen
+      initialRoute: AppRoutes.splash,
+      getPages: AppRoutes.routes,
     );
   }
 }

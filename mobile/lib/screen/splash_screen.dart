@@ -4,6 +4,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 
 import '../helper/global.dart';
 import '../helper/pref.dart';
+import '../routes/app_routes.dart';
 import '../widgets/custom_loading.dart';
 import 'onboarding_screen.dart';
 import 'login_screen.dart';
@@ -23,8 +24,9 @@ class _SplashScreenState extends State<SplashScreen> {
     // ⏳ Wait for 2 seconds and then navigate to the appropriate screen
     Future.delayed(const Duration(seconds: 2), () {
       // 📌 If onboarding is enabled, show OnboardingScreen, otherwise go to LoginScreen
-      Get.off(() =>
-          Pref.showOnboarding ? const OnboardingScreen() : const LoginScreen());
+      Get.offAllNamed(
+        Pref.showOnboarding ? AppRoutes.onboarding : AppRoutes.login,
+      );
     });
   }
 

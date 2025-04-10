@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:speaking_english_with_ai/screen/home_screen.dart';
+import '../routes/app_routes.dart';
+import '../services/api_service.dart';
+import '../helper/pref.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -11,7 +13,7 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
-  final _formKey = GlobalKey<FormState>();
+  final _registerFormKey = GlobalKey<FormState>(debugLabel: 'register_form');
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -30,14 +32,31 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   void _handleRegister() async {
-    if (_formKey.currentState!.validate()) {
+    if (_registerFormKey.currentState!.validate()) {
       setState(() => _isLoading = true);
 
-      // TODO: Implement actual registration logic here
-      await Future.delayed(const Duration(seconds: 2)); // Simulated delay
+      try {
+        final response = await ApiService.register(
+          _nameController.text,
+          _emailController.text,
+          _passwordController.text,
+        );
 
-      setState(() => _isLoading = false);
-      Get.offAll(() => const HomeScreen());
+        // Store user data
+        await Pref.setUserData(response['user']);
+
+        Get.offAllNamed(AppRoutes.home);
+      } catch (e) {
+        Get.snackbar(
+          'Error',
+          e.toString(),
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red.shade100,
+          colorText: Colors.red.shade900,
+        );
+      } finally {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -59,7 +78,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(24),
             child: Form(
-              key: _formKey,
+              key: _registerFormKey,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [

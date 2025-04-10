@@ -8,7 +8,9 @@ import '../helper/ad_helper.dart';
 import '../helper/global.dart';
 import '../helper/pref.dart';
 import '../model/home_type.dart';
+import '../model/user.dart';
 import '../widgets/home_card.dart';
+import '../routes/app_routes.dart';
 
 /// 📌 **Home Screen**
 ///
@@ -28,12 +30,7 @@ class _HomeScreenState extends State<HomeScreen> {
   /// - Observes whether dark mode is enabled
   /// - Uses `Get.isDarkMode.obs` instead of `Pref.isDarkMode.obs` to avoid bugs
   final _isDarkMode = Get.isDarkMode.obs;
-
-  // Mock user data - replace with actual user data from your backend
-  final String _userName = "John Doe";
-  final String _userEmail = "john.doe@example.com";
-  final String _userAvatar =
-      "https://ui-avatars.com/api/?name=John+Doe&background=0D8ABC&color=fff";
+  final _user = Rxn<User>();
 
   @override
   void initState() {
@@ -44,6 +41,14 @@ class _HomeScreenState extends State<HomeScreen> {
 
     // 🚀 **Disable Onboarding for Future Launches**
     Pref.showOnboarding = false;
+    _loadUserData();
+  }
+
+  void _loadUserData() {
+    final userData = Pref.getUserData();
+    if (userData != null) {
+      _user.value = User.fromJson(userData);
+    }
   }
 
   @override
@@ -108,63 +113,80 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           children: [
             // User Profile Card
-            Card(
-              elevation: 2,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  children: [
-                    CircleAvatar(
-                      radius: 30,
-                      backgroundImage: NetworkImage(_userAvatar),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Welcome back,',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey.shade600,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            _userName,
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            _userEmail,
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey.shade600,
-                            ),
-                          ),
-                        ],
+            Obx(() => Card(
+                      elevation: 2,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
                       ),
-                    ),
-                    IconButton(
-                      onPressed: () {
-                        HomeType.profile.onTap();
-                      },
-                      icon: Icon(
-                        Icons.edit_outlined,
-                        color: Colors.blue.shade700,
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Row(
+                          children: [
+                            CircleAvatar(
+                              radius: 30,
+                              backgroundColor: Colors.blue.shade100,
+                              backgroundImage: _user.value?.avatar != null
+                                  ? NetworkImage(_user.value!.avatar!)
+                                  : null,
+                              child: _user.value?.avatar == null
+                                  ? Text(
+                                      _user.value?.name
+                                              .substring(0, 1)
+                                              .toUpperCase() ??
+                                          'U',
+                                      style: const TextStyle(
+                                        fontSize: 24,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
+                                    )
+                                  : null,
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Welcome back,',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.grey.shade600,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    _user.value?.name ?? 'User',
+                                    style: const TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    _user.value?.email ?? '',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.grey.shade600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            IconButton(
+                              onPressed: () => Get.toNamed(AppRoutes.profile),
+                              icon: Icon(
+                                Icons.edit_outlined,
+                                color: Colors.blue.shade700,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-              ),
-            ).animate().fadeIn(duration: 600.ms).slideY(begin: 0.2, end: 0),
+                    ))
+                .animate()
+                .fadeIn(duration: 600.ms)
+                .slideY(begin: 0.2, end: 0),
 
             const SizedBox(height: 24),
 

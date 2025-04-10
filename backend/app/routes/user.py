@@ -352,3 +352,4 @@ async def get_users(current_user: dict = Depends(get_current_user)):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=str(e)
         )
+INFO:     Application startup complete.

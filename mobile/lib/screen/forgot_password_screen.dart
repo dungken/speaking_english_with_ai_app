@@ -10,7 +10,8 @@ class ForgotPasswordScreen extends StatefulWidget {
 }
 
 class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
-  final _formKey = GlobalKey<FormState>();
+  final _forgotPasswordFormKey =
+      GlobalKey<FormState>(debugLabel: 'forgot_password_form');
   final _emailController = TextEditingController();
   bool _isLoading = false;
   bool _resetSent = false;
@@ -22,7 +23,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   }
 
   void _handleResetPassword() async {
-    if (_formKey.currentState!.validate()) {
+    if (_forgotPasswordFormKey.currentState!.validate()) {
       setState(() => _isLoading = true);
 
       // TODO: Implement actual password reset logic here
@@ -53,7 +54,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(24),
             child: Form(
-              key: _formKey,
+              key: _forgotPasswordFormKey,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [

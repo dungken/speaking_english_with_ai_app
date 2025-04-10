@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:get/get.dart';
 import '../../model/topic.dart';
 import '../../model/chunk.dart';
 import '../../widgets/topic_card.dart';
@@ -14,10 +15,7 @@ class SubtopicsScreen extends StatelessWidget {
   }) : super(key: key);
 
   void _navigateToInteractiveLearning(BuildContext context, Topic subtopic) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => InteractiveLearningScreen(
+    Get.to(() => InteractiveLearningScreen(
           question: subtopic.title,
           questionTranslation: subtopic.description,
           basicChunks: [
@@ -54,9 +52,7 @@ class SubtopicsScreen extends StatelessWidget {
               audioUrl: 'assets/audio/i_prefer_working.mp3',
             ),
           ],
-        ),
-      ),
-    );
+        ));
   }
 
   @override
@@ -117,14 +113,9 @@ class SubtopicsScreen extends StatelessWidget {
                           },
                           onTap: () {
                             if (subtopic.subtopics != null) {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => SubtopicsScreen(
+                              Get.to(() => SubtopicsScreen(
                                     topic: subtopic,
-                                  ),
-                                ),
-                              );
+                                  ));
                             } else {
                               _navigateToInteractiveLearning(context, subtopic);
                             }
