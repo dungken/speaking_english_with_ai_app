@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:speaking_english_with_ai/screen/register_screen.dart';
-import 'package:speaking_english_with_ai/screen/home_screen.dart';
-import 'package:speaking_english_with_ai/screen/forgot_password_screen.dart';
+import '../routes/app_routes.dart';
+import '../services/api_service.dart';
+import '../helper/pref.dart';
+import '../model/user.dart';
+import '../helper/logger.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -13,7 +15,7 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _formKey = GlobalKey<FormState>();
+  final _loginFormKey = GlobalKey<FormState>(debugLabel: 'login_form');
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
@@ -26,15 +28,70 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
+  void _showSuccessNotification(User user) {
+    Get.snackbar(
+      'Welcome Back!',
+      'Successfully logged in as ${user.name}',
+      snackPosition: SnackPosition.TOP,
+      backgroundColor: Colors.green.shade50,
+      colorText: Colors.green.shade900,
+      duration: const Duration(seconds: 3),
+      icon: const Icon(
+        Icons.check_circle,
+        color: Colors.green,
+      ),
+      shouldIconPulse: true,
+      margin: const EdgeInsets.all(10),
+      borderRadius: 10,
+      barBlur: 10,
+    );
+  }
+
   void _handleLogin() async {
-    if (_formKey.currentState!.validate()) {
+    if (_loginFormKey.currentState!.validate()) {
       setState(() => _isLoading = true);
 
-      // TODO: Implement actual login logic here
-      await Future.delayed(const Duration(seconds: 2)); // Simulated delay
+      try {
+        final response = await ApiService.login(
+          _emailController.text,
+          _passwordController.text,
+        );
 
-      setState(() => _isLoading = false);
-      Get.offAll(() => const HomeScreen());
+        // Parse user data
+        final user = User.fromJson(response['user']);
+
+        // Store user data
+        await Pref.setUserData(response['user']);
+
+        // Show success notification
+        _showSuccessNotification(user);
+
+        // Log success
+        Logger.s('Login', 'Successfully logged in as ${user.name}');
+
+        // Navigate to home after a short delay to allow notification to be seen
+        await Future.delayed(const Duration(milliseconds: 500));
+        Get.offAllNamed(AppRoutes.home);
+      } catch (e) {
+        Get.snackbar(
+          'Login Failed',
+          e.toString().replaceAll('Exception: ', ''),
+          snackPosition: SnackPosition.TOP,
+          backgroundColor: Colors.red.shade50,
+          colorText: Colors.red.shade900,
+          borderRadius: 10,
+          margin: const EdgeInsets.all(10),
+          duration: const Duration(seconds: 3),
+          icon: const Icon(
+            Icons.error_outline,
+            color: Colors.red,
+          ),
+          shouldIconPulse: true,
+          barBlur: 10,
+        );
+      } finally {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -57,7 +114,7 @@ class _LoginScreenState extends State<LoginScreen> {
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(24),
               child: Form(
-                key: _formKey,
+                key: _loginFormKey,
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -259,9 +316,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     Align(
                       alignment: Alignment.centerRight,
                       child: TextButton(
-                        onPressed: () {
-                          Get.to(() => const ForgotPasswordScreen());
-                        },
+                        onPressed: () => Get.toNamed(AppRoutes.forgotPassword),
                         style: TextButton.styleFrom(
                           foregroundColor: Colors.blue.shade700,
                         ),
@@ -321,7 +376,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
                         TextButton(
-                          onPressed: () => Get.to(() => const RegisterScreen()),
+                          onPressed: () => Get.toNamed(AppRoutes.register),
                           style: TextButton.styleFrom(
                             foregroundColor: Colors.blue.shade700,
                             padding: const EdgeInsets.symmetric(horizontal: 8),

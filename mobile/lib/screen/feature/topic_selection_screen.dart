@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:get/get.dart';
 import '../../helper/global.dart';
 import '../../model/topic.dart';
 import '../../widgets/topic_card.dart';
@@ -316,14 +317,9 @@ class _TopicSelectionScreenState extends State<TopicSelectionScreen> {
               },
               onTap: () {
                 if (topic.subtopics != null) {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => SubtopicsScreen(
+                  Get.to(() => SubtopicsScreen(
                         topic: topic,
-                      ),
-                    ),
-                  );
+                      ));
                 }
               },
             )),

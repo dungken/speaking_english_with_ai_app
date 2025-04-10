@@ -10,6 +10,7 @@ class Pref {
   static late Box _box;
   static const String _themeKey = 'theme_mode';
   static const String _tokenKey = 'auth_token';
+  static const String _userDataKey = 'user_data';
 
   /// Initializes Hive and opens the preferences box.
   ///
@@ -55,13 +56,33 @@ class Pref {
     _box.put(_themeKey, value);
   }
 
-  static String? get token => _box.get(_tokenKey);
+  /// Get the authentication token
+  static String? getToken() => _box.get(_tokenKey);
 
-  static set token(String? value) {
-    if (value != null) {
-      _box.put(_tokenKey, value);
+  /// Set the authentication token
+  static Future<void> setToken(String? token) async {
+    if (token != null) {
+      await _box.put(_tokenKey, token);
     } else {
-      _box.delete(_tokenKey);
+      await _box.delete(_tokenKey);
     }
+  }
+
+  /// Get the user data
+  static Map<String, dynamic>? getUserData() => _box.get(_userDataKey);
+
+  /// Set the user data
+  static Future<void> setUserData(Map<String, dynamic>? userData) async {
+    if (userData != null) {
+      await _box.put(_userDataKey, userData);
+    } else {
+      await _box.delete(_userDataKey);
+    }
+  }
+
+  /// Clear all user data (token and user info)
+  static Future<void> clearUserData() async {
+    await _box.delete(_tokenKey);
+    await _box.delete(_userDataKey);
   }
 }

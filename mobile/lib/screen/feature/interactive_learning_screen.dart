@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:get/get.dart';
 import '../../model/chunk.dart';
 import '../../widgets/learning_stages/chunking_stage.dart';
 import '../../widgets/learning_stages/sentence_building_stage.dart';
@@ -173,7 +174,7 @@ class _InteractiveLearningScreenState extends State<InteractiveLearningScreen> {
         }
         break;
       case LearningStage.summary:
-        Navigator.of(context).pop();
+        Get.back();
         break;
       default:
         break;

@@ -344,3 +344,4 @@ async def get_users():
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=str(e)
         )
+INFO:     Application startup complete.
