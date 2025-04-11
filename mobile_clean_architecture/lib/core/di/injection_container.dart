@@ -24,12 +24,7 @@ Future<void> init() async {
   //! Features - Authentication
   // Bloc
   sl.registerFactory(
-    () => AuthBloc(
-      signIn: sl(),
-      register: sl(),
-      signOut: sl(),
-      getCurrentUser: sl(),
-    ),
+    () => AuthBloc(),
   );
 
   // Use cases
@@ -58,7 +53,7 @@ Future<void> init() async {
 
   //! Core
   sl.registerLazySingleton<NetworkInfo>(
-    () => NetworkInfoImpl(connectionChecker: sl()),
+    () => NetworkInfoImpl(sl()),
   );
 
   //! External

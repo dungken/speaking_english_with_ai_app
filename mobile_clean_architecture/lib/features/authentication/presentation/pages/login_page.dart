@@ -38,9 +38,8 @@ class _LoginPageState extends State<LoginPage> {
       if (mounted) {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
-            builder:
-                (context) =>
-                    HomePage(name: "Demo User", email: _emailController.text),
+            builder: (context) =>
+                HomePage(name: "Demo User", email: _emailController.text),
           ),
         );
       }
@@ -124,7 +123,7 @@ class _LoginPageState extends State<LoginPage> {
                     TextFormField(
                       controller: _emailController,
                       keyboardType: TextInputType.emailAddress,
-                      style: const TextStyle(fontSize: 15),
+                      style: TextStyle(fontSize: 15, color: Colors.black87),
                       decoration: InputDecoration(
                         labelText: 'Email',
                         hintText: 'Enter your email',
@@ -182,7 +181,7 @@ class _LoginPageState extends State<LoginPage> {
                     TextFormField(
                       controller: _passwordController,
                       obscureText: _obscurePassword,
-                      style: const TextStyle(fontSize: 15),
+                      style: TextStyle(fontSize: 15, color: Colors.black87),
                       decoration: InputDecoration(
                         labelText: 'Password',
                         hintText: 'Enter your password',
@@ -285,25 +284,24 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                         elevation: _isLoading ? 0 : 3,
                       ),
-                      child:
-                          _isLoading
-                              ? SizedBox(
-                                height: 20,
-                                width: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation<Color>(
-                                    Colors.blue.shade100,
-                                  ),
-                                ),
-                              )
-                              : const Text(
-                                'Sign In',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
+                      child: _isLoading
+                          ? SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  Colors.blue.shade100,
                                 ),
                               ),
+                            )
+                          : const Text(
+                              'Sign In',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                     ),
 
                     const SizedBox(height: 24),

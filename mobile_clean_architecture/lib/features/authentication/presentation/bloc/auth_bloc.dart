@@ -1,95 +1,165 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:equatable/equatable.dart';
 
-import '../../../../core/usecases/usecase.dart';
-import '../../domain/usecases/get_current_user_usecase.dart';
-import '../../domain/usecases/register_usecase.dart';
-import '../../domain/usecases/sign_in_usecase.dart';
-import '../../domain/usecases/sign_out_usecase.dart';
-import 'auth_event.dart';
-import 'auth_state.dart';
+import '../../domain/entities/user.dart';
 
-/// BLoC for authentication feature
+// Events
+abstract class AuthEvent extends Equatable {
+  const AuthEvent();
+
+  @override
+  List<Object> get props => [];
+}
+
+class SignInRequested extends AuthEvent {
+  final String email;
+  final String password;
+
+  const SignInRequested(this.email, this.password);
+
+  @override
+  List<Object> get props => [email, password];
+}
+
+class RegisterRequested extends AuthEvent {
+  final String name;
+  final String email;
+  final String password;
+
+  const RegisterRequested(this.name, this.email, this.password);
+
+  @override
+  List<Object> get props => [name, email, password];
+}
+
+class SignOutRequested extends AuthEvent {}
+
+class GetCurrentUserRequested extends AuthEvent {}
+
+// States
+abstract class AuthState extends Equatable {
+  const AuthState();
+
+  @override
+  List<Object?> get props => [];
+}
+
+class AuthInitial extends AuthState {}
+
+class AuthLoading extends AuthState {}
+
+class Authenticated extends AuthState {
+  final User user;
+
+  const Authenticated(this.user);
+
+  @override
+  List<Object?> get props => [user];
+}
+
+class Unauthenticated extends AuthState {}
+
+class AuthError extends AuthState {
+  final String message;
+
+  const AuthError(this.message);
+
+  @override
+  List<Object?> get props => [message];
+}
+
+// Bloc
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
-  final SignInUseCase signIn;
-  final RegisterUseCase register;
-  final SignOutUseCase signOut;
-  final GetCurrentUserUseCase getCurrentUser;
-
-  AuthBloc({
-    required this.signIn,
-    required this.register,
-    required this.signOut,
-    required this.getCurrentUser,
-  }) : super(AuthInitial()) {
-    // Check if user is already authenticated
-    on<CheckAuthenticationEvent>(_onCheckAuthentication);
-
-    // Sign in a user
-    on<SignInEvent>(_onSignIn);
-
-    // Register a new user
-    on<RegisterEvent>(_onRegister);
-
-    // Sign out a user
-    on<SignOutEvent>(_onSignOut);
+  AuthBloc() : super(AuthInitial()) {
+    on<SignInRequested>(_onSignInRequested);
+    on<RegisterRequested>(_onRegisterRequested);
+    on<SignOutRequested>(_onSignOutRequested);
+    on<GetCurrentUserRequested>(_onGetCurrentUserRequested);
   }
 
-  /// Check if the user is already authenticated
-  Future<void> _onCheckAuthentication(
-    CheckAuthenticationEvent event,
+  Future<void> _onSignInRequested(
+    SignInRequested event,
     Emitter<AuthState> emit,
   ) async {
     emit(AuthLoading());
-
-    final result = await getCurrentUser(NoParams());
-
-    result.fold(
-      (failure) => emit(Unauthenticated()),
-      (user) => emit(Authenticated(user: user)),
-    );
+    try {
+      // TODO: Implement actual sign in logic
+      await Future.delayed(const Duration(seconds: 1));
+      emit(
+        Authenticated(
+          const User(
+            id: '1',
+            name: 'Test User',
+            email: 'test@example.com',
+            profileImageUrl: null,
+            token: 'test_token',
+          ),
+        ),
+      );
+    } catch (e) {
+      emit(AuthError(e.toString()));
+    }
   }
 
-  /// Sign in a user with email and password
-  Future<void> _onSignIn(SignInEvent event, Emitter<AuthState> emit) async {
+  Future<void> _onRegisterRequested(
+    RegisterRequested event,
+    Emitter<AuthState> emit,
+  ) async {
     emit(AuthLoading());
-
-    final result = await signIn(
-      SignInParams(email: event.email, password: event.password),
-    );
-
-    result.fold(
-      (failure) => emit(AuthError(message: failure.message)),
-      (user) => emit(Authenticated(user: user)),
-    );
+    try {
+      // TODO: Implement actual registration logic
+      await Future.delayed(const Duration(seconds: 1));
+      emit(
+        Authenticated(
+          User(
+            id: '1',
+            name: event.name,
+            email: event.email,
+            profileImageUrl: null,
+            token: 'test_token',
+          ),
+        ),
+      );
+    } catch (e) {
+      emit(AuthError(e.toString()));
+    }
   }
 
-  /// Register a new user
-  Future<void> _onRegister(RegisterEvent event, Emitter<AuthState> emit) async {
+  Future<void> _onSignOutRequested(
+    SignOutRequested event,
+    Emitter<AuthState> emit,
+  ) async {
     emit(AuthLoading());
-
-    final result = await register(
-      RegisterParams(
-        name: event.name,
-        email: event.email,
-        password: event.password,
-      ),
-    );
-
-    result.fold(
-      (failure) => emit(AuthError(message: failure.message)),
-      (user) => emit(Authenticated(user: user)),
-    );
+    try {
+      // TODO: Implement actual sign out logic
+      await Future.delayed(const Duration(milliseconds: 500));
+      emit(Unauthenticated());
+    } catch (e) {
+      emit(AuthError(e.toString()));
+    }
   }
 
-  /// Sign out the current user
-  Future<void> _onSignOut(SignOutEvent event, Emitter<AuthState> emit) async {
+  Future<void> _onGetCurrentUserRequested(
+    GetCurrentUserRequested event,
+    Emitter<AuthState> emit,
+  ) async {
     emit(AuthLoading());
-
-    final result = await signOut(NoParams());
-
-    result.fold(
-      (failure) => emit(AuthError(message: failure.message)),
-      (_) => emit(Unauthenticated()),
-    );
+    try {
+      // TODO: Implement actual get current user logic
+      await Future.delayed(const Duration(milliseconds: 500));
+      emit(
+        Authenticated(
+          const User(
+            id: '1',
+            name: 'Test User',
+            email: 'test@example.com',
+            profileImageUrl: null,
+            token: 'test_token',
+          ),
+        ),
+      );
+    } catch (e) {
+      emit(Unauthenticated());
+    }
   }
 }

@@ -59,6 +59,9 @@ dependencies:
   # Others
   json_annotation: ^4.8.1
 
+  # Navigation
+  go_router: ^13.2.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -76,6 +79,12 @@ dev_dependencies:
   
   # For Hive Type Adapters
   hive_generator: ^2.0.1
+
+  # Local Storage
+  shared_preferences: ^2.2.2
+
+  # Utils
+  injectable: ^2.3.2
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

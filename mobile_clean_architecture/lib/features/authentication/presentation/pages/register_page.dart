@@ -93,7 +93,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       controller: _nameController,
                       keyboardType: TextInputType.name,
                       textCapitalization: TextCapitalization.words,
-                      style: const TextStyle(fontSize: 15),
+                      style: TextStyle(fontSize: 15, color: Colors.black87),
                       decoration: InputDecoration(
                         labelText: 'Full Name',
                         hintText: 'Enter your full name',
@@ -145,7 +145,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     TextFormField(
                       controller: _emailController,
                       keyboardType: TextInputType.emailAddress,
-                      style: const TextStyle(fontSize: 15),
+                      style: TextStyle(fontSize: 15, color: Colors.black87),
                       decoration: InputDecoration(
                         labelText: 'Email',
                         hintText: 'Enter your email',
@@ -203,7 +203,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     TextFormField(
                       controller: _passwordController,
                       obscureText: _obscurePassword,
-                      style: const TextStyle(fontSize: 15),
+                      style: TextStyle(fontSize: 15, color: Colors.black87),
                       decoration: InputDecoration(
                         labelText: 'Password',
                         hintText: 'Create a password',
@@ -271,7 +271,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     TextFormField(
                       controller: _confirmPasswordController,
                       obscureText: _obscureConfirmPassword,
-                      style: const TextStyle(fontSize: 15),
+                      style: TextStyle(fontSize: 15, color: Colors.black87),
                       decoration: InputDecoration(
                         labelText: 'Confirm Password',
                         hintText: 'Confirm your password',
@@ -351,25 +351,24 @@ class _RegisterPageState extends State<RegisterPage> {
                         ),
                         elevation: _isLoading ? 0 : 3,
                       ),
-                      child:
-                          _isLoading
-                              ? SizedBox(
-                                height: 20,
-                                width: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation<Color>(
-                                    Colors.blue.shade100,
-                                  ),
-                                ),
-                              )
-                              : const Text(
-                                'Sign Up',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
+                      child: _isLoading
+                          ? SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  Colors.blue.shade100,
                                 ),
                               ),
+                            )
+                          : const Text(
+                              'Sign Up',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                     ),
 
                     const SizedBox(height: 20),

@@ -68,16 +68,14 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
 
                     // Title
                     Text(
-                          _resetSent
-                              ? 'Reset Email Sent'
-                              : 'Reset Your Password',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.blue.shade800,
-                          ),
-                        )
+                      _resetSent ? 'Reset Email Sent' : 'Reset Your Password',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.blue.shade800,
+                      ),
+                    )
                         .animate()
                         .fadeIn(duration: 400.ms)
                         .slideY(begin: 0.2, end: 0),
@@ -103,7 +101,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                       TextFormField(
                         controller: _emailController,
                         keyboardType: TextInputType.emailAddress,
-                        style: const TextStyle(fontSize: 15),
+                        style: TextStyle(fontSize: 15, color: Colors.black87),
                         decoration: InputDecoration(
                           labelText: 'Email',
                           hintText: 'Enter your email',
@@ -172,25 +170,24 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                           ),
                           elevation: _isLoading ? 0 : 3,
                         ),
-                        child:
-                            _isLoading
-                                ? SizedBox(
-                                  height: 20,
-                                  width: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    valueColor: AlwaysStoppedAnimation<Color>(
-                                      Colors.blue.shade100,
-                                    ),
-                                  ),
-                                )
-                                : const Text(
-                                  'Reset Password',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
+                        child: _isLoading
+                            ? SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    Colors.blue.shade100,
                                   ),
                                 ),
+                              )
+                            : const Text(
+                                'Reset Password',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                       ).animate().fadeIn(delay: 600.ms).scale(delay: 600.ms),
                     ] else ...[
                       // Return to Login Button

@@ -1,44 +1,27 @@
-/// Base Exception class for the application
+/// Base class for all exceptions in the application
 class AppException implements Exception {
   final String message;
+  final int? statusCode;
 
-  AppException({required this.message});
+  AppException({required this.message, this.statusCode});
 
   @override
-  String toString() => 'AppException: $message';
+  String toString() =>
+      'AppException: $message${statusCode != null ? ' (Status: $statusCode)' : ''}';
 }
 
-/// Exception thrown when a server error occurs
+/// Represents a server-side exception
 class ServerException extends AppException {
-  final int statusCode;
-
-  ServerException({required String message, required this.statusCode})
-    : super(message: message);
-
-  @override
-  String toString() => 'ServerException: $message (Status code: $statusCode)';
+  ServerException({required String message, int? statusCode})
+      : super(message: message, statusCode: statusCode);
 }
 
-/// Exception thrown when a cache error occurs
+/// Represents a cache/local storage exception
 class CacheException extends AppException {
   CacheException({required String message}) : super(message: message);
-
-  @override
-  String toString() => 'CacheException: $message';
 }
 
-/// Exception thrown when a network error occurs
+/// Represents a network connectivity exception
 class NetworkException extends AppException {
   NetworkException({required String message}) : super(message: message);
-
-  @override
-  String toString() => 'NetworkException: $message';
-}
-
-/// Exception thrown when an authentication error occurs
-class AuthException extends AppException {
-  AuthException({required String message}) : super(message: message);
-
-  @override
-  String toString() => 'AuthException: $message';
 }
