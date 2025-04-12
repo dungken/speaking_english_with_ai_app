@@ -32,12 +32,12 @@ class AuthRepositoryImpl implements AuthRepository {
         await localDataSource.cacheUser(userModel);
         return Right(userModel);
       } on ServerException catch (e) {
-        return Left(ServerFailure(message: e.message));
+        return Left(ServerFailure(e.message));
       } catch (e) {
-        return Left(ServerFailure(message: e.toString()));
+        return Left(ServerFailure(e.toString()));
       }
     } else {
-      return Left(NetworkFailure(message: 'No internet connection.'));
+      return Left(NetworkFailure('No internet connection.'));
     }
   }
 
@@ -57,12 +57,12 @@ class AuthRepositoryImpl implements AuthRepository {
         await localDataSource.cacheUser(userModel);
         return Right(userModel);
       } on ServerException catch (e) {
-        return Left(ServerFailure(message: e.message));
+        return Left(ServerFailure(e.message));
       } catch (e) {
-        return Left(ServerFailure(message: e.toString()));
+        return Left(ServerFailure(e.toString()));
       }
     } else {
-      return Left(NetworkFailure(message: 'No internet connection.'));
+      return Left(NetworkFailure('No internet connection.'));
     }
   }
 
@@ -72,9 +72,9 @@ class AuthRepositoryImpl implements AuthRepository {
       await localDataSource.clearUser();
       return const Right(true);
     } on CacheException catch (e) {
-      return Left(CacheFailure(message: e.message));
+      return Left(CacheFailure(e.message));
     } catch (e) {
-      return Left(CacheFailure(message: e.toString()));
+      return Left(CacheFailure(e.toString()));
     }
   }
 
@@ -84,9 +84,9 @@ class AuthRepositoryImpl implements AuthRepository {
       final userModel = await localDataSource.getLastUser();
       return Right(userModel);
     } on CacheException catch (e) {
-      return Left(CacheFailure(message: e.message));
+      return Left(CacheFailure(e.message));
     } catch (e) {
-      return Left(CacheFailure(message: e.toString()));
+      return Left(CacheFailure(e.toString()));
     }
   }
 

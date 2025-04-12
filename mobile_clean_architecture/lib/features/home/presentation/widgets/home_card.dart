@@ -34,7 +34,7 @@ class HomeCard extends StatelessWidget {
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
-                  homeType.icon,
+                  _getIconForType(homeType),
                   color: Theme.of(context).primaryColor,
                   size: 24,
                 ),
@@ -47,7 +47,7 @@ class HomeCard extends StatelessWidget {
                     Text(
                       homeType.title,
                       style: const TextStyle(
-                        fontSize: 16,
+                        fontSize: 18,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -55,7 +55,7 @@ class HomeCard extends StatelessWidget {
                     Text(
                       homeType.description,
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: 14,
                         color: Colors.grey.shade600,
                       ),
                     ),
@@ -71,12 +71,12 @@ class HomeCard extends StatelessWidget {
           ),
         ),
       ),
-    ).animate().fadeIn(duration: 600.ms, delay: 400.ms);
+    ).animate().fadeIn(duration: 600.ms).slideX(begin: 0.2, end: 0);
   }
 
   void _navigateToFeature(BuildContext context) {
     switch (homeType) {
-      case HomeType.conversations:
+      case HomeType.conversation:
         context.push('/conversations');
         break;
       case HomeType.topics:
@@ -88,6 +88,19 @@ class HomeCard extends StatelessWidget {
       case HomeType.profile:
         context.push('/profile');
         break;
+    }
+  }
+
+  IconData _getIconForType(HomeType type) {
+    switch (type) {
+      case HomeType.conversation:
+        return Icons.chat_bubble_outline;
+      case HomeType.imageDescription:
+        return Icons.image_outlined;
+      case HomeType.topics:
+        return Icons.topic_outlined;
+      case HomeType.profile:
+        return Icons.person_outline;
     }
   }
 }

@@ -12,13 +12,19 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:get_it/get_it.dart';
 
 import 'core/routes/app_router.dart';
 import 'core/theme/app_theme.dart';
-import 'features/authentication/presentation/bloc/auth_bloc.dart';
+import 'features/home/di/home_module.dart';
+import 'features/home/presentation/cubit/home_cubit.dart';
+import 'features/home/presentation/bloc/user_bloc.dart';
 
 /// Application entry point
 void main() {
+  // Initialize dependency injection
+  initHomeModule();
+
   runApp(const MyApp());
 }
 
@@ -36,9 +42,13 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
-        // Initialize authentication state management
-        BlocProvider<AuthBloc>(
-          create: (context) => AuthBloc(),
+        // Initialize home state management
+        BlocProvider<HomeCubit>(
+          create: (context) => GetIt.instance<HomeCubit>(),
+        ),
+        // Add UserBloc provider
+        BlocProvider<UserBloc>(
+          create: (context) => UserBloc(),
         ),
       ],
       child: MaterialApp.router(

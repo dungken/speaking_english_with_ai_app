@@ -12,6 +12,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/authentication/presentation/pages/forgot_password_page.dart';
 import '../../features/authentication/presentation/pages/login_page.dart';
 import '../../features/authentication/presentation/pages/register_page.dart';
 import '../../features/home/presentation/pages/home_page.dart';
@@ -29,6 +30,7 @@ class AppRouter {
   /// Routes defined:
   /// - /login: Authentication page
   /// - /register: User registration
+  /// - /forgot-password: Password recovery
   /// - /home: Main app screen
   /// - /profile: User profile management
   static final GoRouter router = GoRouter(
@@ -41,6 +43,10 @@ class AppRouter {
       GoRoute(
         path: '/register',
         builder: (context, state) => const RegisterPage(),
+      ),
+      GoRoute(
+        path: '/forgot-password',
+        builder: (context, state) => const ForgotPasswordPage(),
       ),
       GoRoute(
         path: '/home',

@@ -3,12 +3,16 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../domain/entities/home_type.dart';
+import '../bloc/user_bloc.dart';
 import '../widgets/home_card.dart';
 import '../widgets/user_profile_card.dart';
+import '../cubit/home_cubit.dart';
+import '../cubit/home_state.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -19,19 +23,24 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   bool _isDarkMode = false;
+  late SharedPreferences _prefs;
 
   @override
   void initState() {
     super.initState();
-    // Enable Fullscreen Edge-to-Edge UI
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    _initPrefs();
+    context.read<HomeCubit>().loadHomeTypes();
+  }
+
+  Future<void> _initPrefs() async {
+    _prefs = await SharedPreferences.getInstance();
     _loadThemePreference();
   }
 
   void _loadThemePreference() {
-    // TODO: Load theme preference from shared preferences
     setState(() {
-      _isDarkMode = Theme.of(context).brightness == Brightness.dark;
+      _isDarkMode = _prefs.getBool('isDarkMode') ??
+          Theme.of(context).brightness == Brightness.dark;
     });
   }
 
@@ -40,13 +49,31 @@ class _HomePageState extends State<HomePage> {
       _isDarkMode = !_isDarkMode;
     });
 
-    // TODO: Save theme preference to shared preferences
+    // Save theme preference to shared preferences
+    _prefs.setBool('isDarkMode', _isDarkMode);
 
     // Update the app theme
-    if (_isDarkMode) {
-      ThemeMode.dark;
-    } else {
-      ThemeMode.light;
+    if (mounted) {
+      final themeMode = _isDarkMode ? ThemeMode.dark : ThemeMode.light;
+      // Use a simple approach that works on all platforms
+      final brightness = _isDarkMode ? Brightness.dark : Brightness.light;
+      final theme = brightness == Brightness.dark
+          ? AppTheme.darkTheme
+          : AppTheme.lightTheme;
+
+      // Create a new MaterialApp with the updated theme
+      // This is a workaround since we can't directly change the theme of the existing app
+      // In a real app, you would use a ThemeBloc to manage theme state
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (context) => MaterialApp(
+            theme: AppTheme.lightTheme,
+            darkTheme: AppTheme.darkTheme,
+            themeMode: themeMode,
+            home: const HomePage(),
+          ),
+        ),
+      );
     }
   }
 
@@ -54,7 +81,7 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(AppConstants.appName),
+        title: const Text('Speak AI'),
         elevation: 0,
         backgroundColor: Colors.transparent,
         actions: [
@@ -63,8 +90,8 @@ class _HomePageState extends State<HomePage> {
             onPressed: _toggleTheme,
             icon: Icon(
               _isDarkMode
-                  ? Icons.brightness_2_rounded
-                  : Icons.brightness_5_rounded,
+                  ? Icons.brightness_2_rounded // 🌙 Dark Mode Icon
+                  : Icons.brightness_5_rounded, // ☀️ Light Mode Icon
               size: 26,
             ),
           ),
@@ -85,35 +112,53 @@ class _HomePageState extends State<HomePage> {
             ],
           ),
         ),
-        child: ListView(
-          padding: EdgeInsets.symmetric(
-            horizontal: MediaQuery.of(context).size.width * .04,
-            vertical: MediaQuery.of(context).size.height * .015,
-          ),
-          children: [
-            // User Profile Card
-            const UserProfileCard()
-                .animate()
-                .fadeIn(duration: 600.ms)
-                .slideY(begin: 0.2, end: 0),
+        child: BlocBuilder<HomeCubit, dynamic>(
+          builder: (context, state) {
+            // Simple approach without pattern matching
+            if (state.toString().contains('initial') ||
+                state.toString().contains('loading')) {
+              return const Center(child: CircularProgressIndicator());
+            } else if (state.toString().contains('loaded')) {
+              // Extract homeTypes from the state
+              final homeTypes = (state as dynamic).homeTypes as List<dynamic>;
 
-            const SizedBox(height: 24),
-
-            // Learning Tools Section
-            const Padding(
-              padding: EdgeInsets.only(left: 4, bottom: 12),
-              child: Text(
-                'Learning Tools',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
+              return ListView(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
                 ),
-              ),
-            ).animate().fadeIn(duration: 600.ms, delay: 400.ms),
+                children: [
+                  const UserProfileCard()
+                      .animate()
+                      .fadeIn(duration: 600.ms)
+                      .slideY(begin: 0.2, end: 0),
+                  const SizedBox(height: 24),
+                  const Padding(
+                    padding: EdgeInsets.only(left: 4, bottom: 12),
+                    child: Text(
+                      'Learning Tools',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ).animate().fadeIn(duration: 600.ms, delay: 400.ms),
+                  ...homeTypes.map((type) => HomeCard(homeType: type)),
+                ],
+              );
+            } else if (state.toString().contains('error')) {
+              // Extract message from the state
+              final message = (state as dynamic).message as String;
 
-            // Menu Items
-            ...HomeType.values.map((e) => HomeCard(homeType: e)),
-          ],
+              return Center(
+                child: Text(
+                  'Error: $message',
+                  style: const TextStyle(color: Colors.red),
+                ),
+              );
+            }
+            return const Center(child: CircularProgressIndicator());
+          },
         ),
       ),
     );

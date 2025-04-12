@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
-/// Registration page for new users
+/// Page for user registration
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
 
@@ -31,12 +32,32 @@ class _RegisterPageState extends State<RegisterPage> {
     if (_formKey.currentState!.validate()) {
       setState(() => _isLoading = true);
 
-      // TODO: Implement actual registration logic here
-      await Future.delayed(const Duration(seconds: 2)); // Simulated delay
+      try {
+        // TODO: Implement actual registration logic here
+        await Future.delayed(const Duration(seconds: 2)); // Simulated delay
 
-      setState(() => _isLoading = false);
-      if (mounted) {
-        Navigator.pop(context); // Return to login page
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Registration successful! Please login.'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          context.pop(); // Go back to login page
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Registration failed: ${e.toString()}'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      } finally {
+        if (mounted) {
+          setState(() => _isLoading = false);
+        }
       }
     }
   }
@@ -44,7 +65,11 @@ class _RegisterPageState extends State<RegisterPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Create Account'), elevation: 0),
+      appBar: AppBar(
+        title: const Text('Create Account'),
+        elevation: 0,
+        backgroundColor: Colors.transparent,
+      ),
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -63,9 +88,18 @@ class _RegisterPageState extends State<RegisterPage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
+                    // Icon
+                    Icon(
+                      Icons.person_add,
+                      size: 80,
+                      color: Colors.blue.shade700,
+                    ),
+
+                    const SizedBox(height: 32),
+
                     // Title
                     Text(
-                      'Create Your Account',
+                      'Create Account',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 28,
@@ -78,7 +112,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
                     // Subtitle
                     Text(
-                      'Join our community and start speaking English fluently',
+                      'Sign up to get started',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 16,
@@ -92,7 +126,6 @@ class _RegisterPageState extends State<RegisterPage> {
                     TextFormField(
                       controller: _nameController,
                       keyboardType: TextInputType.name,
-                      textCapitalization: TextCapitalization.words,
                       style: TextStyle(fontSize: 15, color: Colors.black87),
                       decoration: InputDecoration(
                         labelText: 'Full Name',
@@ -206,7 +239,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       style: TextStyle(fontSize: 15, color: Colors.black87),
                       decoration: InputDecoration(
                         labelText: 'Password',
-                        hintText: 'Create a password',
+                        hintText: 'Enter your password',
                         prefixIcon: Icon(
                           Icons.lock_outline,
                           color: Colors.blue.shade700,
@@ -256,7 +289,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Please enter a password';
+                          return 'Please enter your password';
                         }
                         if (value.length < 6) {
                           return 'Password must be at least 6 characters';
@@ -334,9 +367,9 @@ class _RegisterPageState extends State<RegisterPage> {
                       },
                     ),
 
-                    const SizedBox(height: 30),
+                    const SizedBox(height: 24),
 
-                    // Register Button with Loading State
+                    // Register Button
                     ElevatedButton(
                       onPressed: _isLoading ? null : _handleRegister,
                       style: ElevatedButton.styleFrom(
@@ -363,7 +396,7 @@ class _RegisterPageState extends State<RegisterPage> {
                               ),
                             )
                           : const Text(
-                              'Sign Up',
+                              'Create Account',
                               style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
@@ -371,9 +404,9 @@ class _RegisterPageState extends State<RegisterPage> {
                             ),
                     ),
 
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 24),
 
-                    // Login Link
+                    // Back to Login
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -382,9 +415,7 @@ class _RegisterPageState extends State<RegisterPage> {
                           style: TextStyle(color: Colors.grey.shade700),
                         ),
                         TextButton(
-                          onPressed: () {
-                            Navigator.pop(context);
-                          },
+                          onPressed: () => context.pop(),
                           child: Text(
                             'Sign In',
                             style: TextStyle(

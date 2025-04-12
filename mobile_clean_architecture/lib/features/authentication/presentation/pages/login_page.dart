@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
-import 'forgot_password_page.dart';
-import 'home_page.dart';
-import 'register_page.dart';
+import '../../../home/domain/entities/user.dart';
+import '../../../home/presentation/bloc/user_bloc.dart';
 
 /// Login page for the application
 class LoginPage extends StatefulWidget {
@@ -30,18 +31,36 @@ class _LoginPageState extends State<LoginPage> {
     if (_formKey.currentState!.validate()) {
       setState(() => _isLoading = true);
 
-      // TODO: Implement actual login logic here
-      await Future.delayed(const Duration(seconds: 2)); // Simulated delay
+      try {
+        // TODO: Implement actual login logic here
+        await Future.delayed(const Duration(seconds: 2)); // Simulated delay
 
-      setState(() => _isLoading = false);
-
-      if (mounted) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-            builder: (context) =>
-                HomePage(name: "Demo User", email: _emailController.text),
-          ),
+        // Create a demo user for now
+        final user = User(
+          id: 'demo_user_id',
+          name: 'Demo User',
+          email: _emailController.text,
         );
+
+        // Update the user bloc with the logged-in user
+        if (mounted) {
+          context.read<UserBloc>().add(UpdateUser(user));
+          // Navigate to home page
+          context.go('/home');
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Login failed: ${e.toString()}'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      } finally {
+        if (mounted) {
+          setState(() => _isLoading = false);
+        }
       }
     }
   }
@@ -250,12 +269,7 @@ class _LoginPageState extends State<LoginPage> {
                       alignment: Alignment.centerRight,
                       child: TextButton(
                         onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const ForgotPasswordPage(),
-                            ),
-                          );
+                          context.push('/forgot-password');
                         },
                         child: Text(
                           'Forgot Password?',
@@ -316,12 +330,7 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                         TextButton(
                           onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const RegisterPage(),
-                              ),
-                            );
+                            context.push('/register');
                           },
                           child: Text(
                             'Sign Up',
