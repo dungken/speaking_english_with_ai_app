@@ -1,0 +1,48 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+Please follow these clean architecture rules when helping me implement  feature:
+
+1. ALWAYS separate code into three distinct layers:
+   - Domain layer: entities, repository interfaces, use cases
+   - Data layer: models, repository implementations, data sources
+   - Presentation layer: UI components, state management
+
+2. Dependency rule: Dependencies must ONLY point inward (domain ← data ← presentation)
+   - Domain layer must have NO dependencies on data or presentation
+   - Data layer may depend only on domain
+   - Presentation layer may depend on domain and data
+
+3. Entities:
+   - Create pure domain entities with NO Flutter dependencies
+   - Immutable data classes with proper constructors
+
+4. Use cases:
+   - Single responsibility principle for each use case
+   - One public method per use case class (call() or execute())
+   - Depend only on repository interfaces
+
+5. Repositories:
+   - Define interfaces in domain layer
+   - Implement in data layer
+   - Handle all data operations
+
+6. UI and state management:
+   - Separate business logic from UI components
+   - Use BLoC pattern with clear events and states
+   - Create reusable widgets for repeated UI patterns
+   - Keep widget files under 200 lines when possible
+
+7. File organization:
+   - Group by feature first, then by layer
+   - Keep related files together
+   - Follow consistent naming conventions
+
+8. Proper error handling in each layer:
+   - Domain: define failure classes
+   - Data: catch exceptions and convert to failures
+   - Presentation: display user-friendly error messages
+
+When you generate code, explain your architectural decisions briefly.
