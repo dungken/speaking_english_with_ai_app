@@ -13,19 +13,52 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'core/routes/app_router.dart';
 import 'core/theme/app_theme.dart';
+import 'core/theme/theme_provider.dart';
+import 'features/authentication/data/models/user_model.dart';
+import 'features/authentication/di/auth_module.dart';
 import 'features/home/di/home_module.dart';
 import 'features/home/presentation/cubit/home_cubit.dart';
-import 'features/home/presentation/bloc/user_bloc.dart';
+import 'features/authentication/presentation/bloc/auth_bloc.dart';
 
 /// Application entry point
-void main() {
-  // Initialize dependency injection
+void main() async {
+  // Ensure Flutter bindings are initialized
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize core dependencies
+  await initDependencies();
+
+  // Initialize feature modules
+  initAuthModule();
   initHomeModule();
 
   runApp(const MyApp());
+}
+
+/// Initialize core dependencies
+Future<void> initDependencies() async {
+  // Initialize Hive
+  await Hive.initFlutter();
+
+  // Register User adapter
+  if (!Hive.isAdapterRegistered(0)) {
+    Hive.registerAdapter(UserAdapter());
+  }
+
+  final box = await Hive.openBox<UserModel>('auth_box');
+  GetIt.instance.registerLazySingleton<Box<UserModel>>(() => box);
+
+  // Initialize SharedPreferences
+  final prefs = await SharedPreferences.getInstance();
+  GetIt.instance.registerLazySingleton<SharedPreferences>(() => prefs);
+  GetIt.instance
+      .registerLazySingleton<ThemeProvider>(() => ThemeProvider(prefs));
 }
 
 /// Root widget of the application
@@ -40,24 +73,29 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MultiBlocProvider(
+    return MultiProvider(
       providers: [
-        // Initialize home state management
+        ChangeNotifierProvider(
+          create: (_) => GetIt.instance<ThemeProvider>(),
+        ),
         BlocProvider<HomeCubit>(
           create: (context) => GetIt.instance<HomeCubit>(),
         ),
-        // Add UserBloc provider
-        BlocProvider<UserBloc>(
-          create: (context) => UserBloc(),
+        BlocProvider<AuthBloc>(
+          create: (context) => GetIt.instance<AuthBloc>(),
         ),
       ],
-      child: MaterialApp.router(
-        title: 'Speak AI',
-        debugShowCheckedModeBanner: false,
-        theme: AppTheme.lightTheme,
-        darkTheme: AppTheme.darkTheme,
-        themeMode: ThemeMode.system,
-        routerConfig: AppRouter.router,
+      child: Consumer<ThemeProvider>(
+        builder: (context, themeProvider, child) {
+          return MaterialApp.router(
+            title: 'Speaking English With AI',
+            debugShowCheckedModeBanner: false,
+            theme: AppTheme.lightTheme,
+            darkTheme: AppTheme.darkTheme,
+            themeMode: themeProvider.themeMode,
+            routerConfig: AppRouter.router,
+          );
+        },
       ),
     );
   }

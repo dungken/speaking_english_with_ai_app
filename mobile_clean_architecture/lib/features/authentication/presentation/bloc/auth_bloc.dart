@@ -3,82 +3,20 @@ import 'package:equatable/equatable.dart';
 
 import '../../domain/entities/user.dart';
 
-// Events
-abstract class AuthEvent extends Equatable {
-  const AuthEvent();
+part 'auth_event.dart';
+part 'auth_state.dart';
 
-  @override
-  List<Object> get props => [];
-}
-
-class SignInRequested extends AuthEvent {
-  final String email;
-  final String password;
-
-  const SignInRequested(this.email, this.password);
-
-  @override
-  List<Object> get props => [email, password];
-}
-
-class RegisterRequested extends AuthEvent {
-  final String name;
-  final String email;
-  final String password;
-
-  const RegisterRequested(this.name, this.email, this.password);
-
-  @override
-  List<Object> get props => [name, email, password];
-}
-
-class SignOutRequested extends AuthEvent {}
-
-class GetCurrentUserRequested extends AuthEvent {}
-
-// States
-abstract class AuthState extends Equatable {
-  const AuthState();
-
-  @override
-  List<Object?> get props => [];
-}
-
-class AuthInitial extends AuthState {}
-
-class AuthLoading extends AuthState {}
-
-class Authenticated extends AuthState {
-  final User user;
-
-  const Authenticated(this.user);
-
-  @override
-  List<Object?> get props => [user];
-}
-
-class Unauthenticated extends AuthState {}
-
-class AuthError extends AuthState {
-  final String message;
-
-  const AuthError(this.message);
-
-  @override
-  List<Object?> get props => [message];
-}
-
-// Bloc
+/// Authentication bloc that handles user authentication state
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   AuthBloc() : super(AuthInitial()) {
-    on<SignInRequested>(_onSignInRequested);
-    on<RegisterRequested>(_onRegisterRequested);
-    on<SignOutRequested>(_onSignOutRequested);
-    on<GetCurrentUserRequested>(_onGetCurrentUserRequested);
+    on<SignInEvent>(_onSignInRequested);
+    on<RegisterEvent>(_onRegisterRequested);
+    on<SignOutEvent>(_onSignOutRequested);
+    on<CheckAuthenticationEvent>(_onGetCurrentUserRequested);
   }
 
   Future<void> _onSignInRequested(
-    SignInRequested event,
+    SignInEvent event,
     Emitter<AuthState> emit,
   ) async {
     emit(AuthLoading());
@@ -102,7 +40,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   }
 
   Future<void> _onRegisterRequested(
-    RegisterRequested event,
+    RegisterEvent event,
     Emitter<AuthState> emit,
   ) async {
     emit(AuthLoading());
@@ -126,7 +64,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   }
 
   Future<void> _onSignOutRequested(
-    SignOutRequested event,
+    SignOutEvent event,
     Emitter<AuthState> emit,
   ) async {
     emit(AuthLoading());
@@ -140,7 +78,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   }
 
   Future<void> _onGetCurrentUserRequested(
-    GetCurrentUserRequested event,
+    CheckAuthenticationEvent event,
     Emitter<AuthState> emit,
   ) async {
     emit(AuthLoading());

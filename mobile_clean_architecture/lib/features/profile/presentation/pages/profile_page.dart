@@ -15,7 +15,7 @@ class ProfilePage extends StatelessWidget {
         title: const Text('Profile'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.pop(),
+          onPressed: () => Future.microtask(() => context.pop()),
         ),
       ),
       body: BlocBuilder<AuthBloc, AuthState>(
@@ -54,7 +54,7 @@ class ProfilePage extends StatelessWidget {
                 ElevatedButton(
                   onPressed: () {
                     // TODO: Implement logout
-                    context.go('/login');
+                    Future.microtask(() => context.go('/login'));
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.red,

@@ -30,7 +30,7 @@ class AuthRepositoryImpl implements AuthRepository {
       try {
         final userModel = await remoteDataSource.signIn(email, password);
         await localDataSource.cacheUser(userModel);
-        return Right(userModel);
+        return Right(userModel.toEntity());
       } on ServerException catch (e) {
         return Left(ServerFailure(e.message));
       } catch (e) {
@@ -55,7 +55,7 @@ class AuthRepositoryImpl implements AuthRepository {
           password,
         );
         await localDataSource.cacheUser(userModel);
-        return Right(userModel);
+        return Right(userModel.toEntity());
       } on ServerException catch (e) {
         return Left(ServerFailure(e.message));
       } catch (e) {
@@ -82,7 +82,7 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<Either<Failure, User>> getCurrentUser() async {
     try {
       final userModel = await localDataSource.getLastUser();
-      return Right(userModel);
+      return Right(userModel.toEntity());
     } on CacheException catch (e) {
       return Left(CacheFailure(e.message));
     } catch (e) {
