@@ -19,7 +19,38 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMixin {
+  late final AnimationController _animationController;
+  late final Animation<double> _fadeAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    // Initialize animation controller for page transitions
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 400),
+    );
+    
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: Curves.easeOut,
+      ),
+    );
+    
+    // Start animation after build is complete
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _animationController.forward();
+    });
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocListener<AuthBloc, AuthState>(
@@ -39,7 +70,10 @@ class _HomeScreenState extends State<HomeScreen> {
               isDarkMode: isDarkMode,
               onThemeToggle: () => themeProvider.toggleTheme(),
             ),
-            body: HomeContent(isDarkMode: isDarkMode),
+            body: FadeTransition(
+              opacity: _fadeAnimation,
+              child: HomeContent(isDarkMode: isDarkMode),
+            ),
           );
         },
       ),
