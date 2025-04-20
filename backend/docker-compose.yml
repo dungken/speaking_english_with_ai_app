@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   backend:
     build: 
@@ -10,8 +8,8 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - .:/backend
-      - ./logs:/backend/logs
+      - ./:/app
+      - ./logs:/app/logs
     environment:
       - MONGODB_URL=mongodb://mongodb:27017
       - DATABASE_NAME=speak_ai_db
@@ -30,6 +28,7 @@ services:
       - mongodb
     networks:
       - backend_network
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
 
   mongodb:
     image: mongo:6.0
