@@ -449,39 +449,39 @@ async def get_mistake_statistics(
         user_id = ObjectId(current_user["_id"])
         
         # Get total count
-        total_count = await db.mistakes.count_documents({"user_id": user_id})
+        total_count = db.mistakes.count_documents({"user_id": user_id})
         
         # Get mastered count
-        mastered_count = await db.mistakes.count_documents({
+        mastered_count = db.mistakes.count_documents({
             "user_id": user_id,
             "status": "MASTERED"
         })
         
         # Get learning count
-        learning_count = await db.mistakes.count_documents({
+        learning_count = db.mistakes.count_documents({
             "user_id": user_id,
             "status": "LEARNING"
         })
         
         # Get new count
-        new_count = await db.mistakes.count_documents({
+        new_count = db.mistakes.count_documents({
             "user_id": user_id,
             "status": "NEW"
         })
         
         # Get type counts
-        grammar_count = await db.mistakes.count_documents({
+        grammar_count = db.mistakes.count_documents({
             "user_id": user_id,
             "type": "GRAMMAR"
         })
         
-        vocabulary_count = await db.mistakes.count_documents({
+        vocabulary_count = db.mistakes.count_documents({
             "user_id": user_id,
             "type": "VOCABULARY"
         })
         
         # Get due for practice count
-        due_count = await db.mistakes.count_documents({
+        due_count = db.mistakes.count_documents({
             "user_id": user_id,
             "next_practice_date": {"$lte": datetime.utcnow()},
             "status": {"$ne": "MASTERED"}
