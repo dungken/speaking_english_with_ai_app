@@ -101,7 +101,7 @@ class MistakeService:
             all_mistakes = grammar_mistakes + vocab_mistakes
             
             # Store non-duplicate mistakes
-            stored_ids = await self._store_unique_mistakes(user_id, all_mistakes)
+            stored_ids = self._store_unique_mistakes(user_id, all_mistakes)
             
             return len(stored_ids)
             
@@ -180,7 +180,7 @@ class MistakeService:
         interval_days = min(2 ** practice_count, 30)  # Cap at 30 days
         return now + timedelta(days=interval_days)
     
-    async def _store_unique_mistakes(self, user_id: str, mistakes: List[Dict[str, Any]]) -> List[str]:
+    def _store_unique_mistakes(self, user_id: str, mistakes: List[Dict[str, Any]]) -> List[str]:
         """
         Store mistakes while handling duplicates.
         
@@ -201,7 +201,7 @@ class MistakeService:
             # Check for existing similar mistake
             existing = None
             try:
-                existing = await db.mistakes.find_one({
+                existing = db.mistakes.find_one({
                     "user_id": ObjectId(user_id),
                     "type": mistake["type"],
                     "original_text": mistake["original_text"],
@@ -214,7 +214,7 @@ class MistakeService:
             if existing:
                 # Update existing mistake (increase frequency)
                 try:
-                    await db.mistakes.update_one(
+                    db.mistakes.update_one(
                         {"_id": existing["_id"]},
                         {
                             "$inc": {"frequency": 1},
@@ -227,66 +227,44 @@ class MistakeService:
             else:
                 # Insert new mistake
                 try:
-                    result = await db.mistakes.insert_one(mistake)
+                    result = db.mistakes.insert_one(mistake)
                     stored_ids.append(str(result.inserted_id))
                 except Exception as e:
                     logger.error(f"Error inserting new mistake: {str(e)}")
         
         return stored_ids
     
-    async def get_practice_items(self, user_id: str, limit: int = 5) -> List[Dict[str, Any]]:
+    def get_practice_items(self, user_id: str, limit: int = 5) -> List[Dict[str, Any]]:
         """
-        Get mistakes due for practice.
+        Retrieve mistakes for practice.
         
         Args:
             user_id: ID of the user
             limit: Maximum number of mistakes to return
             
         Returns:
-            List of mistakes due for practice
+            List of mistakes for practice
         """
         now = datetime.utcnow()
         
         try:
-            # Get mistakes due for practice
+            # Fetch practice-due mistakes
             cursor = db.mistakes.find({
                 "user_id": ObjectId(user_id),
-                "next_practice_date": {"$lte": now},
-                "status": {"$ne": "MASTERED"},
-                "in_drill_queue": True
-            }).sort([
-                ("frequency", -1),  # Most frequent first
-                ("severity", -1)    # Most severe next
-            ]).limit(limit)
+                "in_drill_queue": True,
+                "next_practice_date": {"$lte": now}
+            }).sort("next_practice_date", 1).limit(limit)
             
-            mistakes = await cursor.to_list(length=limit)
+            mistakes = list(cursor)
             
             # Transform into practice exercises
-            exercises = []
-            for mistake in mistakes:
-                exercise = {
-                    "mistake_id": str(mistake["_id"]),
-                    "type": mistake["type"],
-                    "practice_prompt": self._generate_practice_prompt(mistake),
-                    "original_text": mistake["original_text"],
-                    "context": mistake["context"],
-                    "correction": mistake["correction"],
-                    "explanation": mistake["explanation"]
-                }
-                
-                # Add example usage for vocabulary
-                if mistake["type"] == "VOCABULARY" and "example_usage" in mistake:
-                    exercise["example_usage"] = mistake["example_usage"]
-                    
-                exercises.append(exercise)
-            
-            return exercises
+            return [self._transform_to_practice_item(mistake) for mistake in mistakes]
             
         except Exception as e:
-            logger.error(f"Error getting practice items: {str(e)}")
+            logger.error(f"Error fetching practice items: {str(e)}")
             return []
     
-    async def record_practice_result(
+    def record_practice_result(
         self, 
         mistake_id: str, 
         user_id: str,
@@ -309,61 +287,78 @@ class MistakeService:
             ValueError: If mistake not found
         """
         try:
-            # Get the mistake
-            mistake = await db.mistakes.find_one({
-                "_id": ObjectId(mistake_id), 
-                "user_id": ObjectId(user_id)
-            })
-            
-            if not mistake:
-                raise ValueError(f"Mistake not found: {mistake_id}")
-            
-            # Update practice stats
-            practice_count = mistake.get("practice_count", 0) + 1
-            success_count = mistake.get("success_count", 0) + (1 if was_successful else 0)
-            
-            # Calculate mastery level (0-10)
-            mastery_level = min(10, int((success_count / practice_count) * 10)) if practice_count > 0 else 0
-            
-            # Determine status
-            status = "MASTERED" if mastery_level >= 8 else "LEARNING"
-            is_learned = status == "MASTERED"
-            
-            # Calculate next practice date
-            next_practice = self._calculate_next_practice(practice_count, was_successful)
-            
-            # Update mistake
-            await db.mistakes.update_one(
-                {"_id": ObjectId(mistake_id)},
-                {
-                    "$set": {
-                        "practice_count": practice_count,
-                        "success_count": success_count,
-                        "last_practiced": datetime.utcnow(),
-                        "user_answer": user_answer,
-                        "mastery_level": mastery_level,
-                        "status": status,
-                        "is_learned": is_learned,
-                        "in_drill_queue": not is_learned,
-                        "next_practice_date": next_practice
-                    }
-                }
-            )
-            
-            # Get updated mistake
-            updated_mistake = await db.mistakes.find_one({"_id": ObjectId(mistake_id)})
-            
-            if not updated_mistake:
-                raise ValueError(f"Updated mistake not found: {mistake_id}")
+            # Look up mistake
+            try:
+                mistake = db.mistakes.find_one({
+                    "_id": ObjectId(mistake_id),
+                    "user_id": ObjectId(user_id)
+                })
                 
-            # Convert ObjectId to string
-            updated_mistake["_id"] = str(updated_mistake["_id"])
-            updated_mistake["user_id"] = str(updated_mistake["user_id"])
-            
-            # Add feedback
-            updated_mistake["feedback"] = self._generate_practice_feedback(updated_mistake, was_successful)
-            
-            return updated_mistake
+                if not mistake:
+                    return {"error": "Mistake not found"}
+                
+                # Update practice metrics
+                practice_count = mistake.get("practice_count", 0) + 1
+                success_count = mistake.get("success_count", 0)
+                
+                if was_successful:
+                    success_count += 1
+                
+                # Calculate mastery level (0-100)
+                if practice_count > 0:
+                    mastery_percentage = (success_count / practice_count) * 100
+                else:
+                    mastery_percentage = 0
+                
+                # Determine status
+                status = mistake.get("status", "NEW")
+                is_learned = mistake.get("is_learned", False)
+                
+                if mastery_percentage >= 80 and practice_count >= 3:
+                    status = "MASTERED"
+                    is_learned = True
+                elif mastery_percentage >= 50:
+                    status = "LEARNING"
+                    is_learned = True
+                    
+                # Calculate next practice date
+                next_practice_date = self._calculate_next_practice(practice_count, was_successful)
+                
+                # Update in database
+                db.mistakes.update_one(
+                    {"_id": ObjectId(mistake_id)},
+                    {
+                        "$set": {
+                            "practice_count": practice_count,
+                            "success_count": success_count,
+                            "last_practiced": datetime.utcnow(),
+                            "next_practice_date": next_practice_date,
+                            "mastery_level": mastery_percentage,
+                            "status": status,
+                            "is_learned": is_learned,
+                            "last_answer": user_answer
+                        }
+                    }
+                )
+                
+                # Get updated mistake
+                updated_mistake = db.mistakes.find_one({"_id": ObjectId(mistake_id)})
+                
+                if not updated_mistake:
+                    raise ValueError(f"Updated mistake not found: {mistake_id}")
+                
+                # Convert ObjectId to string
+                updated_mistake["_id"] = str(updated_mistake["_id"])
+                updated_mistake["user_id"] = str(updated_mistake["user_id"])
+                
+                # Add feedback
+                updated_mistake["feedback"] = self._generate_practice_feedback(updated_mistake, was_successful)
+                
+                return updated_mistake
+                
+            except Exception as e:
+                logger.error(f"Error finding mistake: {str(e)}")
+                raise
             
         except Exception as e:
             logger.error(f"Error recording practice result: {str(e)}")
