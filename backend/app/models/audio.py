@@ -1,5 +1,6 @@
 from datetime import datetime
 from bson import ObjectId
+from typing import Dict, Any, Optional
 
 class Audio:
     """
@@ -12,15 +13,21 @@ class Audio:
         duration_seconds: Duration of the audio in seconds
         transcription: Text transcription of the audio content
         language: Language of the audio content
+        pronunciation_score: Overall pronunciation score (0-100)
+        pronunciation_feedback: Detailed pronunciation feedback
+        language_feedback: Detailed language feedback (grammar, vocabulary, etc.)
         created_at: Timestamp when the record was created
     """
     def __init__(
         self, 
         user_id: ObjectId, 
         url: str, 
-        duration_seconds: float = None,
-        transcription: str = None,
-        language: str = "en",
+        duration_seconds: Optional[float] = None,
+        transcription: Optional[str] = None,
+        language: str = "en-US",
+        pronunciation_score: Optional[float] = None,
+        pronunciation_feedback: Optional[Dict[str, Any]] = None,
+        language_feedback: Optional[Dict[str, Any]] = None
     ):
         self._id = ObjectId()
         self.user_id = user_id
@@ -29,8 +36,9 @@ class Audio:
         self.transcription = transcription
         self.language = language
         self.created_at = datetime.utcnow()
-        self.pronunciation_score = None
-        self.pronunciation_feedback = None
+        self.pronunciation_score = pronunciation_score
+        self.pronunciation_feedback = pronunciation_feedback
+        self.language_feedback = language_feedback
 
     def to_dict(self):
         """Convert the Audio instance to a dictionary for MongoDB storage."""
@@ -43,5 +51,6 @@ class Audio:
             "language": self.language,
             "created_at": self.created_at,
             "pronunciation_score": self.pronunciation_score,
-            "pronunciation_feedback": self.pronunciation_feedback
+            "pronunciation_feedback": self.pronunciation_feedback,
+            "language_feedback": self.language_feedback
         }
