@@ -66,23 +66,28 @@ class ProgressSection extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Row(
-          children: [
-            Icon(
-              Icons.insights_rounded,
-              size: 18,
-              color: AppColors.primary,
-            ),
-            const SizedBox(width: 8),
-            Text(
-              'Learning Insights',
-              style: TextStyle(
-                fontWeight: FontWeight.w700,
-                fontSize: fontSize,
-                color: AppColors.getTextColor(isDarkMode),
+        Flexible(
+          child: Row(
+            children: [
+              Icon(
+                Icons.insights_rounded,
+                size: 18,
+                color: AppColors.primary,
               ),
-            ),
-          ],
+              const SizedBox(width: 8),
+              Flexible(
+                child: Text(
+                  'Learning Insights',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: fontSize,
+                    color: AppColors.getTextColor(isDarkMode),
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
         ),
         TextButton.icon(
           onPressed: () => context.push('/progress'),
@@ -98,10 +103,12 @@ class ProgressSection extends StatelessWidget {
               fontWeight: FontWeight.w500,
               color: isDarkMode ? AppColors.primaryLight : AppColors.primary,
             ),
+            overflow: TextOverflow.ellipsis,
           ),
           style: TextButton.styleFrom(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
             visualDensity: VisualDensity.compact,
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
           ),
         ),
       ],
