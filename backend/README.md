@@ -38,7 +38,7 @@ MONGODB_URL=mongodb://localhost:27017
 DATABASE_NAME=speak_ai_db
 
 # Authentication
-JWT_SECRET=your_jwt_secret_key
+JWT_SECRET_KEY=your_jwt_secret_key
 ACCESS_TOKEN_EXPIRE_MINUTES=30
 REFRESH_TOKEN_EXPIRE_DAYS=7
 
@@ -80,6 +80,12 @@ GEMINI_API_KEY=your_gemini_api_key
 2. This will start both the API server and MongoDB database
 
 3. Visit `http://localhost:8000/docs` to access the Swagger documentation
+
+
+4. Connect to database using mongodbCompass with this connection string: 
+   ```
+   mongodb://admin:password@localhost:27017/speak_ai_db?authSource=admin
+   ```
 
 ## Azure Speech Services Integration
 

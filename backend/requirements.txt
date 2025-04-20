@@ -13,3 +13,9 @@ pydantic==2.5.2
 azure-cognitiveservices-speech==1.35.0
 python-jose==3.3.0
 email-validator==2.1.0
+
+# Local speech recognition (optional)
+# These packages are optional and may require system dependencies
+# Use pip install SpeechRecognition PyAudio if running locally
+SpeechRecognition>=3.10.0
+# PyAudio>=0.2.13  # Requires portaudio system dependencies

@@ -3,24 +3,26 @@ FROM python:3.10-slim
 # Set working directory
 WORKDIR /app
 
-# Set environment variables
-ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1 \
-    PYTHONPATH=/app
-
-# Install system dependencies
+# Install system dependencies including ffmpeg and portaudio for audio processing
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends gcc curl \
+    && apt-get install -y --no-install-recommends \
+       gcc \
+       libc6-dev \
+       build-essential \
+       ffmpeg \
+       portaudio19-dev \
+       python3-pyaudio \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements file
+# Copy requirements and install
 COPY requirements.txt .
-
-# Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy project
+# Install PyAudio separately after system dependencies
+RUN pip install pyaudio
+
+# Copy application code
 COPY . .
 
 # Fix potentially corrupted user.py file
@@ -30,4 +32,4 @@ RUN sed -i '/INFO:     Application startup complete./d' /app/app/routes/user.py
 EXPOSE 8000
 
 # Command to run the application
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
