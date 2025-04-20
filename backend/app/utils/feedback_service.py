@@ -18,7 +18,7 @@ class FeedbackService:
     3. Parse and validate the response from Gemini
     """
     
-    async def generate_dual_feedback(
+    def generate_dual_feedback(
         self, 
         transcription: str, 
         context: Optional[Dict[str, Any]] = None
