@@ -4,9 +4,24 @@ from typing import List, Optional
 
 from app.config.database import db
 from app.models.audio import Audio
-from app.schemas.audio import AudioCreate, AudioResponse, TranscriptionRequest, TranscriptionResponse, PronunciationFeedback
+from app.schemas.audio import (
+    AudioCreate, 
+    AudioResponse, 
+    TranscriptionRequest, 
+    TranscriptionResponse, 
+    PronunciationFeedback,
+    AnalysisRequest,
+    AnalysisResponse,
+    LanguageFeedback
+)
 from app.utils.auth import get_current_user
-from app.utils.audio_processor import transcribe_audio, assess_pronunciation
+from app.utils.audio_processor import (
+    transcribe_audio, 
+    assess_pronunciation, 
+    analyze_spoken_english,
+    extract_mistakes_from_feedback,
+    generate_feedback
+)
 from app.utils.error_handler import get_not_found_exception, handle_general_exception
 
 router = APIRouter()
@@ -59,7 +74,7 @@ async def transcribe(
     current_user: dict = Depends(get_current_user)
 ):
     """
-    Transcribe audio content to text.
+    Transcribe audio content to text using Azure Speech-to-Text.
     
     Args:
         request: Transcription request with audio URL
@@ -99,7 +114,7 @@ async def analyze_pronunciation(
     current_user: dict = Depends(get_current_user)
 ):
     """
-    Analyze pronunciation quality of an audio recording.
+    Analyze pronunciation quality of an audio recording using Azure Speech Services.
     
     Args:
         request: Audio URL to analyze
@@ -145,6 +160,77 @@ async def analyze_pronunciation(
     
     except Exception as e:
         raise handle_general_exception(e, "pronunciation analysis")
+
+
+@router.post("/analyze", response_model=AnalysisResponse)
+async def comprehensive_analysis(
+    request: AnalysisRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Perform comprehensive analysis of spoken English including transcription, 
+    pronunciation, and language feedback using Azure Speech Services.
+    
+    Args:
+        request: Analysis request with audio URL and optional reference text
+        current_user: Authenticated user information
+        
+    Returns:
+        Comprehensive analysis results
+    """
+    try:
+        user_id = ObjectId(current_user["_id"])
+        
+        # Perform comprehensive analysis
+        result = analyze_spoken_english(
+            audio_url=str(request.audio_url),
+            reference_text=request.reference_text
+        )
+        
+        # Update audio record if it exists
+        audio_record = db.audio.find_one({"url": str(request.audio_url)})
+        if audio_record:
+            db.audio.update_one(
+                {"_id": audio_record["_id"]},
+                {
+                    "$set": {
+                        "transcription": result["transcription"],
+                        "pronunciation_score": result["pronunciation"]["overall_score"],
+                        "pronunciation_feedback": result["pronunciation"],
+                        "language_feedback": result["language_feedback"]
+                    }
+                }
+            )
+            
+        # Extract mistakes for automatic tracking
+        mistakes = extract_mistakes_from_feedback(
+            result["language_feedback"], 
+            result["transcription"]
+        )
+        
+        # Save mistakes to the database for the user
+        if mistakes:
+            for mistake in mistakes:
+                mistake["user_id"] = user_id
+                mistake["created_at"] = db.get_current_datetime()
+                mistake["frequency"] = 1
+                mistake["in_drill_queue"] = False
+                db.mistakes.insert_one(mistake)
+        
+        # Construct response
+        return AnalysisResponse(
+            transcription=result["transcription"],
+            confidence=result["confidence"],
+            pronunciation=PronunciationFeedback(
+                overall_score=result["pronunciation"]["overall_score"],
+                word_scores=result["pronunciation"]["word_scores"],
+                improvement_suggestions=result["pronunciation"]["improvement_suggestions"]
+            ),
+            language_feedback=LanguageFeedback(**result["language_feedback"])
+        )
+    
+    except Exception as e:
+        raise handle_general_exception(e, "comprehensive analysis")
 
 
 @router.get("/history", response_model=List[AudioResponse])
