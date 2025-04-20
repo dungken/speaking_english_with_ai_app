@@ -1,149 +1,167 @@
 # Speak AI Backend
 
-A FastAPI-based backend for the Speak AI English learning application.
+This is the backend API for the Speak AI Flutter application, focusing on English language learning through speech interaction, feedback, and mistake tracking.
 
-## Project Structure
+## Features
+
+- **Audio Processing**: Transcription, pronunciation assessment, and comprehensive language analysis
+- **User Management**: Authentication, profile management, and progress tracking
+- **Conversation System**: Role-play conversations with AI feedback
+- **Mistake Tracking**: Systematic tracking and drilling of language mistakes
+- **Image Description**: Practice describing images with feedback
+
+## Technology Stack
+
+- **FastAPI**: Modern, fast API framework with automatic documentation
+- **MongoDB**: NoSQL database for flexible data storage
+- **Azure Speech Services**: For high-quality speech-to-text and pronunciation assessment
+- **Gemini AI**: For generating language feedback and suggestions
+- **Docker**: Containerized deployment for easy setup and scaling
+
+## Getting Started
+
+### Prerequisites
+
+- Python 3.8+
+- Docker and Docker Compose (for containerized setup)
+- Azure Speech Services account
+- Gemini AI API key
+
+### Environment Setup
+
+1. Clone the repository
+2. Copy `env.txt` to `.env` and fill in the required environment variables:
 
 ```
-/backend
-│
-├── /app
-│   ├── /config
-│   │   ├── __init__.py
-│   │   └── database.py
-│   │
-│   ├── /models
-│   │   ├── __init__.py
-│   │   ├── conversation.py
-│   │   ├── message.py
-│   │   ├── user.py
-│   │   ├── audio.py
-│   │   ├── feedback.py
-│   │   └── mistake.py
-│   │
-│   ├── /routes
-│   │   ├── __init__.py
-│   │   ├── conversation.py
-│   │   ├── user.py
-│   │   ├── audio.py
-│   │   ├── feedback.py
-│   │   └── mistake.py
-│   │
-│   ├── /schemas
-│   │   ├── __init__.py
-│   │   ├── conversation.py
-│   │   ├── message.py
-│   │   ├── user.py
-│   │   ├── audio.py
-│   │   ├── feedback.py
-│   │   └── mistake.py
-│   │
-│   ├── /utils
-│   │   ├── __init__.py
-│   │   ├── auth.py
-│   │   ├── gemini.py
-│   │   ├── security.py
-│   │   ├── audio_processor.py
-│   │   ├── error_handler.py
-│   │   └── spaced_repetition.py
-│   │
-│   ├── __init__.py
-│   └── main.py
-│
-├── .env
-├── .dockerignore
-├── Dockerfile
-├── .gitignore
-├── README.md
-└── requirements.txt
+# MongoDB Configuration
+MONGODB_URL=mongodb://localhost:27017
+DATABASE_NAME=speak_ai_db
+
+# Authentication
+JWT_SECRET=your_jwt_secret_key
+ACCESS_TOKEN_EXPIRE_MINUTES=30
+REFRESH_TOKEN_EXPIRE_DAYS=7
+
+# Azure Speech Services
+AZURE_SPEECH_KEY=your_azure_speech_key
+AZURE_SPEECH_REGION=eastus
+
+# Gemini AI for Feedback Generation
+GEMINI_API_KEY=your_gemini_api_key
 ```
 
-## Setup Options
+### Running Locally
 
-### Option 1: Using Docker (Recommended)
-
-The easiest way to run the backend is using Docker with Docker Compose.
-
-#### Prerequisites
-- [Docker](https://docs.docker.com/get-docker/)
-- [Docker Compose](https://docs.docker.com/compose/install/)
-
-#### Steps
-
-1. Create a `.env` file in the root directory based on `.env.example`
-   ```bash
-   cp .env.example .env
+1. Create and activate a virtual environment:
+   ```
+   python -m venv .venv
+   source .venv/bin/activate  # On Windows: .venv\Scripts\activate
    ```
 
-2. Edit the `.env` file and fill in your Google Gemini API key and other variables
-
-3. Start the services
-   ```bash
-   docker-compose up -d
+2. Install dependencies:
    ```
-
-4. Access the API at `http://localhost:8000`
-   - API documentation: `http://localhost:8000/docs`
-
-5. To stop the services
-   ```bash
-   docker-compose down
-   ```
-
-### Option 2: Local Development (Windows)
-
-#### Prerequisites
-- Python 3.10+
-- MongoDB running locally or accessible remotely
-
-#### Steps
-
-1. Create a Virtual Environment
-   ```bash
-   python -m venv venv
-   ```
-
-2. Activate the Virtual Environment
-   ```bash
-   # Windows (Command Prompt)
-   venv\Scripts\activate
-   
-   # Windows (Git Bash)
-   source venv/Scripts/activate
-   ```
-
-3. Install dependencies
-   ```bash
    pip install -r requirements.txt
    ```
 
-4. Create `.env` file with your environment variables
+3. Start the FastAPI server:
    ```
-   MONGODB_URL=mongodb://localhost:27017
-   DATABASE_NAME=speak_ai_db
-   JWT_SECRET_KEY=your_secret_key
-   GEMINI_API_KEY=your_gemini_api_key
+   uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
    ```
 
-5. Run the application
-   ```bash
-   uvicorn app.main:app --reload
+4. Visit `http://localhost:8000/docs` to access the Swagger documentation
+
+### Running with Docker
+
+1. Build and start the containers:
+   ```
+   docker-compose up -d
    ```
 
-6. Access the API at `http://localhost:8000`
+2. This will start both the API server and MongoDB database
+
+3. Visit `http://localhost:8000/docs` to access the Swagger documentation
+
+## Azure Speech Services Integration
+
+This project uses Azure Speech Services for:
+
+1. **Speech-to-Text**: Converting audio to accurate text transcriptions
+2. **Pronunciation Assessment**: Evaluating pronunciation quality and providing detailed feedback
+3. **Comprehensive Analysis**: Combined transcription, pronunciation assessment, and language feedback
+
+### Azure Speech Services Setup
+
+1. Create an Azure account and set up a Speech Services resource
+2. Get your Speech Service key and region 
+3. Add these to your .env file as `AZURE_SPEECH_KEY` and `AZURE_SPEECH_REGION`
 
 ## API Documentation
 
-When the application is running, you can access:
-- Interactive API documentation: `http://localhost:8000/docs`
-- OpenAPI specification: `http://localhost:8000/openapi.json`
+The API is documented using FastAPI's built-in Swagger UI:
 
-## Main Features
+- `/docs`: Swagger UI documentation
+- `/redoc`: ReDoc documentation
 
-- User authentication with JWT
-- Role-based access control
-- Conversation role-play with AI
-- Audio processing and transcription
-- Pronunciation assessment
-- Language feedback generation
-- Mistake tracking and drilling with spaced repetition
+## Key Endpoints
+
+### Audio Processing
+- `POST /api/audio/upload`: Register audio recording metadata
+- `POST /api/audio/transcribe`: Transcribe audio to text
+- `POST /api/audio/pronunciation`: Analyze pronunciation quality
+- `POST /api/audio/analyze`: Comprehensive analysis (transcription + pronunciation + language feedback)
+
+### Users
+- `POST /api/users/register`: Register a new user
+- `POST /api/users/login`: Authenticate and get access token
+- `GET /api/users/me`: Get current user's profile
+- `PUT /api/users/me`: Update user profile
+
+### Conversations
+- `POST /api/conversations`: Create a new conversation
+- `GET /api/conversations`: List user's conversations
+- `POST /api/conversations/{id}/messages`: Add a message to a conversation
+- `GET /api/conversations/{id}/messages`: Get messages for a conversation
+
+### Mistakes
+- `GET /api/mistakes`: Get user's tracked mistakes
+- `POST /api/mistakes/{id}/drill`: Create a practice drill for a mistake
+- `PUT /api/mistakes/{id}`: Update mistake information
+
+## Development
+
+### Project Structure
+
+```
+app/
+├── config/         # Configuration modules
+├── models/         # Database models
+├── routes/         # API route handlers
+├── schemas/        # Pydantic schemas
+├── utils/          # Utility functions
+└── main.py         # Application entry point
+```
+
+### Adding New Features
+
+1. Define new models in `app/models/`
+2. Create Pydantic schemas in `app/schemas/`
+3. Implement route handlers in `app/routes/`
+4. Register new routers in `main.py`
+
+## Testing
+
+Run tests using pytest:
+
+```
+pytest
+```
+
+## Deployment
+
+For production deployment:
+
+1. Update the `.env` file with production settings
+2. Set `DEBUG=False` in production
+3. Use a proper MongoDB setup with authentication
+4. Set up SSL/TLS for secure communication
+5. Consider using a reverse proxy like Nginx
