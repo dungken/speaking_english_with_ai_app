@@ -7,6 +7,7 @@ import shutil
 from pathlib import Path
 from datetime import datetime
 import base64
+import logging
 
 from app.config.database import db
 from app.models.audio import Audio
@@ -38,6 +39,9 @@ UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 # Define valid audio file extensions
 VALID_AUDIO_EXTENSIONS = ['.mp3', '.wav', '.m4a', '.aac', '.ogg', '.flac']
+
+# Set up logger
+logger = logging.getLogger(__name__)
 
 @router.post("/upload", response_model=AudioResponse)
 async def upload_audio(
@@ -901,12 +905,12 @@ async def analyze_speech(
         context = None
         if conversation_id:
             # Get conversation from database
-            conversation = await db.conversations.find_one({"_id": ObjectId(conversation_id)})
+            conversation = db.conversations.find_one({"_id": ObjectId(conversation_id)})
             if conversation:
                 # Get recent messages for context
                 messages_cursor = db.messages.find({"conversation_id": ObjectId(conversation_id)})
                 messages_cursor = messages_cursor.sort("timestamp", -1).limit(5)
-                messages = await messages_cursor.to_list(length=5)
+                messages = list(messages_cursor)
                 
                 # Build context object
                 context = {
@@ -919,7 +923,7 @@ async def analyze_speech(
         # Generate dual feedback
         from app.utils.feedback_service import FeedbackService
         feedback_service = FeedbackService()
-        feedback_result = await feedback_service.generate_dual_feedback(
+        feedback_result = feedback_service.generate_dual_feedback(
             transcription=transcription,
             context=context
         )
@@ -946,7 +950,7 @@ async def analyze_speech(
         )
         
         # Insert audio record
-        result = await db.audio.insert_one(audio_record.to_dict())
+        result = db.audio.insert_one(audio_record.to_dict())
         audio_id = str(result.inserted_id)
         
         # Store feedback
@@ -963,7 +967,7 @@ async def analyze_speech(
             "created_at": datetime.utcnow()
         }
         
-        await db.feedback.insert_one(feedback_record)
+        db.feedback.insert_one(feedback_record)
         
         # Return response
         return {
