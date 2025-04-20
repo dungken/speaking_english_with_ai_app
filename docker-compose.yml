@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  api:
+    build: ./backend
+    container_name: speak_ai_api
+    restart: always
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+    environment:
+      - MONGODB_URL=mongodb://mongodb:27017
+      - DATABASE_NAME=speak_ai_db
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY:-mysecretkey}
+      - JWT_ALGORITHM=HS256
+      - JWT_ACCESS_TOKEN_EXPIRE_MINUTES=60
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+    depends_on:
+      - mongodb
+    networks:
+      - speak_ai_network
+
+  mongodb:
+    image: mongo:6.0
+    container_name: speak_ai_mongodb
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - speak_ai_network
+
+networks:
+  speak_ai_network:
+    driver: bridge
+
+volumes:
+  mongodb_data:
