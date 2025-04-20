@@ -11,7 +11,7 @@ services:
       - ./:/app
       - ./logs:/app/logs
     environment:
-      - MONGODB_URL=mongodb://mongodb:27017
+      - MONGODB_URL=mongodb://admin:password@mongodb:27017/speak_ai_db?authSource=admin
       - DATABASE_NAME=speak_ai_db
       - JWT_SECRET_KEY=${JWT_SECRET_KEY:-mysecretkey}
       - JWT_ALGORITHM=HS256

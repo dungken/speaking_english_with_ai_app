@@ -248,5 +248,6 @@ async def send_message(
     # Return AI response
     ai_message_dict = ai_message.to_dict()
     ai_message_dict["id"] = str(ai_message_dict["_id"])
+    ai_message_dict["conversation_id"] = str(ai_message_dict["conversation_id"])
     del ai_message_dict["_id"]
     return MessageResponse(**ai_message_dict)

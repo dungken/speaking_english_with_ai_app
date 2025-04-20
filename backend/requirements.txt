@@ -12,3 +12,4 @@ requests==2.31.0
 pydantic==2.5.2
 azure-cognitiveservices-speech==1.35.0
 python-jose==3.3.0
+email-validator==2.1.0
