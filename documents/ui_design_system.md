@@ -577,7 +577,6 @@ Implement the following screen templates to ensure structural consistency:
    - Action buttons (20% of vertical space)
 
 ## 10. Performance Guidelines
-
 #### Rendering Performance Targets
 
 To ensure a smooth user experience across all devices, implement these performance targets:
