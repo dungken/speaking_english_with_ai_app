@@ -1,13 +1,21 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, HttpUrl
 from typing import List, Dict, Any, Optional
 from datetime import datetime
 from bson import ObjectId
 
 class GrammarIssue(BaseModel):
     """Schema for a grammar issue."""
-    issue: str = Field(..., description="Description of the grammar issue")
-    correction: str = Field(..., description="Suggested correction")
-    explanation: str = Field(..., description="Explanation of the grammar rule")
+    issue: str = Field(..., description="The exact problematic text")
+    correction: str = Field(..., description="How it should be corrected")
+    explanation: str = Field(..., description="Why this is an issue")
+    severity: int = Field(..., ge=1, le=5, description="Severity level (1-5)")
+
+class VocabularyIssue(BaseModel):
+    """Schema for a vocabulary issue."""
+    original: str = Field(..., description="The word or phrase used")
+    better_alternative: str = Field(..., description="A better word or phrase")
+    reason: str = Field(..., description="Why the alternative is better")
+    example_usage: str = Field(..., description="Example sentence using the better alternative")
 
 class VocabularySuggestion(BaseModel):
     """Schema for a vocabulary suggestion."""
@@ -20,6 +28,11 @@ class PronunciationDetail(BaseModel):
     overall_score: float = Field(..., description="Overall pronunciation score (0-100)")
     word_scores: Dict[str, float] = Field({}, description="Per-word pronunciation scores")
     improvement_suggestions: List[str] = Field([], description="Suggestions for pronunciation improvement")
+
+class DetailedFeedback(BaseModel):
+    """Schema for detailed feedback structure"""
+    grammar_issues: List[GrammarIssue] = Field(default_factory=list)
+    vocabulary_issues: List[VocabularyIssue] = Field(default_factory=list)
 
 class FeedbackBase(BaseModel):
     """Base schema for feedback."""
@@ -34,6 +47,11 @@ class FeedbackCreate(FeedbackBase):
     """Schema for creating feedback."""
     target_id: str = Field(..., description="ID of the entity receiving feedback")
     target_type: str = Field(..., description="Type of entity receiving feedback")
+
+class DualFeedbackResponse(BaseModel):
+    """Schema for dual feedback response"""
+    user_feedback: str = Field(..., description="User-friendly feedback text")
+    detailed_feedback: DetailedFeedback = Field(..., description="Detailed structured feedback")
 
 class FeedbackResponse(FeedbackBase):
     """Schema for feedback response."""

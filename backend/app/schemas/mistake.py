@@ -66,3 +66,38 @@ class MistakeUpdate(BaseModel):
     severity: Optional[int] = Field(None, description="Updated severity (1-5)")
     is_learned: Optional[bool] = Field(None, description="Mark as learned")
     in_drill_queue: Optional[bool] = Field(None, description="Include in drill queue")
+
+class PracticeItemResponse(BaseModel):
+    """Schema for a practice item response"""
+    mistake_id: str = Field(..., description="ID of the mistake")
+    type: str = Field(..., description="Type of mistake (GRAMMAR or VOCABULARY)")
+    practice_prompt: str = Field(..., description="Generated prompt for practice")
+    original_text: str = Field(..., description="Original text with the mistake")
+    context: str = Field(..., description="Context with highlighted mistake")
+    correction: str = Field(..., description="Correct version")
+    explanation: str = Field(..., description="Explanation of the mistake")
+    example_usage: Optional[str] = Field(None, description="Example usage (for vocabulary)")
+
+class PracticeResultRequest(BaseModel):
+    """Schema for submitting practice result"""
+    was_successful: bool = Field(..., description="Whether the practice was successful")
+    user_answer: str = Field(..., description="User's answer during practice")
+
+class PracticeResultResponse(BaseModel):
+    """Schema for practice result response"""
+    mistake_id: str = Field(..., description="ID of the mistake")
+    mastery_level: int = Field(..., ge=0, le=10, description="Current mastery level (0-10)")
+    next_practice_date: datetime = Field(..., description="Next scheduled practice date")
+    status: str = Field(..., description="Current status (NEW, LEARNING, or MASTERED)")
+    feedback: str = Field(..., description="Feedback on the practice attempt")
+
+class MistakeStatistics(BaseModel):
+    """Schema for mistake statistics"""
+    total_count: int = Field(..., description="Total number of mistakes")
+    mastered_count: int = Field(..., description="Number of mastered mistakes")
+    learning_count: int = Field(..., description="Number of mistakes in learning")
+    new_count: int = Field(..., description="Number of new mistakes")
+    grammar_count: int = Field(..., description="Number of grammar mistakes")
+    vocabulary_count: int = Field(..., description="Number of vocabulary mistakes")
+    due_for_practice: int = Field(..., description="Number of mistakes due for practice")
+    mastery_percentage: float = Field(..., description="Percentage of mastered mistakes")

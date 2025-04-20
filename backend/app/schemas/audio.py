@@ -5,7 +5,7 @@ from bson import ObjectId
 
 class AudioBase(BaseModel):
     """Base schema with common audio properties."""
-    url: HttpUrl = Field(..., description="URL where the audio file is stored")
+    url: Optional[HttpUrl] = Field(None, description="URL where the audio file is stored")
     duration_seconds: Optional[float] = Field(None, description="Duration of the audio in seconds")
     language: str = Field("en-US", description="Language code of the audio content")
 
@@ -13,10 +13,20 @@ class AudioCreate(AudioBase):
     """Schema for creating a new audio record."""
     pass
 
-class AudioResponse(AudioBase):
+class AudioUpload(BaseModel):
+    """Schema for file upload metadata."""
+    filename: str = Field(..., description="Name of the uploaded file")
+    duration_seconds: Optional[float] = Field(None, description="Duration of the audio in seconds")
+    language: str = Field("en-US", description="Language code of the audio content")
+
+class AudioResponse(BaseModel):
     """Schema for audio response including transcription and pronunciation data."""
     id: str = Field(..., alias="_id", description="Unique identifier for the audio record")
     user_id: str = Field(..., description="ID of the user who created the audio")
+    url: Optional[str] = Field(None, description="URL where the audio file is stored")
+    filename: Optional[str] = Field(None, description="Name of the uploaded file")
+    duration_seconds: Optional[float] = Field(None, description="Duration of the audio in seconds")
+    language: str = Field("en-US", description="Language code of the audio content")
     transcription: Optional[str] = Field(None, description="Text transcription of the audio content")
     pronunciation_score: Optional[float] = Field(None, description="Overall pronunciation score (0-100)")
     pronunciation_feedback: Optional[Dict[str, Any]] = Field(None, description="Detailed pronunciation feedback")
@@ -31,10 +41,24 @@ class AudioResponse(AudioBase):
             ObjectId: lambda v: str(v)
         }
 
+class FileProcessRequest(BaseModel):
+    """Schema for requesting processing of an uploaded file."""
+    file_id: str = Field(..., description="ID of the uploaded file to process")
+    language: str = Field("en-US", description="Language code for processing")
+    reference_text: Optional[str] = Field(None, description="Optional reference text for comparison")
+
 class TranscriptionRequest(BaseModel):
     """Schema for requesting audio transcription."""
-    audio_url: HttpUrl = Field(..., description="URL of the audio to transcribe")
+    audio_url: Optional[HttpUrl] = Field(None, description="URL of the audio to transcribe")
+    file_id: Optional[str] = Field(None, description="ID of the uploaded file to transcribe")
     language: str = Field("en-US", description="Language code for transcription")
+
+class LocalFileRequest(BaseModel):
+    """Schema for requesting audio processing from a local file path."""
+    file_path: str = Field(..., description="Absolute path to the audio file on the server. Must be a path accessible to the server process.")
+    language: str = Field("en-US", description="Language code for processing")
+    reference_text: Optional[str] = Field(None, description="Optional reference text for comparison")
+    user_id: Optional[str] = Field(None, description="Optional user ID to associate with the recording")
 
 class TranscriptionResponse(BaseModel):
     """Schema for transcription response."""
@@ -68,16 +92,19 @@ class LanguageFeedback(BaseModel):
 
 class AnalysisRequest(BaseModel):
     """Schema for requesting comprehensive spoken English analysis."""
-    audio_url: HttpUrl = Field(..., description="URL of the audio to analyze")
+    audio_url: Optional[HttpUrl] = Field(None, description="URL of the audio to analyze")
+    file_id: Optional[str] = Field(None, description="ID of the uploaded file to analyze")
     reference_text: Optional[str] = Field(None, description="Optional reference text for comparison")
     language: str = Field("en-US", description="Language code for analysis")
 
 class AnalysisResponse(BaseModel):
     """Schema for comprehensive analysis response."""
-    transcription: str = Field(..., description="Transcribed text")
-    confidence: float = Field(..., description="Transcription confidence score")
-    pronunciation: PronunciationFeedback = Field(..., description="Pronunciation assessment")
-    language_feedback: LanguageFeedback = Field(..., description="Language feedback")
+    audio_id: Optional[str] = Field(None, description="ID of the analyzed audio")
+    transcription: str = Field(..., description="Transcribed text from the audio")
+    user_feedback: str = Field(..., description="User-friendly feedback text")
+    grammar_issues: List[Dict[str, Any]] = Field([], description="Grammar issues identified")
+    vocabulary_issues: List[Dict[str, Any]] = Field([], description="Vocabulary improvement suggestions")
+    conversation_id: Optional[str] = Field(None, description="ID of the conversation if applicable")
     
     class Config:
         """Configuration for Pydantic model."""
