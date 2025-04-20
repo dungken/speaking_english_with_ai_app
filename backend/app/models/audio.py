@@ -9,7 +9,9 @@ class Audio:
     Attributes:
         _id: Unique identifier
         user_id: ID of the user who recorded the audio
-        url: URL where the audio file is stored
+        url: URL where the audio file is stored (optional)
+        filename: Name of the uploaded file (optional)
+        file_path: Path to the stored file on server (optional)
         duration_seconds: Duration of the audio in seconds
         transcription: Text transcription of the audio content
         language: Language of the audio content
@@ -20,8 +22,10 @@ class Audio:
     """
     def __init__(
         self, 
-        user_id: ObjectId, 
-        url: str, 
+        user_id: ObjectId,
+        url: Optional[str] = None,
+        filename: Optional[str] = None,
+        file_path: Optional[str] = None,
         duration_seconds: Optional[float] = None,
         transcription: Optional[str] = None,
         language: str = "en-US",
@@ -32,6 +36,8 @@ class Audio:
         self._id = ObjectId()
         self.user_id = user_id
         self.url = url
+        self.filename = filename
+        self.file_path = file_path
         self.duration_seconds = duration_seconds
         self.transcription = transcription
         self.language = language
@@ -46,6 +52,8 @@ class Audio:
             "_id": self._id,
             "user_id": self.user_id,
             "url": self.url,
+            "filename": self.filename,
+            "file_path": self.file_path,
             "duration_seconds": self.duration_seconds,
             "transcription": self.transcription,
             "language": self.language,
