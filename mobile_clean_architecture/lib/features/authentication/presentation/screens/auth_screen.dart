@@ -6,6 +6,26 @@ import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../bloc/auth_bloc.dart';
 
+/*
+This file implements the authentication screen for your English learning app. It serves as both
+a login and registration screen, toggling between the two modes. It's responsible for:
+1. Collecting user credentials
+2. Validating input fields
+3. Sending authentication requests
+4. Handling authentication responses
+5. Navigating to the home screen upon successful authentication
+
+It connects to the rest of the app through:
+- AuthBloc: Handles authentication business logic
+- GoRouter: For navigation between screens
+- Theme constants: For consistent styling
+
+Key dependencies:
+- flutter/material.dart: Core Flutter UI components
+- flutter_bloc: For state management (BlocConsumer)
+- go_router: For navigation
+*/
+
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key});
 
