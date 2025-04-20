@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, HTTPException, status, Query, Body
 from bson import ObjectId
 from typing import List, Optional
 from datetime import datetime
@@ -9,8 +9,12 @@ from app.schemas.mistake import MistakeCreate, MistakeResponse, MistakePracticeR
 from app.utils.auth import get_current_user
 from app.utils.spaced_repetition import get_review_session, record_review_result
 from app.utils.error_handler import get_not_found_exception, handle_general_exception
+from app.utils.mistake_service import MistakeService
 
 router = APIRouter()
+
+# Initialize services
+mistake_service = MistakeService()
 
 @router.post("/create", response_model=MistakeResponse)
 async def create_mistake(
@@ -354,3 +358,148 @@ async def delete_mistake(
         raise get_not_found_exception("Mistake", mistake_id)
     except Exception as e:
         raise handle_general_exception(e, "mistake deletion")
+
+
+@router.get("/practice", response_model=List[dict])
+async def get_practice_items(
+    limit: int = Query(5, ge=1, le=10),
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Get mistakes due for practice.
+    
+    Args:
+        limit: Maximum number of mistakes to return
+        current_user: Authenticated user information
+        
+    Returns:
+        List of mistakes formatted as practice exercises
+    """
+    try:
+        user_id = str(current_user["_id"])
+        
+        # Get practice items using the service
+        exercises = await mistake_service.get_practice_items(
+            user_id=user_id,
+            limit=limit
+        )
+        
+        return exercises
+    
+    except Exception as e:
+        raise handle_general_exception(e, "getting practice items")
+
+@router.post("/practice/{mistake_id}/result")
+async def record_practice_result(
+    mistake_id: str,
+    was_successful: bool = Body(...),
+    user_answer: str = Body(...),
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Record the result of practicing a mistake.
+    
+    Args:
+        mistake_id: ID of the mistake
+        was_successful: Whether the practice was successful
+        user_answer: User's answer during practice
+        current_user: Authenticated user information
+        
+    Returns:
+        Updated mistake with feedback and progress information
+    """
+    try:
+        user_id = str(current_user["_id"])
+        
+        # Record practice result using the service
+        result = await mistake_service.record_practice_result(
+            mistake_id=mistake_id,
+            user_id=user_id,
+            was_successful=was_successful,
+            user_answer=user_answer
+        )
+        
+        return {
+            "mistake_id": result["_id"],
+            "mastery_level": result.get("mastery_level", 0),
+            "next_practice_date": result.get("next_practice_date"),
+            "status": result.get("status", "LEARNING"),
+            "feedback": result.get("feedback", "")
+        }
+    
+    except ValueError as e:
+        raise get_not_found_exception("Mistake", mistake_id)
+    except Exception as e:
+        raise handle_general_exception(e, "recording practice result")
+        
+@router.get("/statistics")
+async def get_mistake_statistics(
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Get statistics about the user's mistakes.
+    
+    Args:
+        current_user: Authenticated user information
+        
+    Returns:
+        Statistics about mistakes
+    """
+    try:
+        user_id = ObjectId(current_user["_id"])
+        
+        # Get total count
+        total_count = await db.mistakes.count_documents({"user_id": user_id})
+        
+        # Get mastered count
+        mastered_count = await db.mistakes.count_documents({
+            "user_id": user_id,
+            "status": "MASTERED"
+        })
+        
+        # Get learning count
+        learning_count = await db.mistakes.count_documents({
+            "user_id": user_id,
+            "status": "LEARNING"
+        })
+        
+        # Get new count
+        new_count = await db.mistakes.count_documents({
+            "user_id": user_id,
+            "status": "NEW"
+        })
+        
+        # Get type counts
+        grammar_count = await db.mistakes.count_documents({
+            "user_id": user_id,
+            "type": "GRAMMAR"
+        })
+        
+        vocabulary_count = await db.mistakes.count_documents({
+            "user_id": user_id,
+            "type": "VOCABULARY"
+        })
+        
+        # Get due for practice count
+        due_count = await db.mistakes.count_documents({
+            "user_id": user_id,
+            "next_practice_date": {"$lte": datetime.utcnow()},
+            "status": {"$ne": "MASTERED"}
+        })
+        
+        # Calculate mastery percentage
+        mastery_percentage = (mastered_count / total_count) * 100 if total_count > 0 else 0
+        
+        return {
+            "total_count": total_count,
+            "mastered_count": mastered_count,
+            "learning_count": learning_count,
+            "new_count": new_count,
+            "grammar_count": grammar_count,
+            "vocabulary_count": vocabulary_count,
+            "due_for_practice": due_count,
+            "mastery_percentage": round(mastery_percentage, 1)
+        }
+    
+    except Exception as e:
+        raise handle_general_exception(e, "getting mistake statistics")
