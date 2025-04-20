@@ -1,5 +1,5 @@
 from fastapi import FastAPI, Depends
-from app.routes import user, conversation
+from app.routes import user, conversation, audio, feedback, mistake
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.models import SecurityScheme
 from fastapi.security import OAuth2PasswordBearer
@@ -32,6 +32,18 @@ app = FastAPI(
         {
             "name": "conversations",
             "description": "Operations with conversations. Requires authentication."
+        },
+        {
+            "name": "audio",
+            "description": "Operations with audio recordings. Includes transcription and pronunciation assessment."
+        },
+        {
+            "name": "feedback",
+            "description": "Operations for generating and managing language feedback."
+        },
+        {
+            "name": "mistakes",
+            "description": "Operations for tracking and drilling language mistakes."
         }
     ]
 )
@@ -50,7 +62,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # Allows all origins
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],  # Explicitly list allowed methods
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],  # Explicitly list allowed methods
     allow_headers=["*"],  # Allows all headers including Authorization
     expose_headers=["*"],  # Expose all headers to the client
 )
@@ -67,6 +79,27 @@ app.include_router(
     conversation.router,
     prefix="/api",
     tags=["conversations"],
+    responses={401: {"description": "Unauthorized"}}
+)
+
+app.include_router(
+    audio.router,
+    prefix="/api/audio",
+    tags=["audio"],
+    responses={401: {"description": "Unauthorized"}}
+)
+
+app.include_router(
+    feedback.router,
+    prefix="/api/feedback",
+    tags=["feedback"],
+    responses={401: {"description": "Unauthorized"}}
+)
+
+app.include_router(
+    mistake.router,
+    prefix="/api/mistakes",
+    tags=["mistakes"],
     responses={401: {"description": "Unauthorized"}}
 )
 
