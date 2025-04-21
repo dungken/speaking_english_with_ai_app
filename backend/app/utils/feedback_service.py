@@ -90,7 +90,7 @@ class FeedbackService:
         self, 
         user_id: str, 
         feedback_data: Union[FeedbackResult, Dict[str, Any]], 
-        conversation_id: Optional[str] = None, 
+        user_message_id: Optional[str] = None, 
         transcription: Optional[str] = None
     ) -> str:
         """
@@ -118,7 +118,7 @@ class FeedbackService:
                 logger.warning(f"Invalid user_id format: {user_id}. Using generic ObjectId.")
                 user_object_id = ObjectId()
             
-            target_id = ObjectId(conversation_id) if conversation_id else ObjectId()
+            target_id = ObjectId(user_message_id) if user_message_id else ObjectId()
             
             # Process feedback data based on type
             if isinstance(feedback_data, FeedbackResult):
@@ -136,7 +136,7 @@ class FeedbackService:
             feedback = Feedback(
                 user_id=user_object_id,
                 target_id=target_id,
-                target_type="conversation" if conversation_id else "standalone",
+                target_type="message" if user_message_id else "conversation",
                 transcription=transcription,
                 user_feedback=user_feedback,
                 grammar_issues=detailed_feedback.get("grammar_issues", []),
@@ -147,9 +147,9 @@ class FeedbackService:
             result = db.feedback.insert_one(feedback.to_dict())
             
             # If associated with a conversation, update the conversation record
-            if conversation_id:
+            if user_message_id:
                 db.conversations.update_one(
-                    {"_id": ObjectId(conversation_id)},
+                    {"_id": ObjectId(user_message_id)},
                     {"$push": {"feedback_ids": str(result.inserted_id)}}
                 )
             
