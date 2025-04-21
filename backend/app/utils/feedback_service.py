@@ -2,9 +2,12 @@ import json
 import logging
 from typing import Dict, Any, Optional, List, Tuple
 from datetime import datetime
+from bson import ObjectId
 
 # Import Gemini client
 from app.utils.gemini import generate_response
+from app.config.database import db
+from app.models.feedback import Feedback
 
 logger = logging.getLogger(__name__)
 
@@ -16,6 +19,7 @@ class FeedbackService:
     1. Generate dual feedback (user-friendly and detailed) for a user's speech
     2. Build prompts for Gemini that ask for both types of feedback
     3. Parse and validate the response from Gemini
+    4. Store feedback in the database
     """
     
     def generate_dual_feedback(
@@ -72,6 +76,52 @@ class FeedbackService:
         except Exception as e:
             logger.error(f"Error generating feedback: {str(e)}")
             return self._generate_fallback_feedback(transcription)
+    
+    def store_feedback(self, user_id: str, feedback_data: Dict[str, Any], conversation_id: Optional[str] = None) -> str:
+        """
+        Store feedback in the database.
+        
+        Args:
+            user_id: ID of the user who received the feedback
+            feedback_data: Feedback data to store
+            conversation_id: Optional ID of the associated conversation
+            
+        Returns:
+            ID of the stored feedback
+            
+        Raises:
+            StorageError: If database storage fails
+        """
+        try:
+            # Convert string IDs to ObjectIds
+            user_object_id = ObjectId(user_id)
+            target_id = ObjectId(conversation_id) if conversation_id else ObjectId()
+            
+            # Create feedback model
+            feedback = Feedback(
+                target_id=target_id,
+                target_type="conversation" if conversation_id else "standalone",
+                user_feedback=feedback_data.get("user_feedback", ""),
+                grammar_issues=feedback_data.get("detailed_feedback", {}).get("grammar_issues", []),
+                vocabulary_issues=feedback_data.get("detailed_feedback", {}).get("vocabulary_issues", [])
+            )
+            
+            # Insert feedback into database
+            result = db.feedback.insert_one(feedback.to_dict())
+            
+            # If associated with a conversation, update the conversation record
+            if conversation_id:
+                db.conversations.update_one(
+                    {"_id": ObjectId(conversation_id)},
+                    {"$push": {"feedback_ids": str(result.inserted_id)}}
+                )
+            
+            # Return the feedback ID as a string
+            return str(result.inserted_id)
+                
+        except Exception as e:
+            logger.error(f"Error storing feedback: {str(e)}")
+            raise Exception(f"Failed to store feedback: {str(e)}")
     
     def _build_dual_feedback_prompt(
         self, 

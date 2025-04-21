@@ -859,129 +859,130 @@ async def analyze_speech(
     audio_file: UploadFile = File(...),
     conversation_id: Optional[str] = Form(None),
     current_user: dict = Depends(get_current_user),
-    background_tasks: BackgroundTasks = None
+    background_tasks: BackgroundTasks = BackgroundTasks()
 ):
     """
-    Analyze speech to generate grammar and vocabulary feedback and extract mistakes.
+    Analyze speech from an uploaded audio file.
     
-    This endpoint:
-    1. Saves and transcribes the uploaded audio file using local speech recognition
-    2. Gets conversation context if available
-    3. Generates dual feedback (user-friendly and detailed grammar/vocabulary analysis)
-    4. Extracts and stores mistakes in the background
-    5. Returns the immediate feedback to the user
+    This endpoint follows the sequence in the speech-analysis-sequence diagram:
+    1. Transcribe the audio file
+    2. Save the audio file to disk
+    3. Fetch conversation context if available
+    4. Generate dual feedback using Gemini
+    5. Store results in database
+    6. Trigger background task for mistake extraction
     
     Args:
         audio_file: The audio file to analyze
-        conversation_id: Optional ID of the conversation for context
+        conversation_id: Optional ID of the associated conversation
         current_user: Authenticated user information
-        background_tasks: Background tasks runner (created automatically if not provided)
+        background_tasks: FastAPI background tasks manager
         
     Returns:
         Analysis response with transcription and feedback
     """
     try:
-        # Create background tasks if not provided
-        if background_tasks is None:
-            background_tasks = BackgroundTasks()
-            
-        # Get user ID from authenticated user
         user_id = str(current_user["_id"])
         
-        # Save the audio file
-        file_path = await save_audio_file(audio_file, user_id)
+        # Initialize services
+        from app.utils.speech_service import SpeechService
+        from app.utils.feedback_service import FeedbackService
+        from app.utils.event_handler import event_handler
         
-        # Transcribe the audio locally
-        transcription_result = transcribe_audio_local(file_path)
-        if not transcription_result or not transcription_result.get("text"):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Failed to transcribe audio. Please try again."
-            )
+        speech_service = SpeechService()
+        feedback_service = FeedbackService()
         
-        transcription = transcription_result["text"]
-        # Get conversation context if needed
-        context = None
+        # Step 1: Save the audio file
+        file_path, audio_model = speech_service.save_audio_file(audio_file, user_id)
+        audio_id = str(audio_model._id)
+        
+        # Step 2: Transcribe the audio file
+        transcription = speech_service.transcribe_audio(Path(file_path))
+        
+        # Update audio record with transcription
+        db.audio.update_one(
+            {"_id": ObjectId(audio_id)},
+            {"$set": {"transcription": transcription}}
+        )
+        
+        # Step 3: Fetch conversation context if available
+        context = {}
         if conversation_id:
-            # Get conversation from database
             conversation = db.conversations.find_one({"_id": ObjectId(conversation_id)})
             if conversation:
-                # Get recent messages for context
-                messages_cursor = db.messages.find({"conversation_id": ObjectId(conversation_id)})
-                messages_cursor = messages_cursor.sort("timestamp", -1).limit(5)
-                messages = list(messages_cursor)
-                if messages:
-                    logger.debug(f"First message keys: {list(messages[0].keys())}")
-                    logger.debug(f"First message content: {messages[0]}")
+                # Fetch messages to build context
+                messages = list(db.messages.find({"conversation_id": ObjectId(conversation_id)})
+                              .sort("timestamp", 1)
+                              .limit(10))
+                
+                # Format previous exchanges
+                previous_exchanges = []
+                for msg in messages:
+                    sender = "User" if msg.get("sender") == "user" else "AI"
+                    previous_exchanges.append(f"{sender}: {msg.get('content', '')}")
+                
                 context = {
                     "user_role": conversation.get("user_role", "Student"),
                     "ai_role": conversation.get("ai_role", "Teacher"),
                     "situation": conversation.get("situation", "General conversation"),
-                   "previous_exchanges": "\n".join([f"{msg.get('sender', 'Unknown')}: {msg.get('content', '')}" for msg in reversed(messages)])
+                    "previous_exchanges": "\n".join(previous_exchanges)
                 }
-                # {'user_role': 'Student', 'ai_role': 'Teacher', 'situation': 'General conversation', 'previous_exchanges': 'Unknown: \nUnknown: \nUnknown: \nUnknown: \nUnknown: '}
         
-        # Generate dual feedback
-        from app.utils.feedback_service import FeedbackService
-        feedback_service = FeedbackService()
-        feedback_result = feedback_service.generate_dual_feedback(
-            transcription=transcription,
-            context=context
+        # Step 4: Generate feedback
+        feedback_result = feedback_service.generate_dual_feedback(transcription, context)
+        
+        # Step 5: Store feedback
+        feedback_id = feedback_service.store_feedback(
+            user_id, 
+            feedback_result, 
+            conversation_id
         )
-        # Process feedback for mistakes in the background
-        from app.utils.mistake_service import MistakeService
         
-        mistake_service = MistakeService()
+        # If we have a conversation ID, add a message with this transcription
+        if conversation_id:
+            from app.utils.conversation_service import ConversationService
+            conversation_service = ConversationService()
+            
+            # Add user message to conversation
+            message = conversation_service.add_message(
+                conversation_id,
+                {
+                    "sender": "user",
+                    "content": transcription,
+                    "audio_path": str(file_path),
+                    "transcription": transcription,
+                    "generate_response": False  # Don't auto-generate an AI response yet
+                }
+            )
+            
+            # Link feedback to message
+            if message:
+                db.messages.update_one(
+                    {"_id": ObjectId(message["_id"])},
+                    {"$set": {"feedback_id": feedback_id}}
+                )
+        
+        # Step 6: Trigger background task for mistake extraction
         background_tasks.add_task(
-            mistake_service.process_feedback_for_mistakes,
-            user_id=user_id,
-            transcription=transcription,
-            detailed_feedback=feedback_result["detailed_feedback"],
-            context=context
+            event_handler.on_new_feedback,
+            feedback_id
         )
         
-        # Store the audio and create a record
-        audio_record = Audio(
-            user_id=ObjectId(user_id),
-            filename=audio_file.filename,
-            file_path=str(file_path),
+        # Step 7: Prepare response
+        return AnalysisResponse(
             transcription=transcription,
-            language="en-US"
+            user_feedback=feedback_result.get("user_feedback", ""),
+            detailed_feedback=feedback_result.get("detailed_feedback", {}),
+            audio_id=audio_id,
+            feedback_id=feedback_id
         )
-        
-        # Insert audio record
-        result = db.audio.insert_one(audio_record.to_dict())
-        audio_id = str(result.inserted_id)
-           
-        # Store feedback
-        grammar_issues = feedback_result["detailed_feedback"].get("grammar_issues", [])
-        vocabulary_issues = feedback_result["detailed_feedback"].get("vocabulary_issues", [])
-        
-        feedback_record = {
-            "target_id": ObjectId(audio_id),
-            "target_type": "audio",
-            "user_id": ObjectId(user_id),
-            "user_feedback": feedback_result["user_feedback"],
-            "grammar_issues": grammar_issues,
-            "vocabulary_issues": vocabulary_issues,
-            "created_at": datetime.utcnow()
-        }
-        
-        db.feedback.insert_one(feedback_record)
-        
-        # Return response
-        return {
-            "audio_id": audio_id,
-            "transcription": transcription,
-            "user_feedback": feedback_result["user_feedback"],
-            "grammar_issues": grammar_issues,
-            "vocabulary_issues": vocabulary_issues,
-            "conversation_id": conversation_id
-        }
         
     except Exception as e:
-        logger.error(f"Error in speech analysis: {str(e)}")
-        raise handle_general_exception(e, "speech analysis")
+        logger.error(f"Error analyzing speech: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to analyze speech: {str(e)}"
+        )
 
 async def save_audio_file(file: UploadFile, user_id: str) -> str:
     """

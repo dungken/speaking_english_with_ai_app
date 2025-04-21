@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.models import SecurityScheme
 from fastapi.security import OAuth2PasswordBearer
 from typing import Dict
+from app.utils.event_handler import event_handler
 
 # Create FastAPI app with metadata
 app = FastAPI(
@@ -116,3 +117,21 @@ async def root():
         "docs_url": "/docs",
         "openapi_url": "/openapi.json"
     }
+
+@app.on_event("startup")
+async def startup_event():
+    """
+    Function that runs on application startup.
+    Starts the background task processor.
+    """
+    # Start the event handler
+    event_handler.start()
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """
+    Function that runs on application shutdown.
+    Stops the background task processor.
+    """
+    # Stop the event handler
+    event_handler.stop()
