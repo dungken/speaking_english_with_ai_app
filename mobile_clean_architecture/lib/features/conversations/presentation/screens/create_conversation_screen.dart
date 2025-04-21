@@ -1,218 +1,280 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
+
+import '../../../../core/presentation/widgets/buttons/primary_button.dart';
+import '../../../../core/presentation/widgets/inputs/app_text_input.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/theme_cubit.dart';
+import '../../../../core/theme/text_styles.dart';
+import '../../../../core/utils/responsive_layout.dart';
+import '../bloc/conversation_bloc.dart';
+import '../bloc/conversation_event.dart';
+import '../bloc/conversation_state.dart';
 import 'conversation_screen.dart';
 
+/// Screen for creating a new conversation
+///
+/// Allows the user to specify their role, the AI's role, and the situation
 class CreateConversationScreen extends StatefulWidget {
-  const CreateConversationScreen({super.key});
+  const CreateConversationScreen({Key? key}) : super(key: key);
 
   @override
-  State<CreateConversationScreen> createState() =>
-      _CreateConversationScreenState();
+  State<CreateConversationScreen> createState() => _CreateConversationScreenState();
 }
 
 class _CreateConversationScreenState extends State<CreateConversationScreen> {
-  final TextEditingController _promptController = TextEditingController();
-  String _selectedCharacter = 'Nhân viên bán hàng'; // Default character
-  String _selectedAICharacter = 'Khách nước ngoài'; // Default AI character
-  String _gender = 'Nam'; // Default gender
+  final _formKey = GlobalKey<FormState>();
+  final _userRoleController = TextEditingController();
+  final _aiRoleController = TextEditingController();
+  final _situationController = TextEditingController();
+
+  bool _isFormValid = false;
 
   @override
-  void dispose() {
-    _promptController.dispose();
-    super.dispose();
+  void initState() {
+    super.initState();
+    _userRoleController.addListener(_validateForm);
+    _aiRoleController.addListener(_validateForm);
+    _situationController.addListener(_validateForm);
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
+  void dispose() {
+    _userRoleController.dispose();
+    _aiRoleController.dispose();
+    _situationController.dispose();
+    super.dispose();
+  }
+
+  void _validateForm() {
+    final isValid = _userRoleController.text.isNotEmpty &&
+        _aiRoleController.text.isNotEmpty &&
+        _situationController.text.isNotEmpty;
+    
+    if (isValid != _isFormValid) {
+      setState(() {
+        _isFormValid = isValid;
+      });
+    }
+  }
+
+  void _createConversation() {
+    if (_formKey.currentState?.validate() ?? false) {
+      context.read<ConversationBloc>().add(CreateConversationEvent(
+        userRole: _userRoleController.text,
+        aiRole: _aiRoleController.text,
+        situation: _situationController.text,
+      ));
+    }
+  }
+
+  Widget _buildFormField({
+    required String label,
+    required String hint,
+    required TextEditingController controller,
+    int maxLines = 1,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyles.h3(context),
         ),
-        title: const Text('Tạo tình huống giao tiếp của tôi'),
-        centerTitle: true,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        const SizedBox(height: 8),
+        AppTextInput(
+          controller: controller,
+          hintText: hint,
+          maxLines: maxLines,
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return 'This field is required';
+            }
+            return null;
+          },
+        ),
+        const SizedBox(height: 24),
+      ],
+    );
+  }
+
+  Widget _buildPortraitLayout(BuildContext context) {
+    return SafeArea(
+      child: Padding(
+        padding: EdgeInsets.all(ResponsiveLayout.getCardPadding(context)),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Nhân vật của tôi',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-              ),
+            Text(
+              'Create a Conversation',
+              style: TextStyles.h1(context),
             ),
             const SizedBox(height: 8),
-            _buildCharacterInput(
-              'Nhân viên bán hàng',
-              onChanged: (value) => setState(() => _selectedCharacter = value),
+            Text(
+              'Set up a role-play scenario to practice your English',
+              style: TextStyles.body(context),
             ),
-            const SizedBox(height: 16),
-            const Text(
-              'Nhân vật AI',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            const SizedBox(height: 8),
-            _buildCharacterInput(
-              'Khách nước ngoài',
-              onChanged: (value) =>
-                  setState(() => _selectedAICharacter = value),
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              'Giới tính AI',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            const SizedBox(height: 8),
-            _buildGenderSelection(),
-            const SizedBox(height: 16),
-            const Text(
-              'Tình huống',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            const SizedBox(height: 8),
-            _buildPromptInput(),
             const SizedBox(height: 24),
-            _buildCreateButton(),
+            Expanded(
+              child: Form(
+                key: _formKey,
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildFormField(
+                        label: 'Your Role',
+                        hint: 'e.g., Job applicant, Customer, Patient',
+                        controller: _userRoleController,
+                      ),
+                      _buildFormField(
+                        label: 'AI Role',
+                        hint: 'e.g., Interviewer, Customer service, Doctor',
+                        controller: _aiRoleController,
+                      ),
+                      _buildFormField(
+                        label: 'Situation',
+                        hint: 'Describe the context of this conversation',
+                        controller: _situationController,
+                        maxLines: 3,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            PrimaryButton(
+              text: 'Start Conversation',
+              isFullWidth: true,
+              onPressed: _isFormValid ? _createConversation : null,
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildCharacterInput(String placeholder,
-      {required ValueChanged<String> onChanged}) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.grey.shade100,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: TextField(
-        onChanged: onChanged,
-        decoration: InputDecoration(
-          hintText: placeholder,
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          border: InputBorder.none,
-          suffixText: '0/30',
-          suffixStyle: TextStyle(
-            color: Colors.grey.shade600,
-            fontSize: 14,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildGenderSelection() {
-    return Row(
-      children: [
-        _buildGenderOption('Nam'),
-        const SizedBox(width: 16),
-        _buildGenderOption('Nữ'),
-      ],
-    );
-  }
-
-  Widget _buildGenderOption(String gender) {
-    final isSelected = _gender == gender;
-    return GestureDetector(
-      onTap: () => setState(() => _gender = gender),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-        decoration: BoxDecoration(
-          color:
-              isSelected ? Theme.of(context).primaryColor : Colors.transparent,
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(
-            color: isSelected ? Colors.transparent : Colors.grey.shade300,
-          ),
-        ),
-        child: Text(
-          gender,
-          style: TextStyle(
-            color: isSelected ? Colors.white : Colors.black,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPromptInput() {
-    return Container(
-      height: 120,
-      decoration: BoxDecoration(
-        color: Colors.grey.shade100,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: TextField(
-        controller: _promptController,
-        maxLines: null,
-        decoration: InputDecoration(
-          hintText: 'Tôi đang tư vấn khách hàng mua áo khoác',
-          contentPadding: const EdgeInsets.all(16),
-          border: InputBorder.none,
-          suffixText: '0/100',
-          suffixStyle: TextStyle(
-            color: Colors.grey.shade600,
-            fontSize: 14,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCreateButton() {
-    return SizedBox(
-      width: double.infinity,
-      child: ElevatedButton(
-        onPressed: () {
-          if (_promptController.text.isNotEmpty) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => ConversationScreen(
-                  situationDescription: _promptController.text,
+  Widget _buildLandscapeLayout(BuildContext context) {
+    return SafeArea(
+      child: Padding(
+        padding: EdgeInsets.all(ResponsiveLayout.getCardPadding(context)),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              flex: 2,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Create a Conversation',
+                    style: TextStyles.h1(context),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Set up a role-play scenario to practice your English',
+                    style: TextStyles.body(context),
+                  ),
+                  const SizedBox(height: 24),
+                  Expanded(
+                    child: Center(
+                      child: Icon(
+                        Icons.chat_bubble_outline,
+                        size: 120,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 24),
+            Expanded(
+              flex: 3,
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: SingleChildScrollView(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildFormField(
+                              label: 'Your Role',
+                              hint: 'e.g., Job applicant, Customer, Patient',
+                              controller: _userRoleController,
+                            ),
+                            _buildFormField(
+                              label: 'AI Role',
+                              hint: 'e.g., Interviewer, Customer service, Doctor',
+                              controller: _aiRoleController,
+                            ),
+                            _buildFormField(
+                              label: 'Situation',
+                              hint: 'Describe the context of this conversation',
+                              controller: _situationController,
+                              maxLines: 3,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    PrimaryButton(
+                      text: 'Start Conversation',
+                      isFullWidth: true,
+                      onPressed: _isFormValid ? _createConversation : null,
+                    ),
+                  ],
                 ),
               ),
-            );
-          } else {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Vui lòng nhập tình huống giao tiếp'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocListener<ConversationBloc, ConversationState>(
+      listener: (context, state) {
+        if (state is ConversationActive) {
+          // Navigate to the conversation screen when conversation is created
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (_) => ConversationScreen(
+                conversation: state.conversation!,
               ),
-            );
-          }
-        },
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Theme.of(context).primaryColor,
-          foregroundColor: Colors.white,
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
+            ),
+          );
+        } else if (state is ConversationCreationFailed) {
+          // Show error snackbar
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(state.errorMessage ?? 'Failed to create conversation'),
+              backgroundColor: AppColors.error,
+            ),
+          );
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('New Conversation'),
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () => context.pop(),
           ),
         ),
-        child: const Text(
-          'TẠO TÌNH HUỐNG',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-          ),
+        body: LayoutBuilder(
+          builder: (context, constraints) {
+            if (ResponsiveLayout.isLargeScreen(context)) {
+              return _buildLandscapeLayout(context);
+            } else {
+              return _buildPortraitLayout(context);
+            }
+          },
         ),
       ),
     );

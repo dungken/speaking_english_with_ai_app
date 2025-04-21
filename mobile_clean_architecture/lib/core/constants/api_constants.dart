@@ -7,6 +7,10 @@ class ApiConstants {
   static const String loginEndpoint = '/users/login';
   static const String registerEndpoint = '/users/register';
 
+  /// Authentication token
+  /// In a real app, this would be stored securely and retrieved dynamically
+  static String token = '';
+
   /// Headers
   static const Map<String, String> headers = {
     'Content-Type': 'application/json',

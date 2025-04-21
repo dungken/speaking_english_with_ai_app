@@ -13,6 +13,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/authentication/presentation/screens/auth_screen.dart';
+import '../../features/conversations/domain/entities/conversation.dart';
 import '../../features/conversations/presentation/screens/conversation_screen.dart';
 import '../../features/conversations/presentation/screens/create_conversation_screen.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
@@ -61,11 +62,27 @@ class AppRouter {
         builder: (context, state) => const CreateConversationScreen(),
       ),
       GoRoute(
-        path: '/conversation',
+        path: '/conversation/:id',
         builder: (context, state) {
-          final situationDescription =
-              state.uri.queryParameters['situation'] ?? '';
-          return ConversationScreen(situationDescription: situationDescription);
+          final conversationId = state.pathParameters['id'] ?? '';
+          final conversation = state.extra as Conversation?;
+          
+          // If we have the conversation object passed as extra, use it directly
+          if (conversation != null) {
+            return ConversationScreen(conversation: conversation);
+          }
+          
+          // Otherwise, the ConversationScreen will load it using the ID
+          return ConversationScreen(
+            conversation: Conversation(
+              id: conversationId,
+              userRole: 'Loading...',
+              aiRole: 'Loading...',
+              situation: 'Loading conversation details...',
+              messages: const [],
+              startedAt: DateTime.now(),
+            ),
+          );
         },
       ),
       GoRoute(

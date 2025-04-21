@@ -23,6 +23,8 @@ import 'core/theme/app_theme.dart'; // Defines how our app looks (colors, styles
 import 'core/theme/theme_provider.dart'; // Manages theme changes (light/dark mode)
 import 'features/authentication/data/models/user_model.dart'; // Structure for user data
 import 'features/authentication/di/auth_module.dart'; // Sets up authentication features
+import 'features/conversations/di/conversation_module.dart'; // Sets up conversation features
+import 'features/conversations/presentation/bloc/conversation_bloc.dart'; // Controls conversation logic
 import 'features/home/di/home_module.dart'; // Sets up home screen features
 import 'features/home/presentation/cubit/home_cubit.dart'; // Controls logic for home screen
 import 'features/authentication/presentation/bloc/auth_bloc.dart'; // Controls authentication logic
@@ -42,6 +44,7 @@ void main() async {
   // Like arranging furniture in different rooms of the house
   initAuthModule(); // Set up login/signup features
   initHomeModule(); // Set up home screen features
+  initConversationModule(); // Set up conversation features
 
   // Start the app by creating the main widget
   // Like opening the front door and welcoming guests in
@@ -113,6 +116,11 @@ class MyApp extends StatelessWidget {
         // Like installing a security system for the building entrance
         BlocProvider<AuthBloc>(
           create: (context) => GetIt.instance<AuthBloc>(),
+        ),
+        // Set up ConversationBloc to manage conversation logic
+        // Like installing a communication system for the conversation area
+        BlocProvider<ConversationBloc>(
+          create: (context) => GetIt.instance<ConversationBloc>(),
         ),
       ],
       // Consumer listens for theme changes and rebuilds the app when needed

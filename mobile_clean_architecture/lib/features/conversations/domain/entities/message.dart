@@ -1,78 +1,60 @@
 import 'package:equatable/equatable.dart';
 
-enum MessageRole { user, ai }
+/// Enum representing who sent a message
+enum SenderType {
+  /// Message sent by the user
+  user,
+  
+  /// Message sent by the AI
+  ai,
+}
 
+/// Entity representing a message in a conversation
 class Message extends Equatable {
-  final String text;
-  final MessageRole role;
-  final String? audioUrl;
-  final Feedback? feedback;
+  /// Unique identifier for the message
+  final String id;
+  
+  /// ID of the conversation this message belongs to
+  final String conversationId;
+  
+  /// Who sent this message
+  final SenderType sender;
+  
+  /// The content of the message
+  final String content;
+  
+  /// When the message was sent
+  final DateTime timestamp;
+  
+  /// Path to the audio recording (if available)
+  final String? audioPath;
+  
+  /// Transcription of the audio recording (if available)
+  final String? transcription;
+  
+  /// ID of the associated feedback (if available)
+  final String? feedbackId;
 
   const Message({
-    required this.text,
-    required this.role,
-    this.audioUrl,
-    this.feedback,
+    required this.id,
+    required this.conversationId,
+    required this.sender,
+    required this.content,
+    required this.timestamp,
+    this.audioPath,
+    this.transcription,
+    this.feedbackId,
   });
 
   @override
-  List<Object?> get props => [text, role, audioUrl, feedback];
-}
-
-class Feedback extends Equatable {
-  final List<GrammarIssue> grammar;
-  final List<VocabularyIssue> vocabulary;
-  final PronunciationFeedback? pronunciation;
-
-  const Feedback({
-    required this.grammar,
-    required this.vocabulary,
-    this.pronunciation,
-  });
-
-  @override
-  List<Object?> get props => [grammar, vocabulary, pronunciation];
-}
-
-class GrammarIssue extends Equatable {
-  final String mistake;
-  final String suggestion;
-  final String explanation;
-
-  const GrammarIssue({
-    required this.mistake,
-    required this.suggestion,
-    required this.explanation,
-  });
-
-  @override
-  List<Object> get props => [mistake, suggestion, explanation];
-}
-
-class VocabularyIssue extends Equatable {
-  final String word;
-  final String alternative;
-  final String reason;
-
-  const VocabularyIssue({
-    required this.word,
-    required this.alternative,
-    required this.reason,
-  });
-
-  @override
-  List<Object> get props => [word, alternative, reason];
-}
-
-class PronunciationFeedback extends Equatable {
-  final double score;
-  final String details;
-
-  const PronunciationFeedback({
-    required this.score,
-    required this.details,
-  });
-
-  @override
-  List<Object> get props => [score, details];
+  List<Object?> get props => [
+    id, 
+    conversationId, 
+    sender, 
+    content, 
+    timestamp, 
+    audioPath, 
+    transcription, 
+    feedbackId,
+  ];
 }
