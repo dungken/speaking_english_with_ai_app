@@ -1,6 +1,6 @@
 import json
 import logging
-from typing import Dict, Any, Optional, List, Tuple
+from typing import Dict, Any, Optional, List, Tuple, Union
 from datetime import datetime
 from bson import ObjectId
 
@@ -8,6 +8,7 @@ from bson import ObjectId
 from app.utils.gemini import generate_response
 from app.config.database import db
 from app.models.feedback import Feedback
+from app.models.results.feedback_result import FeedbackResult, DetailedFeedback
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +27,7 @@ class FeedbackService:
         self, 
         transcription: str, 
         context: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+    ) -> FeedbackResult:
         """
         Generate both user-friendly and detailed feedback in one call to Gemini.
         
@@ -35,10 +36,7 @@ class FeedbackService:
             context: Optional conversation context information
             
         Returns:
-            Dictionary containing user_feedback and detailed_feedback
-            
-        Raises:
-            Exception: If there are issues with the API call or response parsing
+            FeedbackResult containing user_feedback and detailed_feedback
         """
         try:
             # Build prompt for dual feedback
@@ -61,11 +59,11 @@ class FeedbackService:
                 if "detailed_feedback" not in response_data:
                     raise ValueError("Missing 'detailed_feedback' field in Gemini response")
                 
-                # Return both feedback types
-                return {
-                    "user_feedback": response_data.get("user_feedback", ""),
-                    "detailed_feedback": response_data.get("detailed_feedback", {})
-                }
+                # Create and return FeedbackResult
+                return FeedbackResult(
+                    user_feedback=response_data.get("user_feedback", ""),
+                    detailed_feedback=response_data.get("detailed_feedback", {})
+                )
                 
             except json.JSONDecodeError as e:
                 logger.error(f"Failed to parse Gemini response as JSON: {e}")
@@ -77,33 +75,61 @@ class FeedbackService:
             logger.error(f"Error generating feedback: {str(e)}")
             return self._generate_fallback_feedback(transcription)
     
-    def store_feedback(self, user_id: str, feedback_data: Dict[str, Any], conversation_id: Optional[str] = None) -> str:
+    def store_feedback(
+        self, 
+        user_id: str, 
+        feedback_data: Union[FeedbackResult, Dict[str, Any]], 
+        conversation_id: Optional[str] = None, 
+        transcription: Optional[str] = None
+    ) -> str:
         """
         Store feedback in the database.
         
         Args:
             user_id: ID of the user who received the feedback
-            feedback_data: Feedback data to store
+            feedback_data: Feedback data to store (FeedbackResult or dict)
             conversation_id: Optional ID of the associated conversation
+            transcription: Optional transcription text
             
         Returns:
             ID of the stored feedback
-            
-        Raises:
-            StorageError: If database storage fails
         """
         try:
+            # Validate required parameters
+            if not user_id:
+                logger.warning("Missing user_id for feedback storage")
+                user_id = "unknown_user"  # Fallback value
+            
             # Convert string IDs to ObjectIds
-            user_object_id = ObjectId(user_id)
+            try:
+                user_object_id = ObjectId(user_id)
+            except Exception as e:
+                logger.warning(f"Invalid user_id format: {user_id}. Using generic ObjectId.")
+                user_object_id = ObjectId()
+            
             target_id = ObjectId(conversation_id) if conversation_id else ObjectId()
             
-            # Create feedback model
+            # Process feedback data based on type
+            if isinstance(feedback_data, FeedbackResult):
+                user_feedback = feedback_data.user_feedback
+                detailed_feedback = feedback_data.detailed_feedback.to_dict()
+            else:
+                user_feedback = feedback_data.get("user_feedback", "")
+                detailed_feedback = feedback_data.get("detailed_feedback", {})
+                
+            # Access the detailed feedback safely
+            if not isinstance(detailed_feedback, dict):
+                detailed_feedback = {}
+            
+            # Create feedback model with explicit user_id and transcription
             feedback = Feedback(
+                user_id=user_object_id,
                 target_id=target_id,
                 target_type="conversation" if conversation_id else "standalone",
-                user_feedback=feedback_data.get("user_feedback", ""),
-                grammar_issues=feedback_data.get("detailed_feedback", {}).get("grammar_issues", []),
-                vocabulary_issues=feedback_data.get("detailed_feedback", {}).get("vocabulary_issues", [])
+                transcription=transcription,
+                user_feedback=user_feedback,
+                grammar_issues=detailed_feedback.get("grammar_issues", []),
+                vocabulary_issues=detailed_feedback.get("vocabulary_issues", [])
             )
             
             # Insert feedback into database
@@ -180,7 +206,7 @@ class FeedbackService:
         
         return prompt
     
-    def _generate_fallback_feedback(self, transcription: str) -> Dict[str, Any]:
+    def _generate_fallback_feedback(self, transcription: str) -> FeedbackResult:
         """
         Generate fallback feedback when the API call fails.
         
@@ -188,12 +214,12 @@ class FeedbackService:
             transcription: Transcribed text from user's speech
             
         Returns:
-            Basic feedback dictionary
+            Basic FeedbackResult with minimal content
         """
-        return {
-            "user_feedback": "Thank you for your response. I had trouble analyzing it in detail, but please continue practicing.",
-            "detailed_feedback": {
+        return FeedbackResult(
+            user_feedback="Thank you for your response. I had trouble analyzing it in detail, but please continue practicing.",
+            detailed_feedback={
                 "grammar_issues": [],
                 "vocabulary_issues": []
             }
-        } 
+        ) 

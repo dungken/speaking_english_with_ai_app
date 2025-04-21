@@ -888,6 +888,7 @@ async def analyze_speech(
         from app.utils.speech_service import SpeechService
         from app.utils.feedback_service import FeedbackService
         from app.utils.event_handler import event_handler
+        from app.models.results.feedback_result import FeedbackResult
         
         speech_service = SpeechService()
         feedback_service = FeedbackService()
@@ -898,6 +899,11 @@ async def analyze_speech(
         
         # Step 2: Transcribe the audio file
         transcription = speech_service.transcribe_audio(Path(file_path))
+        
+        # Ensure we have a valid transcription to work with
+        if not transcription or not transcription.strip():
+            logger.warning(f"Empty transcription result for file: {file_path}, using placeholder")
+            transcription = "Audio content could not be transcribed. Please try again with a different file format or check audio quality."
         
         # Update audio record with transcription
         db.audio.update_one(
@@ -929,13 +935,27 @@ async def analyze_speech(
                 }
         
         # Step 4: Generate feedback
-        feedback_result = feedback_service.generate_dual_feedback(transcription, context)
+        try:
+            feedback_result = feedback_service.generate_dual_feedback(transcription, context)
+        except Exception as e:
+            logger.error(f"Error generating feedback: {str(e)}", exc_info=True)
+            # Create a fallback feedback result
+            feedback_result = FeedbackResult(
+                user_feedback="Unable to generate detailed feedback at this time.",
+                detailed_feedback={
+                    "grammar_issues": [],
+                    "vocabulary_issues": [],
+                    "positives": ["Your response was recorded."],
+                    "fluency": ["Keep practicing to improve your English skills."]
+                }
+            )
         
-        # Step 5: Store feedback
+        # Step 5: Store feedback with explicit user_id
         feedback_id = feedback_service.store_feedback(
             user_id, 
             feedback_result, 
-            conversation_id
+            conversation_id,
+            transcription=transcription  # Explicitly pass transcription
         )
         
         # If we have a conversation ID, add a message with this transcription
@@ -965,14 +985,16 @@ async def analyze_speech(
         # Step 6: Trigger background task for mistake extraction
         background_tasks.add_task(
             event_handler.on_new_feedback,
-            feedback_id
+            feedback_id,
+            user_id,  # Explicitly pass user_id to background task
+            transcription  # Explicitly pass transcription to background task
         )
         
         # Step 7: Prepare response
         return AnalysisResponse(
             transcription=transcription,
-            user_feedback=feedback_result.get("user_feedback", ""),
-            detailed_feedback=feedback_result.get("detailed_feedback", {}),
+            user_feedback=feedback_result.user_feedback,
+            detailed_feedback=feedback_result.detailed_feedback.to_dict() if hasattr(feedback_result, 'detailed_feedback') else {},
             audio_id=audio_id,
             feedback_id=feedback_id
         )

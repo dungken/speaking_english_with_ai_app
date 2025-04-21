@@ -1,6 +1,5 @@
 from datetime import datetime
-from bson import ObjectId
-from typing import Dict, List, Any, Optional
+from typing import Dict, Any, Optional, List, Union
 
 class DetailedFeedback:
     """
@@ -58,61 +57,41 @@ class DetailedFeedback:
                     
         return mistakes
 
-class Feedback:
+class FeedbackResult:
     """
-    Model representing feedback for a user's language performance.
+    Result of feedback generation, as defined in class diagram.
     
     Attributes:
-        _id: Unique identifier
-        target_id: ID of the entity receiving feedback (message, audio, etc.)
-        target_type: Type of entity receiving feedback ("message", "audio", etc.)
-        user_feedback: User-friendly feedback in a free-form text
-        detailed_feedback: Detailed structured feedback
-        timestamp: Timestamp of when the feedback was created
-        user_id: ID of the user providing feedback
-        transcription: Transcription of the speech being analyzed
+        user_feedback: User-friendly text feedback
+        detailed_feedback: Structured detailed feedback
+        timestamp: Timestamp when feedback was generated
     """
     def __init__(
         self,
-        target_id: ObjectId,
-        target_type: str,  # "message", "audio", etc.
         user_feedback: str,
-        grammar_issues: Optional[List[Dict[str, Any]]] = None,
-        vocabulary_issues: Optional[List[Dict[str, Any]]] = None,
-        user_id: Optional[ObjectId] = None,
-        transcription: Optional[str] = None
+        detailed_feedback: Union[DetailedFeedback, Dict[str, Any]],
+        timestamp: Optional[datetime] = None
     ):
-        self._id = ObjectId()
-        self.target_id = target_id
-        self.target_type = target_type
         self.user_feedback = user_feedback
-        self.user_id = user_id
-        self.transcription = transcription
-        self.detailed_feedback = DetailedFeedback(grammar_issues, vocabulary_issues)
-        self.timestamp = datetime.utcnow()
-
-    def to_dict(self) -> Dict[str, Any]:
-        """Convert the Feedback instance to a dictionary for MongoDB storage."""
-        return {
-            "_id": self._id,
-            "target_id": self.target_id,
-            "target_type": self.target_type,
-            "user_feedback": self.user_feedback,
-            "detailed_feedback": self.detailed_feedback.to_dict(),
-            "user_id": self.user_id,
-            "transcription": self.transcription,
-            "timestamp": self.timestamp
-        }
         
+        # Handle detailed_feedback as either a DetailedFeedback object or a dictionary
+        if isinstance(detailed_feedback, DetailedFeedback):
+            self.detailed_feedback = detailed_feedback
+        else:
+            grammar_issues = detailed_feedback.get("grammar_issues", [])
+            vocabulary_issues = detailed_feedback.get("vocabulary_issues", [])
+            self.detailed_feedback = DetailedFeedback(grammar_issues, vocabulary_issues)
+            
+        self.timestamp = timestamp or datetime.utcnow()
+    
     def generate_user_friendly_text(self) -> str:
         """Generate user-friendly text from feedback"""
         return self.user_feedback
-        
-    def export_to_mistakes(self) -> List[Dict[str, Any]]:
-        """
-        Export feedback to mistake format for mistake tracking.
-        
-        Returns:
-            List of mistakes for tracking and drilling
-        """
-        return self.detailed_feedback.extract_mistakes()
+    
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary for storage"""
+        return {
+            "user_feedback": self.user_feedback,
+            "detailed_feedback": self.detailed_feedback.to_dict(),
+            "timestamp": self.timestamp
+        } 

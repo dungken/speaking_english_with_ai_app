@@ -98,48 +98,34 @@ class AnalysisRequest(BaseModel):
     language: str = Field("en-US", description="Language code for analysis")
 
 class AnalysisResponse(BaseModel):
-    """Schema for comprehensive analysis response."""
-    audio_id: Optional[str] = Field(None, description="ID of the analyzed audio")
-    transcription: str = Field(..., description="Transcribed text from the audio")
-    user_feedback: str = Field(..., description="User-friendly feedback text")
-    grammar_issues: List[Dict[str, Any]] = Field([], description="Grammar issues identified")
-    vocabulary_issues: List[Dict[str, Any]] = Field([], description="Vocabulary improvement suggestions")
-    conversation_id: Optional[str] = Field(None, description="ID of the conversation if applicable")
+    """
+    Response model for audio analysis results.
+    
+    Aligns with the detailed analysis structure from FeedbackResult in the class diagram.
+    """
+    transcription: str
+    user_feedback: str
+    detailed_feedback: Dict[str, Any] = Field(default_factory=dict)
+    audio_id: Optional[str] = None
+    feedback_id: Optional[str] = None
     
     class Config:
-        """Configuration for Pydantic model."""
-        from_attributes = True
-        json_schema_extra = {
+        schema_extra = {
             "example": {
-                "transcription": "I am excited to improve my English speaking skills.",
-                "confidence": 0.92,
-                "pronunciation": {
-                    "overall_score": 85.5,
-                    "word_scores": {
-                        "excited": 75.0,
-                        "improve": 88.0
-                    },
-                    "improvement_suggestions": [
-                        "Practice the 'x' sound in 'excited'",
-                        "Work on the stress pattern in longer words"
-                    ]
-                },
-                "language_feedback": {
-                    "grammar": [],
-                    "vocabulary": [
+                "transcription": "Hello, my name is John and I am learning English.",
+                "user_feedback": "Great job with your introduction! Your meaning is clear and your sentence structure is correct.",
+                "detailed_feedback": {
+                    "grammar_issues": [
                         {
-                            "original": "excited",
-                            "suggestion": "enthusiastic",
-                            "context": "More formal alternative with similar meaning"
+                            "issue": "I am learning English",
+                            "correction": "I am learning English.",
+                            "explanation": "End the sentence with a period.",
+                            "severity": 1
                         }
                     ],
-                    "fluency": [
-                        "Try using more complex sentence structures"
-                    ],
-                    "positives": [
-                        "Good use of the first person",
-                        "Clear expression of motivation"
-                    ]
-                }
+                    "vocabulary_issues": []
+                },
+                "audio_id": "6042d36e9a1f3c2e8c9b4d8e",
+                "feedback_id": "6042d36e9a1f3c2e8c9b4d8f"
             }
         }

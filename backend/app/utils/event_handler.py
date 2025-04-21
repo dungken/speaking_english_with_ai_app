@@ -46,20 +46,33 @@ class EventHandler:
             self.worker_thread.join(timeout=5)
         logger.info("Background event handler stopped")
     
-    def on_new_feedback(self, feedback_id: str):
+    def on_new_feedback(self, feedback_id: str, user_id: Optional[str] = None, transcription: Optional[str] = None):
         """
         Handle a new feedback event.
         
         Args:
             feedback_id: ID of the newly created feedback record
+            user_id: Optional user ID associated with the feedback
+            transcription: Optional transcription text associated with the feedback
         """
         logger.info(f"Received new feedback event for feedback_id: {feedback_id}")
         
         try:
             # Schedule task to process this feedback for mistakes
+            task_data = {
+                "feedback_id": feedback_id
+            }
+            
+            # Add additional data if provided
+            if user_id:
+                task_data["user_id"] = user_id
+            
+            if transcription:
+                task_data["transcription"] = transcription
+            
             self.schedule_task(
                 task_name="process_feedback_for_mistakes",
-                data={"feedback_id": feedback_id},
+                data=task_data,
                 delay_in_seconds=0  # Process immediately
             )
         except Exception as e:
@@ -223,52 +236,79 @@ class EventHandler:
         if task_name == "process_feedback_for_mistakes":
             # Get feedback record
             feedback_id = data.get("feedback_id")
+            if not feedback_id:
+                raise ValueError("Missing feedback_id in task data")
+            
             feedback = db.feedback.find_one({"_id": ObjectId(feedback_id)})
             
             if not feedback:
                 raise ValueError(f"Feedback with ID {feedback_id} not found")
             
-            # Get associated target (e.g., message, audio)
-            target_id = feedback.get("target_id")
-            target_type = feedback.get("target_type")
+            # Check if user_id and transcription are already in the task data
+            user_id = data.get("user_id")
+            transcription = data.get("transcription")
             
-            # Get user ID based on target type
-            user_id = None
-            transcription = None
-            context = {}
+            # If not in task data, try to get from feedback record
+            if not user_id:
+                user_id = str(feedback.get("user_id", "")) if feedback.get("user_id") else None
             
-            if target_type == "message":
-                message = db.messages.find_one({"_id": target_id})
-                if message:
-                    user_id = message.get("user_id")
-                    transcription = message.get("content")
-                    
-                    # Get conversation context
-                    conversation = db.conversations.find_one({"_id": message.get("conversation_id")})
-                    if conversation:
-                        context = {
-                            "user_role": conversation.get("user_role"),
-                            "ai_role": conversation.get("ai_role"),
-                            "situation": conversation.get("situation")
-                        }
+            if not transcription:
+                transcription = feedback.get("transcription")
             
-            elif target_type == "audio":
-                audio = db.audio.find_one({"_id": target_id})
-                if audio:
-                    user_id = audio.get("user_id")
-                    transcription = audio.get("transcription")
-            
-            # Process feedback for mistakes if we have all required data
-            if user_id and transcription:
-                self.mistake_service.process_feedback_for_mistakes(
-                    str(user_id),
-                    transcription,
-                    feedback,
-                    context
-                )
-            else:
-                logger.warning(f"Missing user_id or transcription for feedback {feedback_id}")
+            # Get associated target (e.g., message, audio) if still missing information
+            if not user_id or not transcription:
+                target_id = feedback.get("target_id")
+                target_type = feedback.get("target_type")
+                context = {}
                 
+                if target_type == "message":
+                    message = db.messages.find_one({"_id": target_id})
+                    if message:
+                        if not user_id:
+                            user_id = str(message.get("user_id", ""))
+                        if not transcription:
+                            transcription = message.get("content")
+                        
+                        # Get conversation context
+                        conversation = db.conversations.find_one({"_id": message.get("conversation_id")})
+                        if conversation:
+                            context = {
+                                "user_role": conversation.get("user_role"),
+                                "ai_role": conversation.get("ai_role"),
+                                "situation": conversation.get("situation")
+                            }
+                
+                elif target_type == "audio":
+                    audio = db.audio.find_one({"_id": target_id})
+                    if audio:
+                        if not user_id:
+                            user_id = str(audio.get("user_id", ""))
+                        if not transcription:
+                            transcription = audio.get("transcription")
+            
+            # Log warnings if still missing critical data
+            if not user_id:
+                logger.warning(f"Missing user_id for feedback {feedback_id}")
+                user_id = "unknown_user"  # Use fallback
+            
+            if not transcription:
+                logger.warning(f"Missing transcription for feedback {feedback_id}")
+                transcription = ""  # Use empty string as fallback
+            
+            # If both user_id and transcription are empty, can't process
+            if user_id == "unknown_user" and not transcription:
+                logger.error(f"Missing user_id or transcription for feedback {feedback_id}")
+                return
+            
+            # Process the feedback for mistakes
+            try:
+                self.mistake_service.extract_and_store_mistakes(
+                    user_id=user_id,
+                    transcription=transcription,
+                    feedback=feedback
+                )
+            except Exception as e:
+                logger.error(f"Error extracting mistakes: {str(e)}")
         elif task_name == "calculate_next_practice_dates":
             # Get user ID
             user_id = data.get("user_id")

@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Query, Body
 from bson import ObjectId
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from datetime import datetime
 
 from app.config.database import db
@@ -9,7 +9,7 @@ from app.schemas.mistake import MistakeCreate, MistakeResponse, MistakePracticeR
 from app.utils.auth import get_current_user
 from app.utils.spaced_repetition import get_review_session, record_review_result
 from app.utils.error_handler import get_not_found_exception, handle_general_exception
-from app.utils.mistake_service import MistakeService
+from app.utils.mistake_service import MistakeService, MistakeStatistics
 
 router = APIRouter()
 
@@ -360,146 +360,139 @@ async def delete_mistake(
         raise handle_general_exception(e, "mistake deletion")
 
 
-@router.get("/practice", response_model=List[dict])
+@router.get("/practice", response_model=List[Dict[str, Any]])
 async def get_practice_items(
-    limit: int = Query(5, ge=1, le=10),
+    limit: int = 5,
     current_user: dict = Depends(get_current_user)
 ):
     """
-    Get mistakes due for practice.
+    Get mistakes ready for practice, ordered by priority.
+    
+    This endpoint matches the class diagram's getMistakesForPractice method.
     
     Args:
         limit: Maximum number of mistakes to return
         current_user: Authenticated user information
         
     Returns:
-        List of mistakes formatted as practice exercises
+        List of practice items
     """
     try:
         user_id = str(current_user["_id"])
-        
-        # Get practice items using the service
-        exercises = await mistake_service.get_practice_items(
-            user_id=user_id,
-            limit=limit
-        )
-        
-        return exercises
-    
+        return mistake_service.get_mistakes_for_practice(user_id, limit)
     except Exception as e:
-        raise handle_general_exception(e, "getting practice items")
+        raise handle_general_exception(e, "retrieving practice items")
 
-@router.post("/practice/{mistake_id}/result")
+@router.post("/practice/{mistake_id}", response_model=Dict[str, Any])
 async def record_practice_result(
     mistake_id: str,
-    was_successful: bool = Body(...),
-    user_answer: str = Body(...),
+    was_successful: bool = Body(..., embed=True),
+    user_answer: str = Body(..., embed=True),
     current_user: dict = Depends(get_current_user)
 ):
     """
-    Record the result of practicing a mistake.
+    Record the result of a practice attempt.
+    
+    This endpoint uses the class diagram's updateAfterPractice method.
     
     Args:
-        mistake_id: ID of the mistake
+        mistake_id: ID of the practiced mistake
         was_successful: Whether the practice was successful
-        user_answer: User's answer during practice
+        user_answer: The user's answer during practice
         current_user: Authenticated user information
         
     Returns:
-        Updated mistake with feedback and progress information
+        Updated mistake information with feedback
     """
     try:
         user_id = str(current_user["_id"])
         
-        # Record practice result using the service
-        result = await mistake_service.record_practice_result(
-            mistake_id=mistake_id,
-            user_id=user_id,
-            was_successful=was_successful,
-            user_answer=user_answer
-        )
-        
-        return {
-            "mistake_id": result["_id"],
-            "mastery_level": result.get("mastery_level", 0),
-            "next_practice_date": result.get("next_practice_date"),
-            "status": result.get("status", "LEARNING"),
-            "feedback": result.get("feedback", "")
+        # Create a result object to match the method signature
+        result = {
+            "user_id": user_id,
+            "was_successful": was_successful,
+            "user_answer": user_answer
         }
-    
-    except ValueError as e:
-        raise get_not_found_exception("Mistake", mistake_id)
+        
+        # Update mistake after practice
+        return mistake_service.update_after_practice(mistake_id, result)
     except Exception as e:
         raise handle_general_exception(e, "recording practice result")
-        
-@router.get("/statistics")
+
+@router.get("/statistics", response_model=Dict[str, Any])
 async def get_mistake_statistics(
     current_user: dict = Depends(get_current_user)
 ):
     """
     Get statistics about the user's mistakes.
     
+    This endpoint matches the class diagram's getMistakeStatistics method.
+    
     Args:
         current_user: Authenticated user information
         
     Returns:
-        Statistics about mistakes
+        Dictionary with statistics about the user's mistakes
     """
     try:
-        user_id = ObjectId(current_user["_id"])
-        
-        # Get total count
-        total_count = db.mistakes.count_documents({"user_id": user_id})
-        
-        # Get mastered count
-        mastered_count = db.mistakes.count_documents({
-            "user_id": user_id,
-            "status": "MASTERED"
-        })
-        
-        # Get learning count
-        learning_count = db.mistakes.count_documents({
-            "user_id": user_id,
-            "status": "LEARNING"
-        })
-        
-        # Get new count
-        new_count = db.mistakes.count_documents({
-            "user_id": user_id,
-            "status": "NEW"
-        })
-        
-        # Get type counts
-        grammar_count = db.mistakes.count_documents({
-            "user_id": user_id,
-            "type": "GRAMMAR"
-        })
-        
-        vocabulary_count = db.mistakes.count_documents({
-            "user_id": user_id,
-            "type": "VOCABULARY"
-        })
-        
-        # Get due for practice count
-        due_count = db.mistakes.count_documents({
-            "user_id": user_id,
-            "next_practice_date": {"$lte": datetime.utcnow()},
-            "status": {"$ne": "MASTERED"}
-        })
-        
-        # Calculate mastery percentage
-        mastery_percentage = (mastered_count / total_count) * 100 if total_count > 0 else 0
-        
-        return {
-            "total_count": total_count,
-            "mastered_count": mastered_count,
-            "learning_count": learning_count,
-            "new_count": new_count,
-            "grammar_count": grammar_count,
-            "vocabulary_count": vocabulary_count,
-            "due_for_practice": due_count,
-            "mastery_percentage": round(mastery_percentage, 1)
-        }
-    
+        user_id = str(current_user["_id"])
+        statistics = mistake_service.get_mistake_statistics(user_id)
+        return statistics.to_dict()
     except Exception as e:
-        raise handle_general_exception(e, "getting mistake statistics")
+        raise handle_general_exception(e, "retrieving mistake statistics")
+
+@router.post("/sessions", response_model=Dict[str, Any])
+async def create_practice_session(
+    mistake_ids: List[str] = Body(..., embed=True),
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Create a new practice session with selected mistakes.
+    
+    This endpoint matches the class diagram's createPracticeSession method.
+    
+    Args:
+        mistake_ids: List of mistake IDs to include in the session
+        current_user: Authenticated user information
+        
+    Returns:
+        Created practice session
+    """
+    try:
+        user_id = str(current_user["_id"])
+        
+        # Get the selected mistakes
+        mistakes = []
+        for mistake_id in mistake_ids:
+            mistake = db.mistakes.find_one({
+                "_id": ObjectId(mistake_id),
+                "user_id": ObjectId(user_id)
+            })
+            if mistake:
+                mistakes.append(mistake)
+        
+        # Create the practice session
+        return mistake_service.create_practice_session(user_id, mistakes)
+    except Exception as e:
+        raise handle_general_exception(e, "creating practice session")
+
+@router.get("/", response_model=List[Dict[str, Any]])
+async def get_unmastered_mistakes(
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Get all unmastered mistakes for the user.
+    
+    This endpoint matches the class diagram's getUnmasteredMistakes method.
+    
+    Args:
+        current_user: Authenticated user information
+        
+    Returns:
+        List of unmastered mistakes
+    """
+    try:
+        user_id = str(current_user["_id"])
+        return mistake_service.get_unmastered_mistakes(user_id)
+    except Exception as e:
+        raise handle_general_exception(e, "retrieving unmastered mistakes")
