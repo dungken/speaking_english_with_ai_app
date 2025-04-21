@@ -124,8 +124,11 @@ async def create_conversation(convo_data: ConversationCreate, current_user: dict
 
     
     # create the initial ai message first
-
-    initial_message = Message(conversation_id=conversation_id, role="ai", text=ai_first_response)
+    initial_message = Message(
+        conversation_id=conversation_id, 
+        sender="ai", 
+        content=ai_first_response
+    )
     db.messages.insert_one(initial_message.to_dict())
 
     # Fetch the conversation and convert ObjectId fields to strings
@@ -140,9 +143,9 @@ async def create_conversation(convo_data: ConversationCreate, current_user: dict
     del initial_message_dict["_id"]
 
     # Fetch conversation history
-    messages = list(db.messages.find({"conversation_id": ObjectId(conversation_id)}).sort("created_at", 1))
+    messages = list(db.messages.find({"conversation_id": ObjectId(conversation_id)}).sort("timestamp", 1))
     history = [
-        {"role": "user" if msg["role"] == "user" else "model", "parts": [msg["text"]]}
+        {"role": "user" if msg["sender"] == "user" else "model", "parts": [msg["content"]]}
         for msg in messages
     ]
 
@@ -164,11 +167,13 @@ async def send_message(
     Args:
         conversation_id (str): The ID of the conversation to send the message in.
             Sample input: "507f1f77bcf86cd799439012"
-        message_data (MessageCreate): The message data containing text and optional audio_url.
+        message_data (MessageCreate): The message data containing content and optional fields.
             Sample input:
             {
-                "text": "Tell me about your experience with Python",
-                "audio_url": "https://storage.example.com/audio/123.mp3"  # optional
+                "content": "Tell me about your experience with Python",
+                "audio_path": "https://storage.example.com/audio/123.mp3",  # optional
+                "transcription": "Tell me about your experience with Python",  # optional
+                "feedback_id": "507f1f77bcf86cd799439015"  # optional
             }
         current_user (dict): The authenticated user's information.
             Sample input:
@@ -184,9 +189,12 @@ async def send_message(
             {
                 "id": "507f1f77bcf86cd799439014",
                 "conversation_id": "507f1f77bcf86cd799439012",
-                "role": "ai",
-                "text": "I have extensive experience with Python...",
-                "created_at": "2024-04-04T12:05:00"
+                "sender": "ai",
+                "content": "I have extensive experience with Python...",
+                "timestamp": "2024-04-04T12:05:00",
+                "audio_path": null,
+                "transcription": null,
+                "feedback_id": null
             }
         
     Raises:
@@ -208,16 +216,18 @@ async def send_message(
     # Store user's message
     user_message = Message(
         conversation_id=ObjectId(conversation_id),
-        role="user",
-        text=message_data.text,
-        audio_url=message_data.audio_url
+        sender="user",
+        content=message_data.content,
+        audio_path=message_data.audio_path,
+        transcription=message_data.transcription,
+        feedback_id=message_data.feedback_id
     )
     db.messages.insert_one(user_message.to_dict())
 
     # Fetch conversation history
-    messages = list(db.messages.find({"conversation_id": ObjectId(conversation_id)}).sort("created_at", 1))
+    messages = list(db.messages.find({"conversation_id": ObjectId(conversation_id)}).sort("timestamp", 1))
     history = [
-        {"role": "user" if msg["role"] == "user" else "model", "parts": [msg["text"]]}
+        {"role": "user" if msg["sender"] == "user" else "model", "parts": [msg["content"]]}
         for msg in messages
     ]
     # Write to a file
@@ -235,14 +245,14 @@ async def send_message(
         f"You are {conversation['ai_assistant']}, and the user is {conversation['topic'].split(' and ')[0]}. "
         f"The situation is: {conversation['situation_description']}. "
         f"Here's the conversation so far:\n" +
-        "\n".join([f"{msg['role']}: {msg['text']}" for msg in messages]) +
+        "\n".join([f"{msg['sender']}: {msg['content']}" for msg in messages]) +
         f"\nRespond as {conversation['ai_assistant']}."
     )
 
     ai_text = generate_response(prompt)
 
     # Store AI response
-    ai_message = Message(conversation_id=ObjectId(conversation_id), role="ai", text=ai_text)
+    ai_message = Message(conversation_id=ObjectId(conversation_id), sender="ai", content=ai_text)
     db.messages.insert_one(ai_message.to_dict())
 
     # Return AI response

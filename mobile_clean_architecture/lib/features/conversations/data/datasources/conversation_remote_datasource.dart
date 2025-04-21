@@ -149,7 +149,8 @@ class ConversationRemoteDataSourceImpl implements ConversationRemoteDataSource {
 
     // Add the message to the conversation
     final response = await client.post(
-      Uri.parse('${ApiConstants.baseUrl}/api/conversations/$conversationId/messages'),
+      Uri.parse(
+          '${ApiConstants.baseUrl}/api/conversations/$conversationId/messages'),
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer ${ApiConstants.token}',
@@ -157,7 +158,7 @@ class ConversationRemoteDataSourceImpl implements ConversationRemoteDataSource {
       body: jsonEncode({
         'sender': sender == SenderType.user ? 'user' : 'ai',
         'content': content,
-        'file_id': fileId,
+        'audio_path': audioPath,
         'transcription': transcription,
       }),
     );
@@ -177,7 +178,8 @@ class ConversationRemoteDataSourceImpl implements ConversationRemoteDataSource {
     required ConversationModel conversation,
   }) async {
     final response = await client.post(
-      Uri.parse('${ApiConstants.baseUrl}/api/conversations/${conversation.id}/ai-response'),
+      Uri.parse(
+          '${ApiConstants.baseUrl}/api/conversations/${conversation.id}/ai-response'),
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer ${ApiConstants.token}',
@@ -253,7 +255,7 @@ class ConversationRemoteDataSourceImpl implements ConversationRemoteDataSource {
   }
 
   /// Helper method to upload an audio file
-  /// 
+  ///
   /// Returns the file ID if successful
   Future<String> _uploadAudioFile(String filePath) async {
     // Create a multipart request
@@ -261,25 +263,25 @@ class ConversationRemoteDataSourceImpl implements ConversationRemoteDataSource {
       'POST',
       Uri.parse('${ApiConstants.baseUrl}/api/audio/upload-file'),
     );
-    
+
     // Add authorization header
     request.headers.addAll({
       'Authorization': 'Bearer ${ApiConstants.token}',
     });
-    
+
     // Add file
     request.files.add(await http.MultipartFile.fromPath(
       'file',
       filePath,
     ));
-    
+
     // Add additional fields
     request.fields['language'] = 'en-US';
-    
+
     // Send the request
     final streamedResponse = await request.send();
     final response = await http.Response.fromStream(streamedResponse);
-    
+
     if (response.statusCode == 200) {
       final responseData = jsonDecode(response.body);
       return responseData['_id'];

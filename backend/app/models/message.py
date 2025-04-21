@@ -2,22 +2,25 @@ from datetime import datetime
 from bson import ObjectId
 
 class Message:
-    def __init__(self, conversation_id: ObjectId, role: str, text: str, audio_url: str = None):
+    def __init__(self, conversation_id: ObjectId, sender: str, content: str, 
+                 audio_path: str = None, transcription: str = None, feedback_id: str = None):
         self._id = ObjectId()
         self.conversation_id = conversation_id
-        self.role = role  # "user" or "ai"
-        self.text = text
-        self.audio_url = audio_url
-        self.feedback = None  # Add later if implementing feedback
-        self.created_at = datetime.utcnow()
+        self.sender = sender  # "user" or "ai"
+        self.content = content
+        self.audio_path = audio_path
+        self.transcription = transcription
+        self.feedback_id = feedback_id
+        self.timestamp = datetime.utcnow()
 
     def to_dict(self):
         return {
             "_id": self._id,
             "conversation_id": self.conversation_id,
-            "role": self.role,
-            "text": self.text,
-            "audio_url": self.audio_url,
-            "feedback": self.feedback,
-            "created_at": self.created_at
+            "sender": self.sender,
+            "content": self.content,
+            "audio_path": self.audio_path,
+            "transcription": self.transcription,
+            "feedback_id": self.feedback_id,
+            "timestamp": self.timestamp
         }

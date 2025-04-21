@@ -900,7 +900,6 @@ async def analyze_speech(
             )
         
         transcription = transcription_result["text"]
-        
         # Get conversation context if needed
         context = None
         if conversation_id:
@@ -911,14 +910,16 @@ async def analyze_speech(
                 messages_cursor = db.messages.find({"conversation_id": ObjectId(conversation_id)})
                 messages_cursor = messages_cursor.sort("timestamp", -1).limit(5)
                 messages = list(messages_cursor)
-                
-                # Build context object
+                if messages:
+                    logger.debug(f"First message keys: {list(messages[0].keys())}")
+                    logger.debug(f"First message content: {messages[0]}")
                 context = {
                     "user_role": conversation.get("user_role", "Student"),
                     "ai_role": conversation.get("ai_role", "Teacher"),
                     "situation": conversation.get("situation", "General conversation"),
-                    "previous_exchanges": "\n".join([f"{msg['sender']}: {msg['content']}" for msg in reversed(messages)])
+                   "previous_exchanges": "\n".join([f"{msg.get('sender', 'Unknown')}: {msg.get('content', '')}" for msg in reversed(messages)])
                 }
+                # {'user_role': 'Student', 'ai_role': 'Teacher', 'situation': 'General conversation', 'previous_exchanges': 'Unknown: \nUnknown: \nUnknown: \nUnknown: \nUnknown: '}
         
         # Generate dual feedback
         from app.utils.feedback_service import FeedbackService
@@ -927,7 +928,6 @@ async def analyze_speech(
             transcription=transcription,
             context=context
         )
-        
         # Process feedback for mistakes in the background
         from app.utils.mistake_service import MistakeService
         
@@ -952,7 +952,7 @@ async def analyze_speech(
         # Insert audio record
         result = db.audio.insert_one(audio_record.to_dict())
         audio_id = str(result.inserted_id)
-        
+           
         # Store feedback
         grammar_issues = feedback_result["detailed_feedback"].get("grammar_issues", [])
         vocabulary_issues = feedback_result["detailed_feedback"].get("vocabulary_issues", [])

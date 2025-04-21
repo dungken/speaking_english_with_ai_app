@@ -4,17 +4,20 @@ from datetime import datetime
 from bson import ObjectId
 
 class MessageCreate(BaseModel):
-    text: str
-    audio_url: Optional[str] = None
+    content: str
+    audio_path: Optional[str] = None
+    transcription: Optional[str] = None
+    feedback_id: Optional[str] = None
 
 class MessageResponse(BaseModel):
     id: str
     conversation_id: str
-    role: str
-    text: str
-    audio_url: Optional[str] = None
-    feedback: Optional[dict] = None
-    created_at: datetime
+    sender: str
+    content: str
+    timestamp: datetime
+    audio_path: Optional[str] = None
+    transcription: Optional[str] = None
+    feedback_id: Optional[str] = None
 
     class Config:
         json_encoders = {
