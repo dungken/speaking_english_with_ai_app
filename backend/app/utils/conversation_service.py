@@ -82,13 +82,13 @@ class ConversationService:
             
             # Enhance scenario if basic
             scenario = data.get("situation", "General conversation")
-            enhanced = None
-            
+                        
             if len(scenario.split()) < 10:  # Basic scenario
                 enhanced = self.conversation_generator.enhance_scenario(scenario)
                 
-                # Update data with enhanced scenario
+                # Update all three variables at once from the enhanced result
                 if enhanced:
+# Distribute the enhanced values to the appropriate variables
                     data["situation"] = enhanced.get("enhanced_description", scenario)
                     data["user_role"] = enhanced.get("user_role", data.get("user_role", "Student"))
                     data["ai_role"] = enhanced.get("ai_role", data.get("ai_role", "Teacher"))

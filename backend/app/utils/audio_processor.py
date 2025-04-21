@@ -4,6 +4,7 @@ Audio processing utilities for transcription using local speech recognition.
 This module provides functionality for:
 1. Audio file transcription using local speech recognition
 2. Basic audio file operations
+3. AI-powered language feedback generation
 """
 
 import os
@@ -31,6 +32,10 @@ logger = logging.getLogger(__name__)
 def transcribe_audio_local(audio_file_path, language_code="en-US"):
     """
     Transcribe audio using local SpeechRecognition library.
+    
+    This function converts spoken words in an audio file into text using Google's
+    Web Speech API through the SpeechRecognition library. It handles various exceptions
+    that may occur during the transcription process.
     
     Args:
         audio_file_path: Path to the audio file
@@ -76,7 +81,10 @@ def generate_feedback(user_text: str, reference_text: Optional[str] = None) -> T
     """
     Generate language feedback for a piece of text.
     
-    This function is a simplified version that only generates grammar and vocabulary feedback.
+    This function uses Google's Gemini AI to analyze spoken language and provide
+    detailed feedback on grammar, vocabulary, positive aspects, and fluency suggestions.
+    It handles error cases gracefully by providing fallback feedback options when
+    the AI generation process encounters issues.
     
     Args:
         user_text: The text to analyze

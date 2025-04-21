@@ -901,19 +901,23 @@ async def analyze_speech(
         transcription = speech_service.transcribe_audio(Path(file_path))
         
         # Ensure we have a valid transcription to work with
+        is_valid_transcription = True
         if not transcription or not transcription.strip():
             logger.warning(f"Empty transcription result for file: {file_path}, using placeholder")
             transcription = "Audio content could not be transcribed. Please try again with a different file format or check audio quality."
+            is_valid_transcription = False
         
-        # Update audio record with transcription
-        db.audio.update_one(
-            {"_id": ObjectId(audio_id)},
-            {"$set": {"transcription": transcription}}
-        )
+        # Only update the database if we have a valid transcription
+        if is_valid_transcription:
+            # Update audio record with transcription
+            db.audio.update_one(
+                {"_id": ObjectId(audio_id)},
+                {"$set": {"transcription": transcription}}
+            )
         
         # Step 3: Fetch conversation context if available
         context = {}
-        if conversation_id:
+        if conversation_id and is_valid_transcription:
             conversation = db.conversations.find_one({"_id": ObjectId(conversation_id)})
             if conversation:
                 # Fetch messages to build context
@@ -950,45 +954,51 @@ async def analyze_speech(
                 }
             )
         
-        # Step 5: Store feedback with explicit user_id
-        feedback_id = feedback_service.store_feedback(
-            user_id, 
-            feedback_result, 
-            conversation_id,
-            transcription=transcription  # Explicitly pass transcription
-        )
+        # Initialize feedback_id as None
         
-        # If we have a conversation ID, add a message with this transcription
-        if conversation_id:
-            from app.utils.conversation_service import ConversationService
-            conversation_service = ConversationService()
-            
-            # Add user message to conversation
-            message = conversation_service.add_message(
+        feedback_id = None
+        
+        # Step 5: Store feedback only if we have a valid transcription
+        if is_valid_transcription:
+            feedback_id = feedback_service.store_feedback(
+                user_id, 
+                feedback_result, 
                 conversation_id,
-                {
-                    "sender": "user",
-                    "content": transcription,
-                    "audio_path": str(file_path),
-                    "transcription": transcription,
-                    "generate_response": False  # Don't auto-generate an AI response yet
-                }
+                transcription=transcription  # Explicitly pass transcription
             )
             
-            # Link feedback to message
-            if message:
-                db.messages.update_one(
-                    {"_id": ObjectId(message["_id"])},
-                    {"$set": {"feedback_id": feedback_id}}
+            # If we have a conversation ID, add a message with this transcription
+            if conversation_id:
+                from app.utils.conversation_service import ConversationService
+                conversation_service = ConversationService()
+                
+                # Add user message to conversation
+                message = conversation_service.add_message(
+                    conversation_id,
+                    {
+                        "sender": "user",
+                        "content": transcription,
+                        "audio_path": str(file_path),
+                        "transcription": transcription,
+                        "generate_response": False  # Don't auto-generate an AI response yet
+                    }
                 )
-        
-        # Step 6: Trigger background task for mistake extraction
-        background_tasks.add_task(
-            event_handler.on_new_feedback,
-            feedback_id,
-            user_id,  # Explicitly pass user_id to background task
-            transcription  # Explicitly pass transcription to background task
-        )
+                
+                # Link feedback to message
+                if message and feedback_id:
+                    db.messages.update_one(
+                        {"_id": ObjectId(message["_id"])},
+                        {"$set": {"feedback_id": feedback_id}}
+                    )
+            
+            # Step 6: Trigger background task for mistake extraction
+            if feedback_id:
+                background_tasks.add_task(
+                    event_handler.on_new_feedback,
+                    feedback_id,
+                    user_id,  # Explicitly pass user_id to background task
+                    transcription  # Explicitly pass transcription to background task
+                )
         
         # Step 7: Prepare response
         return AnalysisResponse(
