@@ -201,128 +201,44 @@ async def create_conversation(convo_data: ConversationCreate, current_user: dict
     }
 
 
-@router.post("/conversations/{conversation_id}/messages", response_model=MessageResponse)
-async def send_message(
-    conversation_id: str,
-    message_data: MessageCreate,
+
+
+@router.post("/audio2text", response_model=dict)
+async def turn_to_text(
+    audio_file: UploadFile = File(...),
     current_user: dict = Depends(get_current_user),
-    background_tasks: BackgroundTasks = BackgroundTasks()
 ):
-    """
-    Send a message in an existing conversation and get the AI's response.
+  
+        # Initialize services
+        from app.utils.speech_service import SpeechService
+        speech_service = SpeechService()
+        user_id = str(current_user["_id"])
+      
+        # Step 1: Save the audio file
+        file_path, audio_model = speech_service.save_audio_file(audio_file, user_id)
+        audio_id = str(audio_model._id)
+        
+        # Step 2: Transcribe the audio file
+        transcription = speech_service.transcribe_audio(Path(file_path))
+        
+        # Ensure we have a valid transcription to work with
+        if not transcription or not transcription.strip():
+         
+            return "Audio content could not be transcribed. Please try again with a different file format or check audio quality."
+          # Update audio record with transcription
+        db.audio.update_one(
+            {"_id": ObjectId(audio_id)},
+            {"$set": {"transcription": transcription}}
+        )
     
-    Args:
-        conversation_id (str): The ID of the conversation to send the message in.
-            Sample input: "507f1f77bcf86cd799439012"
-        message_data (MessageCreate): The message data containing content and optional fields.
-            Sample input:
-            {
-                "content": "Tell me about your experience with Python",
-                "audio_path": "https://storage.example.com/audio/123.mp3",  # optional
-                "transcription": "Tell me about your experience with Python",  # optional
-                "feedback_id": "507f1f77bcf86cd799439015"  # optional
-            }
-        current_user (dict): The authenticated user's information.
-            Sample input:
-            {
-                "_id": "507f1f77bcf86cd799439011",
-                "name": "John Doe",
-                "email": "john@example.com"
-            }
-        background_tasks: FastAPI background tasks manager for processing feedback
+        return audio_id
         
-    Returns:
-        MessageResponse: The AI's response message.
-            Sample output:
-            {
-                "id": "507f1f77bcf86cd799439014",
-                "conversation_id": "507f1f77bcf86cd799439012",
-                "sender": "ai",
-                "content": "I have extensive experience with Python...",
-                "timestamp": "2024-04-04T12:05:00",
-                "audio_path": null,
-                "transcription": null,
-                "feedback_id": null
-            }
-        
-    Raises:
-        HTTPException: If the conversation is not found (404) or other errors occur.
-    """
-    try:
-        # Get user ID from the current_user dictionary
-        user_id = current_user.get("_id")
-        if not user_id:
-            raise HTTPException(status_code=500, detail="User ID not found in token")
-        
-        # Verify conversation exists and belongs to the user
-        conversation = db.conversations.find_one({
-            "_id": ObjectId(conversation_id),
-            "user_id": ObjectId(user_id)
-        })
-        if not conversation:
-            raise HTTPException(status_code=404, detail="Conversation not found")
-
-        # Store user's message
-        user_message = Message(
-            conversation_id=ObjectId(conversation_id),
-            sender="user",
-            content=message_data.content,
-            audio_path=message_data.audio_path,
-            transcription=message_data.transcription,
-            feedback_id=message_data.feedback_id
-        )
-        db.messages.insert_one(user_message.to_dict())
-
-        # Fetch conversation history
-        messages = list(db.messages.find({"conversation_id": ObjectId(conversation_id)}).sort("timestamp", 1))
-        history = [
-            {"role": "user" if msg["sender"] == "user" else "model", "parts": [msg["content"]]}
-            for msg in messages
-        ]
-
-        # Include context in the prompt 
-        prompt = (
-            f"You are {conversation['ai_role']}, and the user is {conversation['user_role']}. "
-            f"The situation is: {conversation['situation']}. "
-            f"Here's the conversation so far:\n" +
-            "\n".join([f"{msg['sender']}: {msg['content']}" for msg in messages]) +
-            f"\nRespond as {conversation['ai_role']}."
-        )
-
-        ai_text = generate_response(prompt)
-
-        # Store AI response
-        ai_message = Message(conversation_id=ObjectId(conversation_id), sender="ai", content=ai_text)
-        db.messages.insert_one(ai_message.to_dict())
-
-        # Process feedback in the background for the user's message
-        if message_data.content and message_data.content.strip():
-            background_tasks.add_task(
-                process_text_feedback,
-                message_content=message_data.content,
-                user_id=str(user_id),
-                conversation_id=conversation_id,
-                user_message_id=str(user_message._id)
-            )
-
-        # Return AI response
-        ai_message_dict = ai_message.to_dict()
-        ai_message_dict["id"] = str(ai_message_dict["_id"])
-        ai_message_dict["conversation_id"] = str(ai_message_dict["conversation_id"])
-        del ai_message_dict["_id"]
-        return MessageResponse(**ai_message_dict)
-    except Exception as e:
-        logger.error(f"Error sending message: {str(e)}", exc_info=True)
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to send message: {str(e)}"
-        )
-
+ 
 
 @router.post("/conversations/{conversation_id}/speechtomessage", response_model=MessageResponse)
 async def analyze_speech(
     conversation_id: str,  # Path parameter, not a Form parameter
-    audio_file: UploadFile = File(...),
+    audio_id: str ,  # Expecting AudioData schema
     current_user: dict = Depends(get_current_user),
     background_tasks: BackgroundTasks = BackgroundTasks()
 ):
@@ -330,8 +246,6 @@ async def analyze_speech(
     Process speech audio and return an AI response.
     
     This simplified endpoint:
-    1. Transcribes the uploaded audio file
-    2. Saves the audio file to disk
     3. Adds the transcribed text as a user message to the conversation
     4. Generates an AI response to the user's message
     5. Handles feedback generation in the background
@@ -347,56 +261,27 @@ async def analyze_speech(
     """
     try:
         user_id = str(current_user["_id"])
+        audio_data = db.audio.find_one({"_id": ObjectId(audio_id)})
         
-        # Initialize services
-        from app.utils.speech_service import SpeechService
-        speech_service = SpeechService()
-        
+      
         # Verify conversation exists and belongs to the user
         conversation = db.conversations.find_one({
             "_id": ObjectId(conversation_id),
             "user_id": ObjectId(user_id)
         })
+   
         if not conversation:
             raise HTTPException(status_code=404, detail="Conversation not found")
         
-        # Step 1: Save the audio file
-        file_path, audio_model = speech_service.save_audio_file(audio_file, user_id)
-        audio_id = str(audio_model._id)
-        
-        # Step 2: Transcribe the audio file
-        transcription = speech_service.transcribe_audio(Path(file_path))
-        
-        # Ensure we have a valid transcription to work with
-        if not transcription or not transcription.strip():
-            logger.warning(f"Empty transcription result for file: {file_path}, using placeholder")
-            transcription = "Audio content could not be transcribed. Please try again with a different file format or check audio quality."
-            # Return early with an error message as AI response
-            ai_message = Message(
-                conversation_id=ObjectId(conversation_id), 
-                sender="ai", 
-                content="I couldn't understand that audio. Could you try again with a clearer recording or different file format?"
-            )
-            db.messages.insert_one(ai_message.to_dict())
-            ai_message_dict = ai_message.to_dict()
-            ai_message_dict["id"] = str(ai_message_dict["_id"])
-            ai_message_dict["conversation_id"] = str(ai_message_dict["conversation_id"])
-            del ai_message_dict["_id"]
-            return MessageResponse(**ai_message_dict)
-        
-        # Update audio record with transcription
-        db.audio.update_one(
-            {"_id": ObjectId(audio_id)},
-            {"$set": {"transcription": transcription}}
-        )
-        
+    
+      
         # Step 3: Store user's message with transcribed content
         user_message = Message(
             conversation_id=ObjectId(conversation_id),
             sender="user",
-            content=transcription,
-            audio_path=str(file_path),
-            transcription=transcription
+            content=audio_data["transcription"],
+            audio_path=audio_data["file_path"],
+            transcription=audio_data["transcription"]
         )
         db.messages.insert_one(user_message.to_dict())
         
@@ -422,11 +307,11 @@ async def analyze_speech(
         # Process feedback in the background without blocking the response
         background_tasks.add_task(
             process_speech_feedback,
-            transcription=transcription,
+            transcription=audio_data["transcription"],
             user_id=user_id,
             conversation_id=conversation_id,
-            audio_id=audio_id,
-            file_path=file_path,
+            audio_id=audio_data["_id"],
+            file_path=audio_data["file_path"],
             user_message_id=str(user_message._id)
         )
         
@@ -436,12 +321,12 @@ async def analyze_speech(
         ai_message_dict["conversation_id"] = str(ai_message_dict["conversation_id"])
         del ai_message_dict["_id"]
         return MessageResponse(**ai_message_dict)
-        
+       
     except Exception as e:
-        logger.error(f"Error analyzing speech: {str(e)}", exc_info=True)
+        logger.error(f"Error /conversations/{conversation_id}/speechtomessage: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to analyze speech: {str(e)}"
+            detail=f"Failed at /conversations/{conversation_id}/speechtomessage: {str(e)}"
         )
 
 async def process_speech_feedback(
@@ -508,7 +393,7 @@ async def process_speech_feedback(
         feedback_id = feedback_service.store_feedback(
             user_id, 
             feedback_result, 
-            conversation_id,
+            user_message_id,
             transcription=transcription
         )
         
@@ -690,87 +575,4 @@ async def get_message_feedback(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to get message feedback: {str(e)}"
-        )
-
-@router.post("/transcribe-url", response_model=TranscriptionResponse)
-async def transcribe_url(
-    url: str = Body(..., embed=True),
-    language_code: str = Body("en-US", embed=True),
-    current_user: dict = Depends(get_current_user)
-):
-    """
-    Transcribe audio from a URL.
-    
-    This endpoint:
-    1. Downloads the audio file from the provided URL
-    2. Transcribes the audio content
-    3. Returns the transcription without storing it in the conversation
-    
-    Args:
-        url: URL of the audio file to transcribe
-        language_code: Language code for transcription (default: en-US)
-        current_user: Authenticated user information
-        
-    Returns:
-        TranscriptionResponse: Contains the transcribed text and confidence score
-    """
-    try:
-        user_id = str(current_user["_id"])
-        
-        # Initialize services
-        from app.utils.speech_service import SpeechService
-        import tempfile
-        import requests
-        
-        speech_service = SpeechService()
-        
-        # Download the file from the URL
-        response = requests.get(url, stream=True)
-        if response.status_code != 200:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Failed to download audio file from URL: {response.status_code}"
-            )
-            
-        # Extract file extension from URL or default to .mp3
-        import os
-        from urllib.parse import urlparse
-        
-        parsed_url = urlparse(url)
-        path = parsed_url.path
-        file_extension = os.path.splitext(path)[1].lower()
-        
-        if not file_extension or file_extension not in VALID_AUDIO_EXTENSIONS:
-            file_extension = ".mp3"  # Default to mp3 if no valid extension found
-            
-        # Create a temporary file to store the downloaded content
-        with tempfile.NamedTemporaryFile(suffix=file_extension, delete=False) as temp_file:
-            for chunk in response.iter_content(chunk_size=8192):
-                temp_file.write(chunk)
-            temp_file_path = temp_file.name
-            
-        # Transcribe the audio file
-        transcription = speech_service.transcribe_audio(Path(temp_file_path), language_code)
-        
-        # Clean up the temporary file
-        os.unlink(temp_file_path)
-        
-        # Ensure we have a valid transcription
-        if not transcription or not transcription.strip():
-            return TranscriptionResponse(
-                text="Audio content could not be transcribed. Please try again with a different file format or check audio quality.",
-                confidence=0.0
-            )
-            
-        # Return the transcription
-        return TranscriptionResponse(
-            text=transcription,
-            confidence=0.8  # Default confidence since local transcription doesn't always provide one
-        )
-        
-    except Exception as e:
-        logger.error(f"Error transcribing audio from URL: {str(e)}", exc_info=True)
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to transcribe audio from URL: {str(e)}"
         )
