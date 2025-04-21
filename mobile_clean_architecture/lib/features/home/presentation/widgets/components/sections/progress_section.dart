@@ -61,57 +61,81 @@ class ProgressSection extends StatelessWidget {
 
   Widget _buildSectionHeader(BuildContext context) {
     final screenType = ResponsiveLayout.getScreenType(context);
+    final spacing = ResponsiveLayout.getSpacing(context);
     final fontSize = screenType == ScreenType.extraSmall ? 15.0 : 16.0;
+    final buttonTextSize = screenType == ScreenType.extraSmall ? 13.0 : 14.0;
+    final iconSize = screenType == ScreenType.extraSmall ? 16.0 : 18.0;
 
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Flexible(
-          child: Row(
-            children: [
-              Icon(
-                Icons.insights_rounded,
-                size: 18,
-                color: AppColors.primary,
-              ),
-              const SizedBox(width: 8),
-              Flexible(
-                child: Text(
-                  'Learning Insights',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w700,
-                    fontSize: fontSize,
-                    color: AppColors.getTextColor(isDarkMode),
-                  ),
-                  overflow: TextOverflow.ellipsis,
+    return Container(
+      constraints: const BoxConstraints(
+          minHeight: 48), // Following touch target guidelines
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Flexible(
+            flex: 2,
+            child: Row(
+              children: [
+                Icon(
+                  Icons.insights_rounded,
+                  size: iconSize,
+                  color: AppColors.primary,
                 ),
-              ),
-            ],
-          ),
-        ),
-        TextButton.icon(
-          onPressed: () => context.push('/progress'),
-          icon: Icon(
-            Icons.analytics_rounded,
-            size: 16,
-            color: isDarkMode ? AppColors.primaryLight : AppColors.primary,
-          ),
-          label: Text(
-            'Detailed Analysis',
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              color: isDarkMode ? AppColors.primaryLight : AppColors.primary,
+                SizedBox(
+                    width:
+                        spacing * 0.5), // Element spacing as per design system
+                Flexible(
+                  child: Text(
+                    'Learning Insights',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: fontSize,
+                      color: AppColors.getTextColor(isDarkMode),
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
             ),
-            overflow: TextOverflow.ellipsis,
           ),
-          style: TextButton.styleFrom(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
-            visualDensity: VisualDensity.compact,
-            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          SizedBox(
+              width: spacing * 0.5), // Element spacing as per design system
+          ConstrainedBox(
+            constraints: const BoxConstraints(
+              minWidth: 44, // Minimum touch target size
+              minHeight: 44,
+            ),
+            child: TextButton.icon(
+              onPressed: () => context.push('/progress'),
+              icon: Icon(
+                Icons.analytics_rounded,
+                size: iconSize - 2,
+                color: isDarkMode ? AppColors.primaryLight : AppColors.primary,
+              ),
+              label: Text(
+                'Detailed Analysis',
+                style: TextStyle(
+                  fontSize: buttonTextSize,
+                  fontWeight: FontWeight.w500,
+                  color:
+                      isDarkMode ? AppColors.primaryLight : AppColors.primary,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+              style: TextButton.styleFrom(
+                padding: EdgeInsets.symmetric(
+                  horizontal:
+                      spacing * 0.5, // Element spacing as per design system
+                  vertical: 0,
+                ),
+                visualDensity: VisualDensity.compact,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                minimumSize: Size.zero,
+              ),
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
