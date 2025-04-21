@@ -7,62 +7,94 @@ The following sequence diagram illustrates the process flow for speech analysis 
 
 actor User
 participant "Mobile App" as App
-participant "Audio Endpoint" as AudioAPI
+participant "SpeechController" as AudioAPI
+participant "SpeechService" as SpeechSvc
 participant "FeedbackService" as FeedbackSvc
-participant "Gemini API" as Gemini
-participant "BackgroundTasks" as BgTasks
+participant "GeminiClient" as Gemini
+participant "EventHandler" as BgTasks
 participant "MistakeService" as MistakeSvc
-database MongoDB as DB
+database "Audio Collection" as AudioDB
+database "Feedback Collection" as FeedbackDB
+database "Mistake Collection" as MistakeDB
+database "Conversation Collection" as ConvDB
 
 User -> App: Record speech audio
 App -> AudioAPI: POST /api/audio/analyze-speech\n(audio file, conversation_id)
 activate AudioAPI
 
-AudioAPI -> AudioAPI: Save audio file
-AudioAPI -> AudioAPI: Transcribe audio locally
-note right: Uses SpeechRecognition library\nwith Google Web Speech API
+AudioAPI -> SpeechSvc: transcribeAudio(audioFile)
+activate SpeechSvc
+SpeechSvc -> SpeechSvc: Process audio file
+SpeechSvc --> AudioAPI: Return transcription
+deactivate SpeechSvc
+
+AudioAPI -> SpeechSvc: saveAudioFile(audioFile, userId)
+activate SpeechSvc
+SpeechSvc --> AudioAPI: Return file path
+deactivate SpeechSvc
 
 alt Has conversation context
-    AudioAPI -> DB: Fetch conversation context
-    DB --> AudioAPI: Return conversation details
+    AudioAPI -> ConvDB: Fetch conversation context
+    ConvDB --> AudioAPI: Return conversation details
 end
 
-AudioAPI -> FeedbackSvc: generate_dual_feedback(transcription, context)
+AudioAPI -> FeedbackSvc: generateDualFeedback(transcription, context)
 activate FeedbackSvc
 
-FeedbackSvc -> FeedbackSvc: Build prompt
-FeedbackSvc -> Gemini: Generate content
+FeedbackSvc -> FeedbackSvc: buildDualFeedbackPrompt(transcription, context)
+FeedbackSvc -> Gemini: generateContent(prompt)
 activate Gemini
+note right: Prompt requests well-formatted feedback\nwith user-friendly and detailed versions
 Gemini --> FeedbackSvc: JSON response with dual feedback
 deactivate Gemini
 
-FeedbackSvc -> FeedbackSvc: Parse and validate response
-FeedbackSvc --> AudioAPI: Return feedback (user-friendly & detailed)
+FeedbackSvc -> FeedbackSvc: Parse and create FeedbackResult
+FeedbackSvc --> AudioAPI: Return FeedbackResult object
 deactivate FeedbackSvc
 
-AudioAPI -> DB: Store audio record
-DB --> AudioAPI: Return audio_id
+AudioAPI -> AudioDB: Store audio record
+AudioDB --> AudioAPI: Return audio_id
 
-AudioAPI -> DB: Store feedback record
-DB --> AudioAPI: Confirm storage
-
-AudioAPI -> BgTasks: Schedule mistake extraction
-activate BgTasks
-BgTasks -> MistakeSvc: process_feedback_for_mistakes()
-activate MistakeSvc
-
-MistakeSvc -> MistakeSvc: Extract grammar mistakes
-MistakeSvc -> MistakeSvc: Extract vocabulary mistakes
-MistakeSvc -> MistakeSvc: Calculate next practice dates
-MistakeSvc -> DB: Store unique mistakes
-DB --> MistakeSvc: Confirm storage
-deactivate MistakeSvc
-deactivate BgTasks
+AudioAPI -> FeedbackSvc: storeFeedback(userId, feedbackData)
+activate FeedbackSvc
+FeedbackSvc -> FeedbackDB: Store feedback with conversation context
+FeedbackDB --> FeedbackSvc: Return feedback_id
+deactivate FeedbackSvc
 
 AudioAPI --> App: Return analysis response\n(transcription & user feedback)
 deactivate AudioAPI
 
 App -> User: Display feedback to user
+
+== After Conversation Ends ==
+
+BgTasks -> BgTasks: Trigger scheduled mistake extraction 
+activate BgTasks
+BgTasks -> FeedbackDB: Fetch stored feedback with context
+FeedbackDB --> BgTasks: Return feedback records
+
+loop For each feedback record
+    BgTasks -> MistakeSvc: processFeedbackForMistakes(userId, transcription, feedback, context)
+    activate MistakeSvc
+    
+    MistakeSvc -> Gemini: generateContent(mistakeExtractionPrompt)
+    activate Gemini
+    note right: Prompt asks to identify and structure\ngrammar and vocabulary mistakes
+    Gemini --> MistakeSvc: Return structured mistake data
+    deactivate Gemini
+    
+    MistakeSvc -> MistakeSvc: storeUniqueMistakes(userId, mistakes)
+    MistakeSvc -> MistakeDB: Store unique mistakes
+    MistakeDB --> MistakeSvc: Confirm storage
+    deactivate MistakeSvc
+end
+
+BgTasks -> MistakeSvc: calculateNextPracticeDates(userId)
+activate MistakeSvc
+MistakeSvc -> MistakeDB: Update practice scheduling for all mistakes
+MistakeDB --> MistakeSvc: Confirm updates
+deactivate MistakeSvc
+deactivate BgTasks
 
 @enduml
 ```

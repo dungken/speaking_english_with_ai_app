@@ -51,7 +51,9 @@ package "Core Services" #DDDDFF {
     + processFeedbackForMistakes(userId: String, transcription: String, feedback: Object, context: Object): Result<void, MistakeError>
     + getUnmasteredMistakes(userId: String): Result<List<Mistake>, QueryError>
     + getMistakesForPractice(userId: String, limit: Number): Result<List<Mistake>, QueryError>
+    + getMistakeStatistics(userId: String): Result<MistakeStatistics, QueryError>
     + updateAfterPractice(mistakeId: String, result: PracticeResult): Result<Mistake, UpdateError>
+    + createPracticeSession(userId: String, mistakes: List<Mistake>): Result<PracticeSession, StorageError>
     - storeUniqueMistakes(userId: String, mistakes: List<Mistake>): Result<List<String>, StorageError>
     - calculateNextPracticeDate(practiceCount: Number, wasSuccessful: Boolean): DateTime
     - extractContext(transcription: String, text: String): String
@@ -59,6 +61,12 @@ package "Core Services" #DDDDFF {
 }
 
 package "Conversation System" {
+  class ConversationService {
+    + createConversation(userId: String, data: ConversationRequest): Result<Conversation, ServiceError>
+    + getConversation(conversationId: String): Result<Conversation, ServiceError>
+    + addMessage(conversationId: String, message: MessageRequest): Result<Message, ServiceError>
+  }
+
   class Conversation {
     + id: String
     + userId: String
@@ -89,6 +97,11 @@ package "Conversation System" {
     + situation: String
     + previousExchanges: List<Exchange>
     + getFormattedContext(): String
+  }
+  
+  class ConversationGenerator {
+    + generateAIResponse(context: ConversationContext): Result<String, GenerationError>
+    + enhanceScenario(basicScenario: String): Result<String, GenerationError>
   }
 }
 
@@ -160,7 +173,10 @@ package "Mistake Tracking" {
     + startedAt: DateTime
     + completedAt: DateTime
     + mistakesPracticed: List<MistakePracticeResult>
+    + initialize(): void
+    + addPracticeResult(mistakeId: String, userAnswer: String, wasSuccessful: Boolean): Result<void, StorageError>
     + calculateSuccess(): Number
+    + save(): Result<String, StorageError>
   }
 
   class MistakePracticeResult {
@@ -169,6 +185,24 @@ package "Mistake Tracking" {
     + wasSuccessful: Boolean
     + feedback: String
     + timestamp: DateTime
+  }
+  
+  class MistakeStatistics {
+    + totalCount: Number
+    + masteredCount: Number
+    + learningCount: Number
+    + newCount: Number
+    + typeDistribution: Map<MistakeType, Number>
+    + dueForPractice: Number
+    + masteryPercentage: Number
+  }
+}
+
+package "Background Processing" {
+  class EventHandler {
+    + onNewFeedback(feedbackId: String): void
+    + processQueuedTasks(): void
+    + scheduleTask(taskName: String, data: Object, delayInSeconds: Number): Result<String, SchedulingError>
   }
 }
 
@@ -180,6 +214,7 @@ package "API Controllers" #DDFFDD {
   class MistakeController {
     + getPracticeItems(userId: String, limit: Number): Result<List<PracticeItem>, ApiError>
     + recordPracticeResult(mistakeId: String, result: PracticeResult): Result<PracticeResultResponse, ApiError>
+    + getMistakeStatistics(userId: String): Result<MistakeStatistics, ApiError>
   }
 
   class ConversationController {
@@ -217,22 +252,35 @@ FeedbackService -- SpeechController : uses >
 MistakeService -- MistakeController : uses >
 MistakeService -- FeedbackService : uses >
 
+ConversationService -- ConversationController : manages >
+ConversationService -- Conversation : manages >
+ConversationService -- ConversationGenerator : uses >
+ConversationGenerator -- GeminiClient : uses >
+
 Conversation "1" -- "*" Message
 Conversation -- ConversationContext : provides >
-ConversationController -- Conversation : manages >
 
 FeedbackResult -- DetailedFeedback : contains >
 DetailedFeedback "1" -- "*" GrammarIssue
 DetailedFeedback "1" -- "*" VocabularyIssue
+DetailedFeedback -- Mistake : creates >
 
 Message -- FeedbackResult : may have >
 
 PracticeSession "1" -- "*" MistakePracticeResult
 MistakePracticeResult -- Mistake : references >
+MistakeService -- PracticeSession : creates >
+MistakeService -- MistakeStatistics : generates >
+
+FeedbackService -- EventHandler : triggers >
+EventHandler -- MistakeService : calls >
 
 DatabaseClient -- Collection : provides >
 MistakeService -- DatabaseClient : uses >
 FeedbackService -- DatabaseClient : uses >
 ConversationController -- DatabaseClient : uses >
+ConversationService -- DatabaseClient : uses >
+
+FeedbackResult -- MistakeService : extracts mistakes from >
 
 @enduml

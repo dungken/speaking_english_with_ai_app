@@ -7,9 +7,11 @@ The following sequence diagram illustrates the process flow for mistake practice
 
 actor User
 participant "Mobile App" as App
-participant "Mistake Endpoint" as MistakeAPI
+participant "MistakeController" as MistakeAPI
 participant "MistakeService" as MistakeSvc
-database MongoDB as DB
+participant "PracticeSession" as Session
+database "Mistake Collection" as MistakeDB
+database "PracticeSession Collection" as SessionDB
 
 == Get Practice Items ==
 
@@ -17,16 +19,21 @@ User -> App: Open practice screen
 App -> MistakeAPI: GET /api/mistakes/practice?limit=5
 activate MistakeAPI
 
-MistakeAPI -> MistakeSvc: get_practice_items(user_id, limit)
+MistakeAPI -> MistakeSvc: getMistakesForPractice(userId, limit)
 activate MistakeSvc
 
-MistakeSvc -> DB: Find mistakes due for practice
-note right: Query mistakes where:\n- next_practice_date <= now\n- status != "MASTERED"\n- in_drill_queue = true\n\nSorted by frequency and severity
+MistakeSvc -> MistakeDB: Find mistakes due for practice
+note right: Query based on nextPracticeDate,\nstatus, and sorted by frequency/severity
+MistakeDB --> MistakeSvc: Return matching mistakes
 
-DB --> MistakeSvc: Return matching mistakes
+MistakeSvc -> Session: new PracticeSession(userId, mistakes)
+activate Session
+Session -> Session: initialize()
+Session -> SessionDB: Save session
+SessionDB --> Session: Return sessionId
+Session --> MistakeSvc: Return session with practice items
+deactivate Session
 
-MistakeSvc -> MistakeSvc: Transform into practice exercises
-MistakeSvc -> MistakeSvc: Generate practice prompts
 MistakeSvc --> MistakeAPI: Return practice items
 deactivate MistakeSvc
 
@@ -38,28 +45,31 @@ App -> User: Display practice exercises
 == Submit Practice Result ==
 
 User -> App: Submit practice answer
-App -> MistakeAPI: POST /api/mistakes/practice/{mistake_id}/result
+App -> MistakeAPI: POST /api/mistakes/practice/{mistakeId}/result
 activate MistakeAPI
-note right: With was_successful and user_answer
+note right: With wasSuccessful and userAnswer
 
-MistakeAPI -> MistakeSvc: record_practice_result(mistake_id, user_id, was_successful, user_answer)
+MistakeAPI -> MistakeSvc: updateAfterPractice(mistakeId, result)
 activate MistakeSvc
 
-MistakeSvc -> DB: Get the mistake
-DB --> MistakeSvc: Return mistake details
+MistakeSvc -> MistakeDB: Get the mistake
+MistakeDB --> MistakeSvc: Return mistake details
 
-MistakeSvc -> MistakeSvc: Update practice stats
-MistakeSvc -> MistakeSvc: Calculate mastery level
+MistakeSvc -> MistakeSvc: Update practiceCount and successCount
+MistakeSvc -> MistakeSvc: calculateMasteryLevel()
 MistakeSvc -> MistakeSvc: Determine status (NEW/LEARNING/MASTERED)
-MistakeSvc -> MistakeSvc: Calculate next practice date
+MistakeSvc -> MistakeSvc: calculateNextPracticeDate(practiceCount, wasSuccessful)
 
-MistakeSvc -> DB: Update mistake record
-DB --> MistakeSvc: Confirm update
+MistakeSvc -> MistakeDB: Update mistake record
+MistakeDB --> MistakeSvc: Confirm update
 
-MistakeSvc -> DB: Get updated mistake
-DB --> MistakeSvc: Return updated mistake
+MistakeSvc -> Session: Add MistakePracticeResult
+Session -> SessionDB: Update session record
+SessionDB --> Session: Confirm update
 
-MistakeSvc -> MistakeSvc: Generate practice feedback
+MistakeSvc -> MistakeDB: Get updated mistake
+MistakeDB --> MistakeSvc: Return updated mistake
+
 MistakeSvc --> MistakeAPI: Return updated mistake with feedback
 deactivate MistakeSvc
 
@@ -74,25 +84,14 @@ User -> App: View mistake statistics
 App -> MistakeAPI: GET /api/mistakes/statistics
 activate MistakeAPI
 
-MistakeAPI -> DB: Count total mistakes
-DB --> MistakeAPI: Return total count
+MistakeAPI -> MistakeSvc: getMistakeStatistics(userId)
+activate MistakeSvc
 
-MistakeAPI -> DB: Count mastered mistakes
-DB --> MistakeAPI: Return mastered count
+MistakeSvc -> MistakeDB: Query for statistics
+MistakeDB --> MistakeSvc: Return aggregated data
 
-MistakeAPI -> DB: Count learning mistakes
-DB --> MistakeAPI: Return learning count
-
-MistakeAPI -> DB: Count new mistakes
-DB --> MistakeAPI: Return new count
-
-MistakeAPI -> DB: Count by type (grammar, vocabulary)
-DB --> MistakeAPI: Return type counts
-
-MistakeAPI -> DB: Count mistakes due for practice
-DB --> MistakeAPI: Return due count
-
-MistakeAPI -> MistakeAPI: Calculate mastery percentage
+MistakeSvc --> MistakeAPI: Return statistics
+deactivate MistakeSvc
 
 MistakeAPI --> App: Return statistics
 deactivate MistakeAPI
