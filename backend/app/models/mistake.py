@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 from bson import ObjectId
-from typing import Optional
+from typing import Optional, Dict, Any
 
 class Mistake:
     """
@@ -10,43 +10,47 @@ class Mistake:
         _id: Unique identifier
         user_id: ID of the user who made the mistake
         type: Type of mistake (grammar, vocabulary, pronunciation, fluency)
-        original_content: The original incorrect content
+        original_text: The original incorrect content
         correction: The corrected version
         explanation: Explanation of why it's a mistake and how to fix it
-        frequency: Number of times this mistake has been made
-        severity: How severe the mistake is (1-5)
-        last_occurred: When this mistake was last made
         context: Original context where the mistake occurred
-        in_drill_queue: Whether this mistake is queued for drilling
+        situation_context: Additional context for the mistake
+        severity: How severe the mistake is (1-5)
+        created: When this mistake was first created
+        last_practiced: When this mistake was last practiced
+        practice_count: Number of times this mistake has been practiced
+        success_count: Number of successful practices for this mistake
+        frequency: Number of times this mistake has been made
         next_practice_date: When this mistake should be practiced next
+        status: Current status of the mistake (NEW, LEARNING, MASTERED)
     """
     def __init__(
         self,
         user_id: ObjectId,
-        type: str,  # "grammar", "vocabulary", "pronunciation", "fluency", "cultural_context"
-        original_content: str,
+        type: str,  # "grammar", "vocabulary", "pronunciation"
+        original_text: str,
         correction: str,
         explanation: str,
         context: str,
+        situation_context: Optional[Dict[str, Any]] = None,
         severity: int = 3,  # 1-5, with 5 being most severe
     ):
         self._id = ObjectId()
         self.user_id = user_id
         self.type = type
-        self.original_content = original_content
+        self.original_text = original_text
         self.correction = correction
         self.explanation = explanation
-        self.frequency = 1
-        self.severity = severity
-        self.last_occurred = datetime.utcnow()
         self.context = context
-        self.in_drill_queue = True
-        self.next_practice_date = datetime.utcnow() + timedelta(days=1)  # Start drilling tomorrow
-        self.created_at = datetime.utcnow()
-        self.updated_at = datetime.utcnow()
-        self.is_learned = False
-        self.successful_practices = 0
-        self.failed_practices = 0
+        self.situation_context = situation_context or {}
+        self.severity = severity
+        self.created = datetime.utcnow()
+        self.last_practiced = None
+        self.practice_count = 0
+        self.success_count = 0
+        self.frequency = 1
+        self.next_practice_date = datetime.utcnow() + timedelta(days=1)
+        self.status = "NEW"  # NEW, LEARNING, MASTERED
 
     def to_dict(self):
         """Convert the Mistake instance to a dictionary for MongoDB storage."""
@@ -54,103 +58,37 @@ class Mistake:
             "_id": self._id,
             "user_id": self.user_id,
             "type": self.type,
-            "original_content": self.original_content,
+            "original_text": self.original_text,
             "correction": self.correction,
             "explanation": self.explanation,
-            "frequency": self.frequency,
-            "severity": self.severity,
-            "last_occurred": self.last_occurred,
             "context": self.context,
-            "in_drill_queue": self.in_drill_queue,
+            "situation_context": self.situation_context,
+            "severity": self.severity,
+            "created": self.created,
+            "last_practiced": self.last_practiced,
+            "practice_count": self.practice_count,
+            "success_count": self.success_count,
+            "frequency": self.frequency,
             "next_practice_date": self.next_practice_date,
-            "created_at": self.created_at,
-            "updated_at": self.updated_at,
-            "is_learned": self.is_learned,
-            "successful_practices": self.successful_practices,
-            "failed_practices": self.failed_practices
+            "status": self.status
         }
         
-    def increment_frequency(self):
-        """Increment the frequency counter when the mistake is repeated."""
-        self.frequency += 1
-        self.last_occurred = datetime.utcnow()
-        self.updated_at = datetime.utcnow()
-        
-        # If the mistake was marked as learned, but occurs again, unmark it
-        if self.is_learned:
-            self.is_learned = False
-            self.in_drill_queue = True
-            
-        # Update next practice date based on frequency
-        # More frequent mistakes should be practiced sooner
-        days_offset = max(1, 7 - min(self.frequency, 5))
-        self.next_practice_date = datetime.utcnow() + timedelta(days=days_offset)
-        
-    def schedule_next_practice(self, performance_score: Optional[float] = None):
-        """
-        Schedule the next practice session based on performance and spaced repetition.
-        
-        Args:
-            performance_score: Optional score from 0-1 indicating performance in practice
-        """
-        self.updated_at = datetime.utcnow()
-        
-        if performance_score is not None:
-            if performance_score >= 0.8:  # Good performance
-                self.successful_practices += 1
-                # Increase interval with each successful practice
-                interval_days = min(30, self.successful_practices * 2)
-                self.next_practice_date = datetime.utcnow() + timedelta(days=interval_days)
-                
-                # Mark as learned if consistently successful
-                if self.successful_practices >= 3:
-                    self.is_learned = True
-                    self.in_drill_queue = False
-            else:  # Poor performance
-                self.failed_practices += 1
-                # Short interval for another practice
-                self.next_practice_date = datetime.utcnow() + timedelta(days=1)
-                self.is_learned = False
-                self.in_drill_queue = True
+    def generate_practice_prompt(self) -> str:
+        """Generate a practice prompt for this mistake"""
+        if self.type == "grammar":
+            return f"Correct the grammar: '{self.original_text}'"
+        elif self.type == "vocabulary":
+            return f"Suggest a better word or phrase for: '{self.original_text}'"
         else:
-            # Default scheduling if no performance provided
-            self.next_practice_date = datetime.utcnow() + timedelta(days=3)
+            return f"Practice pronouncing: '{self.original_text}'"
             
-    def calculate_priority(self) -> float:
-        """
-        Calculate the priority score for this mistake for practice ordering.
+    def calculate_mastery_level(self) -> float:
+        """Calculate the mastery level (0.0-1.0) for this mistake"""
+        if self.practice_count == 0:
+            return 0.0
         
-        Returns:
-            Priority score (higher means higher priority)
-        """
-        # Base priority factors:
-        # 1. Frequency - more frequent mistakes are higher priority
-        # 2. Severity - more severe mistakes are higher priority
-        # 3. Recency - more recent mistakes are higher priority
-        # 4. Failed practices - more failed attempts means higher priority
+        # Calculate based on success rate and number of practices
+        success_rate = self.success_count / self.practice_count
+        practice_factor = min(1.0, self.practice_count / 5.0)  # Max out at 5 practices
         
-        frequency_factor = min(5, self.frequency) / 5  # 0.2 to 1.0
-        severity_factor = self.severity / 5  # 0.2 to 1.0
-        
-        # Calculate days since last occurrence
-        days_since = (datetime.utcnow() - self.last_occurred).days
-        recency_factor = 1 / (1 + days_since * 0.1)  # Decreases with time
-        
-        # Failed practices factor
-        failed_factor = min(1.0, self.failed_practices * 0.2)  # 0.0 to 1.0
-        
-        # Combined priority score (0.0 to 5.0)
-        priority = (
-            frequency_factor * 2.0 +  # 0.4 to 2.0
-            severity_factor * 1.5 +   # 0.3 to 1.5
-            recency_factor * 1.0 +    # 0.0 to 1.0
-            failed_factor * 0.5       # 0.0 to 0.5
-        )
-        
-        return priority
-        
-    def mark_as_learned(self):
-        """Mark this mistake as learned and remove from drill queue."""
-        self.is_learned = True
-        self.in_drill_queue = False
-        self.updated_at = datetime.utcnow()
+        return success_rate * practice_factor

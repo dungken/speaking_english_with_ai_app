@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime
 from bson import ObjectId
 
@@ -11,10 +11,11 @@ class ConversationCreate(BaseModel):
 class ConversationResponse(BaseModel):
     id: str
     user_id: str
-    ai_assistant: str
-    situation_description: str
-    created_at: datetime
-    score: Optional[float] = None
+    user_role: str
+    ai_role: str
+    situation: str
+    started_at: datetime
+    ended_at: Optional[datetime] = None
 
     class Config:
         json_encoders = {

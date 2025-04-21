@@ -1,59 +1,85 @@
 from pydantic import BaseModel, Field
-from typing import Optional, List
+from typing import List, Dict, Any, Optional
+from enum import Enum
 from datetime import datetime
 from bson import ObjectId
-from enum import Enum
 
 class MistakeType(str, Enum):
-    """Enum for types of language mistakes."""
+    """Enum for mistake types."""
     GRAMMAR = "grammar"
     VOCABULARY = "vocabulary"
     PRONUNCIATION = "pronunciation"
-    FLUENCY = "fluency"
-    CULTURAL_CONTEXT = "cultural_context"
+
+class MistakeStatus(str, Enum):
+    """Enum for mistake status."""
+    NEW = "NEW"
+    LEARNING = "LEARNING"
+    MASTERED = "MASTERED"
 
 class MistakeBase(BaseModel):
-    """Base schema for mistake data."""
+    """Base schema for mistakes."""
     type: MistakeType = Field(..., description="Type of mistake")
-    original_content: str = Field(..., description="The original incorrect content")
-    correction: str = Field(..., description="The corrected version")
-    explanation: str = Field(..., description="Explanation of why it's a mistake and how to fix it")
-    context: str = Field(..., description="Original context where the mistake occurred")
-    severity: int = Field(3, description="How severe the mistake is (1-5, with 5 being most severe)")
+    original_text: str = Field(..., description="Original text containing the mistake")
+    correction: str = Field(..., description="Corrected version")
+    explanation: str = Field(..., description="Explanation of the mistake")
+    context: str = Field(..., description="Context where the mistake occurred")
+    situation_context: Dict[str, Any] = Field(default_factory=dict, description="Additional context data")
+    severity: int = Field(..., ge=1, le=5, description="Severity of the mistake (1-5)")
 
 class MistakeCreate(MistakeBase):
-    """Schema for creating a new mistake record."""
-    pass
+    """Schema for creating a mistake."""
+    user_id: str = Field(..., description="ID of the user who made the mistake")
 
 class MistakeResponse(MistakeBase):
     """Schema for mistake response."""
-    id: str = Field(..., alias="_id", description="Unique identifier for the mistake")
+    id: str = Field(..., description="Unique identifier for the mistake")
     user_id: str = Field(..., description="ID of the user who made the mistake")
-    frequency: int = Field(..., description="Number of times this mistake has been made")
-    last_occurred: datetime = Field(..., description="When this mistake was last made")
-    in_drill_queue: bool = Field(..., description="Whether this mistake is queued for drilling")
+    created: datetime = Field(..., description="When this mistake was first recorded")
+    last_practiced: Optional[datetime] = Field(None, description="When this mistake was last practiced")
+    practice_count: int = Field(0, description="Number of times this mistake has been practiced")
+    success_count: int = Field(0, description="Number of successful practices")
+    frequency: int = Field(1, description="Number of times this mistake has been made")
     next_practice_date: datetime = Field(..., description="When this mistake should be practiced next")
-    created_at: datetime = Field(..., description="When this mistake was first recorded")
-    updated_at: datetime = Field(..., description="When this mistake was last updated")
-    is_learned: bool = Field(..., description="Whether this mistake has been learned")
-    successful_practices: int = Field(..., description="Number of successful practice attempts")
-    failed_practices: int = Field(..., description="Number of failed practice attempts")
-    
+    status: MistakeStatus = Field(..., description="Current status of the mistake")
+
     class Config:
         """Configuration for Pydantic model."""
-        from_attributes = True
-        populate_by_name = True
+        use_enum_values = True
         json_encoders = {
             datetime: lambda v: v.isoformat(),
             ObjectId: lambda v: str(v)
         }
 
 class MistakePracticeResult(BaseModel):
-    """Schema for reporting practice results."""
-    mistake_id: str = Field(..., description="ID of the mistake being practiced")
-    user_text: str = Field(..., description="Text provided by the user in practice")
-    performance_score: float = Field(..., description="Score from 0-1 indicating practice performance")
-    is_successful: bool = Field(..., description="Whether the practice attempt was successful")
+    """Schema for recording practice results."""
+    mistake_id: str = Field(..., description="ID of the mistake that was practiced")
+    user_answer: str = Field(..., description="User's answer during practice")
+    was_successful: bool = Field(..., description="Whether the practice was successful")
+    feedback: str = Field(..., description="Feedback on the practice attempt")
+    timestamp: datetime = Field(default_factory=datetime.utcnow, description="When this practice occurred")
+
+class PracticeSession(BaseModel):
+    """Schema for a practice session."""
+    id: str = Field(..., description="Unique identifier for the session")
+    user_id: str = Field(..., description="ID of the user")
+    started_at: datetime = Field(..., description="When this session was created")
+    completed_at: Optional[datetime] = Field(None, description="When this session was completed")
+    mistakes_practiced: List[MistakePracticeResult] = Field(..., description="Results of mistakes practiced")
+
+    class Config:
+        """Configuration for Pydantic model."""
+        json_encoders = {
+            datetime: lambda v: v.isoformat(),
+            ObjectId: lambda v: str(v)
+        }
+        
+    def calculate_success(self) -> float:
+        """Calculate the success rate for this practice session."""
+        if not self.mistakes_practiced:
+            return 0.0
+        
+        success_count = sum(1 for result in self.mistakes_practiced if result.was_successful)
+        return success_count / len(self.mistakes_practiced)
 
 class MistakeDrillSession(BaseModel):
     """Schema for a mistake drilling session."""
@@ -64,7 +90,7 @@ class MistakeDrillSession(BaseModel):
 class MistakeUpdate(BaseModel):
     """Schema for updating mistake properties."""
     severity: Optional[int] = Field(None, description="Updated severity (1-5)")
-    is_learned: Optional[bool] = Field(None, description="Mark as learned")
+    status: Optional[MistakeStatus] = Field(None, description="Updated status")
     in_drill_queue: Optional[bool] = Field(None, description="Include in drill queue")
 
 class PracticeItemResponse(BaseModel):

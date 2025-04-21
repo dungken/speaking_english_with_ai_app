@@ -242,11 +242,11 @@ async def send_message(
 
     # Include context in the prompt 
     prompt = (
-        f"You are {conversation['ai_assistant']}, and the user is {conversation['topic'].split(' and ')[0]}. "
-        f"The situation is: {conversation['situation_description']}. "
+        f"You are {conversation['ai_role']}, and the user is {conversation['user_role']}. "
+        f"The situation is: {conversation['situation']}. "
         f"Here's the conversation so far:\n" +
         "\n".join([f"{msg['sender']}: {msg['content']}" for msg in messages]) +
-        f"\nRespond as {conversation['ai_assistant']}."
+        f"\nRespond as {conversation['ai_role']}."
     )
 
     ai_text = generate_response(prompt)

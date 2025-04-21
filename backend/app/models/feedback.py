@@ -10,34 +10,27 @@ class Feedback:
         _id: Unique identifier
         target_id: ID of the entity receiving feedback (message, audio, etc.)
         target_type: Type of entity receiving feedback ("message", "audio", etc.)
-        grammar_issues: List of grammar issues detected
-        vocabulary_suggestions: List of vocabulary improvement suggestions
-        pronunciation_feedback: Pronunciation feedback (if applicable)
-        fluency_score: Score for fluency/natural expression (0-100)
-        positive_aspects: List of positive aspects in the user's performance
-        prioritized_improvements: List of most important improvements to focus on
+        user_feedback: User's feedback in a free-form text
+        detailed_feedback: Detailed feedback in a structured format
+        timestamp: Timestamp of when the feedback was created
     """
     def __init__(
         self,
         target_id: ObjectId,
-        target_type: str,  # "message", "audio", "image_description"
-        grammar_issues: Optional[List[Dict[str, str]]] = None,
-        vocabulary_suggestions: Optional[List[Dict[str, str]]] = None,
-        pronunciation_feedback: Optional[Dict[str, Any]] = None,
-        fluency_score: Optional[float] = None,
-        positive_aspects: Optional[List[str]] = None,
-        prioritized_improvements: Optional[List[str]] = None
+        target_type: str,  # "message", "audio", etc.
+        user_feedback: str,
+        grammar_issues: Optional[List[Dict[str, Any]]] = None,
+        vocabulary_issues: Optional[List[Dict[str, Any]]] = None,
     ):
         self._id = ObjectId()
         self.target_id = target_id
         self.target_type = target_type
-        self.grammar_issues = grammar_issues or []
-        self.vocabulary_suggestions = vocabulary_suggestions or []
-        self.pronunciation_feedback = pronunciation_feedback
-        self.fluency_score = fluency_score
-        self.positive_aspects = positive_aspects or []
-        self.prioritized_improvements = prioritized_improvements or []
-        self.created_at = datetime.utcnow()
+        self.user_feedback = user_feedback
+        self.detailed_feedback = {
+            "grammar_issues": grammar_issues or [],
+            "vocabulary_issues": vocabulary_issues or []
+        }
+        self.timestamp = datetime.utcnow()
 
     def to_dict(self):
         """Convert the Feedback instance to a dictionary for MongoDB storage."""
@@ -45,14 +38,14 @@ class Feedback:
             "_id": self._id,
             "target_id": self.target_id,
             "target_type": self.target_type,
-            "grammar_issues": self.grammar_issues,
-            "vocabulary_suggestions": self.vocabulary_suggestions,
-            "pronunciation_feedback": self.pronunciation_feedback,
-            "fluency_score": self.fluency_score,
-            "positive_aspects": self.positive_aspects,
-            "prioritized_improvements": self.prioritized_improvements,
-            "created_at": self.created_at
+            "user_feedback": self.user_feedback,
+            "detailed_feedback": self.detailed_feedback,
+            "timestamp": self.timestamp
         }
+        
+    def generate_user_friendly_text(self):
+        """Generate user-friendly text from detailed feedback"""
+        return self.user_feedback
         
     def export_to_mistakes(self) -> List[Dict[str, Any]]:
         """
@@ -64,35 +57,25 @@ class Feedback:
         mistakes = []
         
         # Convert grammar issues to mistakes
-        for issue in self.grammar_issues:
+        for issue in self.detailed_feedback["grammar_issues"]:
             mistakes.append({
                 "type": "grammar",
-                "original_content": issue.get("issue", ""),
+                "original_text": issue.get("issue", ""),
                 "correction": issue.get("correction", ""),
                 "explanation": issue.get("explanation", ""),
-                "context": "Grammar issue from feedback"
+                "context": "Grammar issue from feedback",
+                "severity": issue.get("severity", 3)
             })
             
-        # Convert vocabulary suggestions to mistakes
-        for suggestion in self.vocabulary_suggestions:
+        # Convert vocabulary issues to mistakes
+        for issue in self.detailed_feedback["vocabulary_issues"]:
             mistakes.append({
                 "type": "vocabulary",
-                "original_content": suggestion.get("original", ""),
-                "correction": suggestion.get("suggestion", ""),
-                "explanation": suggestion.get("context", ""),
-                "context": "Vocabulary improvement from feedback"
+                "original_text": issue.get("original", ""),
+                "correction": issue.get("better_alternative", ""),
+                "explanation": issue.get("reason", ""),
+                "context": issue.get("example_usage", ""),
+                "severity": 3
             })
-            
-        # Convert pronunciation issues if available
-        if self.pronunciation_feedback and "word_scores" in self.pronunciation_feedback:
-            for word, score in self.pronunciation_feedback["word_scores"].items():
-                if score < 70:  # Only track words with low scores
-                    mistakes.append({
-                        "type": "pronunciation",
-                        "original_content": word,
-                        "correction": word,  # Same word, but properly pronounced
-                        "explanation": f"Pronunciation score: {score}/100",
-                        "context": "Pronunciation issue from feedback"
-                    })
                     
         return mistakes
