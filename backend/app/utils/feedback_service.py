@@ -41,13 +41,24 @@ class FeedbackService:
         try:
             # Build prompt for dual feedback
             prompt = self._build_dual_feedback_prompt(transcription, context)
+ 
+    
+            # Call Gemini API   
+            gemini_response = generate_response(prompt)
+                       # Clean the response text by removing markdown formatting
+            cleaned_text = gemini_response.strip()
+            if cleaned_text.startswith("```json"):
+                cleaned_text = cleaned_text[7:]  # Remove ```json prefix
+            if cleaned_text.endswith("```"):
+                cleaned_text = cleaned_text[:-3]  # Remove ``` suffix
+            cleaned_text = cleaned_text.strip()
+            # parse the json
             
-            # Call Gemini API
-            response = generate_response(prompt)
-            
+  
             # Parse JSON response
+            
             try:
-                response_data = json.loads(response)
+                response_data = json.loads(cleaned_text)
                 
                 # Validate the response structure
                 if not isinstance(response_data, dict):
@@ -67,7 +78,7 @@ class FeedbackService:
                 
             except json.JSONDecodeError as e:
                 logger.error(f"Failed to parse Gemini response as JSON: {e}")
-                logger.debug(f"Raw response: {response}")
+                logger.debug(f"Raw response: {cleaned_text}")
                 # Fall back to basic feedback
                 return self._generate_fallback_feedback(transcription)
                 
@@ -203,7 +214,6 @@ class FeedbackService:
         
         Return ONLY the JSON object with these two fields, properly formatted. Limit to at most 3 grammar issues and 3 vocabulary issues, focusing on the most important ones.
         """
-        
         return prompt
     
     def _generate_fallback_feedback(self, transcription: str) -> FeedbackResult:

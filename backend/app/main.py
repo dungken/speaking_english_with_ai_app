@@ -1,5 +1,5 @@
 from fastapi import FastAPI, Depends
-from app.routes import user, conversation, audio, feedback, mistake
+from app.routes import user, conversation, feedback, mistake
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.models import SecurityScheme
 from fastapi.security import OAuth2PasswordBearer
@@ -33,10 +33,6 @@ app = FastAPI(
         {
             "name": "conversations",
             "description": "Operations with conversations. Requires authentication."
-        },
-        {
-            "name": "audio",
-            "description": "Operations with audio recordings. Includes transcription and pronunciation assessment."
         },
         {
             "name": "feedback",
@@ -83,12 +79,6 @@ app.include_router(
     responses={401: {"description": "Unauthorized"}}
 )
 
-app.include_router(
-    audio.router,
-    prefix="/api/audio",
-    tags=["audio"],
-    responses={401: {"description": "Unauthorized"}}
-)
 
 app.include_router(
     feedback.router,

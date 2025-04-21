@@ -10,6 +10,7 @@ from app.utils.conversation_generator import ConversationGenerator
 
 logger = logging.getLogger(__name__)
 
+
 class ConversationContext:
     """
     Class representing the context of a conversation.
