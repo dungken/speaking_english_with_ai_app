@@ -6,7 +6,6 @@ from app.models.conversation import Conversation
 from app.models.message import Message
 from app.utils.auth import get_current_user
 from app.utils.gemini import generate_response
-from bson import ObjectId
 import json
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form, Body, Query, BackgroundTasks
 from fastapi.responses import JSONResponse
@@ -53,6 +52,17 @@ VALID_AUDIO_EXTENSIONS = ['.mp3', '.wav', '.m4a', '.aac', '.ogg', '.flac']
 # Set up logger
 logger = logging.getLogger(__name__)
 
+logging.basicConfig(level=logging.INFO)
+
+
+# Create a file handler for our logs
+# Use existing logs directory under the backend folder
+file_handler = logging.FileHandler("app/logs/conversation_logs.txt")
+file_handler.setLevel(logging.INFO)
+
+
+# Add the handler to the logger
+logger.addHandler(file_handler)
 
 router = APIRouter()
 
@@ -127,7 +137,7 @@ async def create_conversation(convo_data: ConversationCreate, current_user: dict
         "refined_user_role": "[your refined user role]",
         "refined_ai_role": "[your refined AI role]",
         "refined_situation": "[your refined situation]",
-        "response": "[your generated response]"
+        "response": "[your first  response as refined_ai_role to the user regardless of the situation]"
         }}
 
         Here are the inputs:
@@ -146,6 +156,7 @@ async def create_conversation(convo_data: ConversationCreate, current_user: dict
     if cleaned_text.endswith("```"):
         cleaned_text = cleaned_text[:-3]  # Remove ``` suffix
     cleaned_text = cleaned_text.strip()
+    logger.info(f"Refined response: {cleaned_text}")
     # parse the json
     data_json = json.loads(cleaned_text)
     
@@ -203,7 +214,7 @@ async def create_conversation(convo_data: ConversationCreate, current_user: dict
 
 
 
-@router.post("/audio2text", response_model=dict)
+@router.post("/audio2text", response_model=str)
 async def turn_to_text(
     audio_file: UploadFile = File(...),
     current_user: dict = Depends(get_current_user),
@@ -230,15 +241,15 @@ async def turn_to_text(
             {"_id": ObjectId(audio_id)},
             {"$set": {"transcription": transcription}}
         )
-    
+
         return audio_id
         
  
 
-@router.post("/conversations/{conversation_id}/speechtomessage", response_model=MessageResponse)
+@router.post("/conversations/{conversation_id}/message", response_model=dict)
 async def analyze_speech(
     conversation_id: str,  # Path parameter, not a Form parameter
-    audio_id: str ,  # Expecting AudioData schema
+    audio_id: str ,  
     current_user: dict = Depends(get_current_user),
     background_tasks: BackgroundTasks = BackgroundTasks()
 ):
@@ -246,14 +257,14 @@ async def analyze_speech(
     Process speech audio and return an AI response.
     
     This simplified endpoint:
-    3. Adds the transcribed text as a user message to the conversation
+    3. Adds audio id user loaded
     4. Generates an AI response to the user's message
-    5. Handles feedback generation in the background
+    5. Handles feedback + mistake generation in the background
     
-    Args:
-        audio_file: The audio file containing user speech
-        conversation_id: ID of the conversation (required)
-        current_user: Authenticated user information
+    Args: \n
+        audio_id: The audio file ID (required)  \n
+        conversation_id: ID of the conversation (required)\n
+        current_user: Authenticated user information \n
         background_tasks: FastAPI background tasks manager
         
     Returns:
@@ -320,13 +331,101 @@ async def analyze_speech(
         ai_message_dict["id"] = str(ai_message_dict["_id"])
         ai_message_dict["conversation_id"] = str(ai_message_dict["conversation_id"])
         del ai_message_dict["_id"]
-        return MessageResponse(**ai_message_dict)
+        
+        user_message_dict = user_message.to_dict()
+        user_message_dict["id"] = str(user_message_dict["_id"])
+        user_message_dict["conversation_id"] = str(user_message_dict["conversation_id"])
+        del user_message_dict["_id"]
+        
+        return {
+            "user_message": MessageResponse(**user_message_dict),
+            "ai_message": MessageResponse(**ai_message_dict)
+        }
+    
        
     except Exception as e:
         logger.error(f"Error /conversations/{conversation_id}/speechtomessage: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed at /conversations/{conversation_id}/speechtomessage: {str(e)}"
+        )
+
+@router.get("/messages/{message_id}/feedback",response_model=dict)
+async def get_message_feedback(
+    message_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Get user-friendly feedback for a specific message.
+    
+    This endpoint retrieves the stored feedback for a message when the user
+    clicks the feedback button in the UI.
+    
+    Args:
+        message_id: ID of the message to get feedback for
+        current_user: Authenticated user information
+        
+    Returns:
+        dict: User-friendly feedback
+    """
+    try:
+        # Log the entry point with message ID for tracking
+        logger.info(f"Fetching feedback for message_id: {message_id}")
+        
+        user_id = str(current_user["_id"])
+        # Find the message
+        message = db.messages.find_one({"_id": ObjectId(message_id)})
+        if not message:
+            logger.warning(f"Message not found: {message_id}")
+            raise HTTPException(status_code=404, detail="Message not found")
+        
+        logger.info(f"Message found: {message_id}, checking for feedback_id")
+        
+        # Check if message has associated feedback
+        feedback_id = message.get("feedback_id")
+        if not feedback_id:
+            logger.info(f"No feedback_id found for message: {message_id}, feedback may still be processing")
+            # Feedback might still be processing
+            return {"user_feedback": "Feedback is still being generated. Please try again in a moment.", "is_ready": False}
+        
+        logger.info(f"Found feedback_id: {feedback_id}, retrieving feedback document")
+        
+        # Get the feedback document
+        try:
+            feedback = db.feedback.find_one({"_id": ObjectId(feedback_id)})
+            # Log the structure of the feedback document to understand its contents
+            logger.info(f"Feedback document structure: {type(feedback).__name__}, keys: {list(feedback.keys()) if feedback else 'None'}")
+        except Exception as e:
+            logger.error(f"Error retrieving feedback document: {str(e)}", exc_info=True)
+            return {"user_feedback": "Error retrieving feedback. Please try again later.", "is_ready": False}
+            
+        if not feedback:
+            logger.warning(f"No feedback found with ID: {feedback_id}")
+            return {"user_feedback": "No feedback available for this message.", "is_ready": False}
+            
+        # Handle feedback document safely
+        try:
+            # Create a safe copy with only the fields we need
+            logger.info(f"Processing feedback document with keys: {list(feedback.keys())}")
+            
+            feedback_dict = {
+                "id": str(feedback.get("_id", "")),
+                "user_feedback": feedback.get("user_feedback", "Feedback content unavailable"),
+                "created_at": feedback.get("created_at", datetime.now().isoformat())
+            }
+            
+            # Add detailed feedback if available
+          
+            return {"user_feedback": feedback_dict, "is_ready": True}
+        except Exception as e:
+            logger.error(f"Error processing feedback document: {str(e)}", exc_info=True)
+            return {"user_feedback": "Error processing feedback data. Please try again later.", "is_ready": False}
+        
+    except Exception as e:
+        logger.error(f"Error getting message feedback: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get message feedback: {str(e)}"
         )
 
 async def process_speech_feedback(
@@ -414,95 +513,95 @@ async def process_speech_feedback(
     except Exception as e:
         logger.error(f"Error processing speech feedback in background: {str(e)}", exc_info=True)
 
-async def process_text_feedback(
-    message_content: str,
-    user_id: str,
-    conversation_id: str,
-    user_message_id: str
-):
-    """
-    Process text feedback in the background.
+# async def process_text_feedback(
+#     message_content: str,
+#     user_id: str,
+#     conversation_id: str,
+#     user_message_id: str
+# ):
+#     """
+#     Process text feedback in the background.
     
-    This function analyzes text messages for language feedback similar to how
-    audio messages are processed. It generates grammar and vocabulary feedback
-    and extracts mistakes for future learning opportunities.
+#     This function analyzes text messages for language feedback similar to how
+#     audio messages are processed. It generates grammar and vocabulary feedback
+#     and extracts mistakes for future learning opportunities.
     
-    Args:
-        message_content: The content of the user's message
-        user_id: User's ID
-        conversation_id: ID of the conversation
-        user_message_id: ID of the user's message to attach feedback to
-    """
-    try:
-        # Initialize services
-        from app.utils.feedback_service import FeedbackService
-        from app.utils.event_handler import event_handler
-        from app.models.results.feedback_result import FeedbackResult
+#     Args:
+#         message_content: The content of the user's message
+#         user_id: User's ID
+#         conversation_id: ID of the conversation
+#         user_message_id: ID of the user's message to attach feedback to
+#     """
+#     try:
+#         # Initialize services
+#         from app.utils.feedback_service import FeedbackService
+#         from app.utils.event_handler import event_handler
+#         from app.models.results.feedback_result import FeedbackResult
         
-        feedback_service = FeedbackService()
+#         feedback_service = FeedbackService()
         
-        # Fetch conversation context
-        context = {}
-        conversation = db.conversations.find_one({"_id": ObjectId(conversation_id)})
-        if conversation:
-            # Fetch messages to build context
-            messages = list(db.messages.find({"conversation_id": ObjectId(conversation_id)})
-                          .sort("timestamp", 1)
-                          .limit(10))
+#         # Fetch conversation context
+#         context = {}
+#         conversation = db.conversations.find_one({"_id": ObjectId(conversation_id)})
+#         if conversation:
+#             # Fetch messages to build context
+#             messages = list(db.messages.find({"conversation_id": ObjectId(conversation_id)})
+#                           .sort("timestamp", 1)
+#                           .limit(10))
             
-            # Format previous exchanges
-            previous_exchanges = []
-            for msg in messages:
-                sender = "User" if msg.get("sender") == "user" else "AI"
-                previous_exchanges.append(f"{sender}: {msg.get('content', '')}")
+#             # Format previous exchanges
+#             previous_exchanges = []
+#             for msg in messages:
+#                 sender = "User" if msg.get("sender") == "user" else "AI"
+#                 previous_exchanges.append(f"{sender}: {msg.get('content', '')}")
             
-            context = {
-                "user_role": conversation.get("user_role", "Student"),
-                "ai_role": conversation.get("ai_role", "Teacher"),
-                "situation": conversation.get("situation", "General conversation"),
-                "previous_exchanges": "\n".join(previous_exchanges)
-            }
+#             context = {
+#                 "user_role": conversation.get("user_role", "Student"),
+#                 "ai_role": conversation.get("ai_role", "Teacher"),
+#                 "situation": conversation.get("situation", "General conversation"),
+#                 "previous_exchanges": "\n".join(previous_exchanges)
+#             }
         
-        # Generate feedback
-        try:
-            feedback_result = feedback_service.generate_dual_feedback(message_content, context)
-        except Exception as e:
-            logger.error(f"Error generating text feedback: {str(e)}", exc_info=True)
-            # Create a fallback feedback result
-            feedback_result = FeedbackResult(
-                user_feedback="Unable to generate detailed feedback at this time.",
-                detailed_feedback={
-                    "grammar_issues": [],
-                    "vocabulary_issues": [],
-                    "positives": ["Your response was recorded."],
-                    "fluency": ["Keep practicing to improve your English skills."]
-                }
-            )
+#         # Generate feedback
+#         try:
+#             feedback_result = feedback_service.generate_dual_feedback(message_content, context)
+#         except Exception as e:
+#             logger.error(f"Error generating text feedback: {str(e)}", exc_info=True)
+#             # Create a fallback feedback result
+#             feedback_result = FeedbackResult(
+#                 user_feedback="Unable to generate detailed feedback at this time.",
+#                 detailed_feedback={
+#                     "grammar_issues": [],
+#                     "vocabulary_issues": [],
+#                     "positives": ["Your response was recorded."],
+#                     "fluency": ["Keep practicing to improve your English skills."]
+#                 }
+#             )
         
-        # Store feedback
-        feedback_id = feedback_service.store_feedback(
-            user_id, 
-            feedback_result, 
-            conversation_id,
-            transcription=message_content  # Use message content as transcription for text messages
-        )
+#         # Store feedback
+#         feedback_id = feedback_service.store_feedback(
+#             user_id, 
+#             feedback_result, 
+#             conversation_id,
+#             transcription=message_content  # Use message content as transcription for text messages
+#         )
         
-        # Link feedback to message
-        if feedback_id:
-            db.messages.update_one(
-                {"_id": ObjectId(user_message_id)},
-                {"$set": {"feedback_id": feedback_id}}
-            )
+#         # Link feedback to message
+#         if feedback_id:
+#             db.messages.update_one(
+#                 {"_id": ObjectId(user_message_id)},
+#                 {"$set": {"feedback_id": feedback_id}}
+#             )
             
-            # Trigger background task for mistake extraction
-            event_handler.on_new_feedback(
-                feedback_id,
-                user_id,
-                message_content
-            )
+#             # Trigger background task for mistake extraction
+#             event_handler.on_new_feedback(
+#                 feedback_id,
+#                 user_id,
+#                 message_content
+#             )
             
-    except Exception as e:
-        logger.error(f"Error processing text feedback in background: {str(e)}", exc_info=True)
+#     except Exception as e:
+#         logger.error(f"Error processing text feedback in background: {str(e)}", exc_info=True)
 
 async def save_audio_file(file: UploadFile, user_id: str) -> str:
     """
@@ -530,49 +629,30 @@ async def save_audio_file(file: UploadFile, user_id: str) -> str:
     
     return str(file_path)
 
-@router.get("/messages/{message_id}/feedback")
-async def get_message_feedback(
-    message_id: str,
+# Add this temporary debugging endpoint
+@router.get("/debug/feedback/{feedback_id}", include_in_schema=False)
+async def debug_feedback_structure(
+    feedback_id: str,
     current_user: dict = Depends(get_current_user)
 ):
     """
-    Get user-friendly feedback for a specific message.
-    
-    This endpoint retrieves the stored feedback for a message when the user
-    clicks the feedback button in the UI.
-    
-    Args:
-        message_id: ID of the message to get feedback for
-        current_user: Authenticated user information
-        
-    Returns:
-        dict: User-friendly feedback
+    Debug endpoint to examine the structure of a feedback document.
+    This is a temporary endpoint for debugging purposes.
     """
     try:
-        user_id = str(current_user["_id"])
-        
-        # Find the message
-        message = db.messages.find_one({"_id": ObjectId(message_id)})
-        if not message:
-            raise HTTPException(status_code=404, detail="Message not found")
-        
-        # Check if message has associated feedback
-        feedback_id = message.get("feedback_id")
-        if not feedback_id:
-            # Feedback might still be processing
-            return {"user_feedback": "Feedback is still being generated. Please try again in a moment."}
-        
-        # Get the feedback document
         feedback = db.feedback.find_one({"_id": ObjectId(feedback_id)})
         if not feedback:
-            return {"user_feedback": "No feedback available for this message."}
-        
-        # Return only the user-friendly feedback
-        return {"user_feedback": feedback.get("user_feedback", "No detailed feedback available.")}
-        
+            return {"error": "Feedback not found"}
+            
+        # Return basic info about the document
+        return {
+            "document_type": type(feedback).__name__,
+            "has_keys": list(feedback.keys()),
+            "id_type": type(feedback.get("_id")).__name__,
+            "user_feedback_type": type(feedback.get("user_feedback", None)).__name__ if feedback.get("user_feedback") else None,
+            "detailed_feedback_type": type(feedback.get("detailed_feedback", None)).__name__ if feedback.get("detailed_feedback") else None,
+            "detailed_feedback_keys": list(feedback.get("detailed_feedback", {}).keys()) if isinstance(feedback.get("detailed_feedback"), dict) else None,
+            "raw_feedback": feedback
+        }
     except Exception as e:
-        logger.error(f"Error getting message feedback: {str(e)}", exc_info=True)
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get message feedback: {str(e)}"
-        )
+        return {"error": str(e), "traceback": str(e.__traceback__)}
