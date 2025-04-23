@@ -1,0 +1,67 @@
+@startuml Conversation Flow
+
+actor Frontend
+participant "API Server" as Server
+database Database
+
+== Conversation Initiation ==
+
+Frontend -> Server: POST /conversations
+{ user_role, ai_role, situation }
+activate Server
+Server -> Database: Create Conversation record
+Server -> Database: Create initial AI Message record
+Server -> Frontend: 200 OK
+{ conversation, initial_message }
+deactivate Server
+Frontend -> Frontend: Display initial AI message
+
+== User Speaks ==
+
+Frontend -> Server: POST /audio2text
+(audio data)
+activate Server
+Server -> Server: Process audio, generate transcription
+Server -> Database: Store audio details & transcription (returns audio_id)
+Server -> Frontend: 200 OK
+{ audio_id, transcription }
+deactivate Server
+
+Frontend -> Frontend: Display user's transcription immediately
+
+Frontend -> Server: POST /conversations/{conversation_id}/message
+{ audio_id }
+activate Server
+Server -> Database: Find audio record by audio_id
+Server -> Database: Create User Message record (linking audio_id, transcription)
+Server -> Server: Generate AI response
+Server -> Database: Create AI Message record
+Server ->> Server: (async) Start background feedback processing for User Message
+Server -> Frontend: 200 OK
+{ user_message, ai_message }
+deactivate Server
+
+Frontend -> Frontend: Display AI response message
+
+== User Requests Feedback ==
+
+Frontend -> Server: GET /feedback/{user_message_id}  
+activate Server
+note right of Server: API Doc mentions POST /conversations/{id}/message for feedback,
+but GET /feedback/{message_id} seems more logical.
+Using GET /feedback/{id} based on response structure.
+Adjust if POST endpoint is confirmed.
+Server -> Database: Retrieve feedback for message_id
+alt Feedback Ready
+    Server -> Frontend: 200 OK
+{ user_feedback, is_ready: true }
+else Feedback Not Ready
+    Server -> Frontend: 200 OK
+{ is_ready: false }
+end
+deactivate Server
+
+Frontend -> Frontend: Display feedback details (if ready)
+
+
+@enduml 
