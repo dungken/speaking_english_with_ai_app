@@ -112,9 +112,17 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
     
     Args:
         form_data (OAuth2PasswordRequestForm): OAuth2 form containing username (email) and password.
+            Input fields:
+            - username: User's email address
+            - password: User's password
     
     Returns:
-        Token: Access token information including token type and expiration.
+        Token: Access token information.
+            Fields:
+            - access_token: JWT token for authentication
+            - token_type: Type of token (always "bearer")
+            - expires_in: Token expiration time in seconds
+            - scope: User permissions ("admin" or "user")
     """
     try:
         user = db.users.find_one({"email": form_data.username})
@@ -166,9 +174,21 @@ async def get_user_profile(current_user: dict = Depends(get_current_user)):
     
     Args:
         current_user (dict): The authenticated user's information from token.
+            Fields:
+            - _id: User's ObjectId
+            - email: User's email
+            - role: User's role ("admin" or "user")
     
     Returns:
         UserResponse: The user profile information.
+            Fields:
+            - _id: User's ObjectId as string
+            - name: User's full name
+            - email: User's email address
+            - role: User's role ("admin" or "user")
+            - created_at: Account creation timestamp
+            - updated_at: Last update timestamp
+            - avatar_url: URL to user's profile image (optional)
     """
     try:
         user = db.users.find_one({"_id": ObjectId(current_user["_id"])})
@@ -205,10 +225,25 @@ async def update_user_profile(
     
     Args:
         user_update (UserUpdate): The user profile update data.
+            Updatable fields:
+            - name: User's full name
+            - avatar_url: URL to user's profile image
         current_user (dict): The authenticated user's information.
+            Fields:
+            - _id: User's ObjectId
+            - email: User's email
+            - role: User's role
     
     Returns:
         UserResponse: The updated user profile information.
+            Fields:
+            - _id: User's ObjectId as string
+            - name: User's updated name
+            - email: User's email address (unchanged)
+            - role: User's role ("admin" or "user")
+            - created_at: Original account creation timestamp
+            - updated_at: New update timestamp
+            - avatar_url: Updated profile image URL if provided
     """
     try:
         # Get current user
@@ -274,9 +309,13 @@ async def delete_user_profile(current_user: dict = Depends(get_current_user)):
     
     Args:
         current_user (dict): The authenticated user's information.
+            Fields:
+            - _id: User's ObjectId
+            - email: User's email
+            - role: User's role
     
     Returns:
-        None: 204 No Content response.
+        None: 204 No Content response with no body.
     """
     try:
         # Soft delete by marking user as deleted
@@ -315,9 +354,21 @@ async def get_users(current_user: dict = Depends(get_current_user)):
     
     Args:
         current_user (dict): The authenticated user's information.
+            Fields:
+            - _id: User's ObjectId
+            - email: User's email
+            - role: User's role (must be "admin" to access)
     
     Returns:
         List[UserResponse]: A list of all user objects.
+            Each user object contains:
+            - _id: User's ObjectId as string
+            - name: User's full name
+            - email: User's email address
+            - role: User's role
+            - created_at: Account creation timestamp
+            - updated_at: Last update timestamp
+            - avatar_url: Profile image URL if available
     """
     try:
         # Check if user is admin

@@ -24,3 +24,4 @@ class MessageResponse(BaseModel):
             datetime: lambda v: v.isoformat(),
             ObjectId: lambda v: str(v)
         }
+        

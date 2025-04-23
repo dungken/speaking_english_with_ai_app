@@ -214,35 +214,50 @@ async def create_conversation(convo_data: ConversationCreate, current_user: dict
 
 
 
-@router.post("/audio2text", response_model=str)
+@router.post("/audio2text", response_model=dict)
 async def turn_to_text(
     audio_file: UploadFile = File(...),
     current_user: dict = Depends(get_current_user),
 ):
+    """
+    Converts an uploaded audio file to text using speech recognition.
+    
+    Args:
+        audio_file (UploadFile): The audio file to transcribe.
+            Supported formats include: mp3, wav, m4a, aac, ogg, flac
+        current_user (dict): The authenticated user's information.
+            Fields:
+            - _id: User's ObjectId
+            - email: User's email
+            - role: User's role
+    
+    Returns:
+        str: The ID of the saved audio record in the database.
+            This ID can be used in subsequent API calls to reference the audio.
+    """
+    # Initialize services
+    from app.utils.speech_service import SpeechService
+    speech_service = SpeechService()
+    user_id = str(current_user["_id"])
   
-        # Initialize services
-        from app.utils.speech_service import SpeechService
-        speech_service = SpeechService()
-        user_id = str(current_user["_id"])
-      
-        # Step 1: Save the audio file
-        file_path, audio_model = speech_service.save_audio_file(audio_file, user_id)
-        audio_id = str(audio_model._id)
-        
-        # Step 2: Transcribe the audio file
-        transcription = speech_service.transcribe_audio(Path(file_path))
-        
-        # Ensure we have a valid transcription to work with
-        if not transcription or not transcription.strip():
-         
-            return "Audio content could not be transcribed. Please try again with a different file format or check audio quality."
-          # Update audio record with transcription
-        db.audio.update_one(
-            {"_id": ObjectId(audio_id)},
-            {"$set": {"transcription": transcription}}
-        )
+    # Step 1: Save the audio file
+    file_path, audio_model = speech_service.save_audio_file(audio_file, user_id)
+    audio_id = str(audio_model._id)
+    
+    # Step 2: Transcribe the audio file
+    transcription = speech_service.transcribe_audio(Path(file_path))
+    
+    # Ensure we have a valid transcription to work with
+    if not transcription or not transcription.strip():
+        return "Audio content could not be transcribed. Please try again with a different file format or check audio quality."
+    
+    # Update audio record with transcription
+    db.audio.update_one(
+        {"_id": ObjectId(audio_id)},
+        {"$set": {"transcription": transcription}}
+    )
 
-        return audio_id
+    return { "audio_id": audio_id, "transcription": transcription}
         
  
 
@@ -256,19 +271,38 @@ async def analyze_speech(
     """
     Process speech audio and return an AI response.
     
-    This simplified endpoint:
-    3. Adds audio id user loaded
-    4. Generates an AI response to the user's message
-    5. Handles feedback + mistake generation in the background
+    This endpoint:
+    1. Retrieves the transcribed audio using the provided audio_id
+    2. Adds the user's message to the conversation
+    3. Generates an AI response based on conversation context
+    4. Handles feedback generation in the background
     
-    Args: \n
-        audio_id: The audio file ID (required)  \n
-        conversation_id: ID of the conversation (required)\n
-        current_user: Authenticated user information \n
-        background_tasks: FastAPI background tasks manager
+    Args:
+        conversation_id (str): ID of the conversation
+            Path parameter identifying which conversation to add the message to
+        audio_id (str): The ID of a previously uploaded and transcribed audio file
+            This should be an ID returned from the /audio2text endpoint
+        current_user (dict): The authenticated user's information
+            Fields:
+            - _id: User's ObjectId
+            - email: User's email
+            - role: User's role
+        background_tasks (BackgroundTasks): FastAPI background tasks manager
+            Used to process feedback generation asynchronously
         
     Returns:
-        MessageResponse: The AI's response message
+        dict: Dictionary containing both the user's message and the AI's response
+            Fields:
+            - user_message: MessageResponse object with the transcribed user message
+            - ai_message: MessageResponse object with the AI's generated response
+            
+            Each MessageResponse contains:
+            - id: Message ID
+            - conversation_id: ID of the conversation
+            - sender: "user" or "ai"
+            - content: The message text
+            - timestamp: When the message was created
+            - additional fields like audio_path, transcription (for user messages)
     """
     try:
         user_id = str(current_user["_id"])
@@ -362,11 +396,25 @@ async def get_message_feedback(
     clicks the feedback button in the UI.
     
     Args:
-        message_id: ID of the message to get feedback for
-        current_user: Authenticated user information
+        message_id (str): ID of the message to get feedback for
+            Path parameter that identifies which message's feedback to retrieve
+        current_user (dict): Authenticated user information
+            Fields:
+            - _id: User's ObjectId
+            - email: User's email
+            - role: User's role
         
     Returns:
-        dict: User-friendly feedback
+        dict: User-friendly feedback information
+            Fields:
+            - user_feedback: Either a string message (if feedback is not ready)
+              or a dictionary containing the feedback details
+            - is_ready: Boolean indicating if the feedback generation is complete
+            
+            When feedback is ready (is_ready=True), user_feedback contains:
+            - id: Feedback document ID
+            - user_feedback: Human-readable feedback text
+            - created_at: Timestamp when feedback was generated
     """
     try:
         # Log the entry point with message ID for tracking
@@ -441,6 +489,28 @@ async def process_speech_feedback(
     
     This function handles the feedback generation and storing part that
     was separated from the main speech analysis to allow quick responses.
+    
+    Args:
+        transcription (str): The transcribed text from the audio
+            The text content that will be analyzed for feedback
+        user_id (str): ID of the user who submitted the audio
+            Used to associate feedback with the user
+        conversation_id (str): ID of the conversation
+            Used to fetch conversation context for better feedback
+        audio_id (str): ID of the stored audio record
+            References the audio file in the database
+        file_path (str): Path to the saved audio file
+            Location of the audio file on disk
+        user_message_id (str): ID of the user's message
+            Used to link the generated feedback to the message
+    
+    Returns:
+        None: This is a background task that doesn't return a value directly
+        
+    Side Effects:
+        - Creates a feedback record in the database
+        - Updates the user's message with the feedback_id
+        - Triggers mistake extraction for learning purposes
     """
     try:
         # Initialize services
@@ -513,106 +583,23 @@ async def process_speech_feedback(
     except Exception as e:
         logger.error(f"Error processing speech feedback in background: {str(e)}", exc_info=True)
 
-# async def process_text_feedback(
-#     message_content: str,
-#     user_id: str,
-#     conversation_id: str,
-#     user_message_id: str
-# ):
-#     """
-#     Process text feedback in the background.
-    
-#     This function analyzes text messages for language feedback similar to how
-#     audio messages are processed. It generates grammar and vocabulary feedback
-#     and extracts mistakes for future learning opportunities.
-    
-#     Args:
-#         message_content: The content of the user's message
-#         user_id: User's ID
-#         conversation_id: ID of the conversation
-#         user_message_id: ID of the user's message to attach feedback to
-#     """
-#     try:
-#         # Initialize services
-#         from app.utils.feedback_service import FeedbackService
-#         from app.utils.event_handler import event_handler
-#         from app.models.results.feedback_result import FeedbackResult
-        
-#         feedback_service = FeedbackService()
-        
-#         # Fetch conversation context
-#         context = {}
-#         conversation = db.conversations.find_one({"_id": ObjectId(conversation_id)})
-#         if conversation:
-#             # Fetch messages to build context
-#             messages = list(db.messages.find({"conversation_id": ObjectId(conversation_id)})
-#                           .sort("timestamp", 1)
-#                           .limit(10))
-            
-#             # Format previous exchanges
-#             previous_exchanges = []
-#             for msg in messages:
-#                 sender = "User" if msg.get("sender") == "user" else "AI"
-#                 previous_exchanges.append(f"{sender}: {msg.get('content', '')}")
-            
-#             context = {
-#                 "user_role": conversation.get("user_role", "Student"),
-#                 "ai_role": conversation.get("ai_role", "Teacher"),
-#                 "situation": conversation.get("situation", "General conversation"),
-#                 "previous_exchanges": "\n".join(previous_exchanges)
-#             }
-        
-#         # Generate feedback
-#         try:
-#             feedback_result = feedback_service.generate_dual_feedback(message_content, context)
-#         except Exception as e:
-#             logger.error(f"Error generating text feedback: {str(e)}", exc_info=True)
-#             # Create a fallback feedback result
-#             feedback_result = FeedbackResult(
-#                 user_feedback="Unable to generate detailed feedback at this time.",
-#                 detailed_feedback={
-#                     "grammar_issues": [],
-#                     "vocabulary_issues": [],
-#                     "positives": ["Your response was recorded."],
-#                     "fluency": ["Keep practicing to improve your English skills."]
-#                 }
-#             )
-        
-#         # Store feedback
-#         feedback_id = feedback_service.store_feedback(
-#             user_id, 
-#             feedback_result, 
-#             conversation_id,
-#             transcription=message_content  # Use message content as transcription for text messages
-#         )
-        
-#         # Link feedback to message
-#         if feedback_id:
-#             db.messages.update_one(
-#                 {"_id": ObjectId(user_message_id)},
-#                 {"$set": {"feedback_id": feedback_id}}
-#             )
-            
-#             # Trigger background task for mistake extraction
-#             event_handler.on_new_feedback(
-#                 feedback_id,
-#                 user_id,
-#                 message_content
-#             )
-            
-#     except Exception as e:
-#         logger.error(f"Error processing text feedback in background: {str(e)}", exc_info=True)
-
 async def save_audio_file(file: UploadFile, user_id: str) -> str:
     """
     Save an uploaded audio file to the server.
     
     Args:
-        file: The audio file to save
-        user_id: ID of the user
+        file (UploadFile): The audio file to save
+            FastAPI UploadFile object containing the audio data
+        user_id (str): ID of the user
+            Used to create user-specific directories for organization
         
     Returns:
-        Path to the saved file
+        str: Path to the saved file on disk
+            Absolute file path that can be used to access the file later
+    
+    Side Effects:
+        - Creates a user directory if it doesn't exist
+        - Writes the audio file to disk with a timestamped filename
     """
     # Create user directory if it doesn't exist
     user_dir = UPLOAD_DIR / str(user_id)
@@ -638,6 +625,30 @@ async def debug_feedback_structure(
     """
     Debug endpoint to examine the structure of a feedback document.
     This is a temporary endpoint for debugging purposes.
+    
+    Args:
+        feedback_id (str): ID of the feedback document to examine
+            Path parameter identifying which feedback document to retrieve
+        current_user (dict): The authenticated user's information
+            Fields:
+            - _id: User's ObjectId
+            - email: User's email
+            - role: User's role
+    
+    Returns:
+        dict: Information about the feedback document structure
+            Fields:
+            - document_type: Python type of the feedback document
+            - has_keys: List of keys present in the document
+            - id_type: Type of the document's _id field
+            - user_feedback_type: Type of the user_feedback field if present
+            - detailed_feedback_type: Type of the detailed_feedback field if present
+            - detailed_feedback_keys: Keys within the detailed_feedback object
+            - raw_feedback: The complete feedback document
+            
+            Or in case of error:
+            - error: Error message
+            - traceback: Error traceback information
     """
     try:
         feedback = db.feedback.find_one({"_id": ObjectId(feedback_id)})

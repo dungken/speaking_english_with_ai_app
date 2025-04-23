@@ -11,50 +11,25 @@ services:
       - ./:/app
       - ./logs:/app/logs
     environment:
-      - MONGODB_URL=mongodb://admin:password@mongodb:27017/speak_ai_db?authSource=admin
-      - DATABASE_NAME=speak_ai_db
+      # Update this with your externally hosted MongoDB connection string
+      - MONGODB_URL=${MONGODB_URL}
+      - DATABASE_NAME=${DATABASE_NAME:-speak_ai_db}
       - JWT_SECRET_KEY=${JWT_SECRET_KEY:-mysecretkey}
       - JWT_ALGORITHM=HS256
       - JWT_ACCESS_TOKEN_EXPIRE_MINUTES=60
       - GEMINI_API_KEY=${GEMINI_API_KEY}
       - AZURE_SPEECH_KEY=${AZURE_SPEECH_KEY}
-      - AZURE_SPEECH_REGION=${AZURE_SPEECH_REGION:-eastus}
+      - AZURE_SPEECH_REGION=${AZURE_SPEECH_REGION:-eastasia}
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/"]
       interval: 30s
       timeout: 10s
       retries: 3
-    depends_on:
-      - mongodb
     networks:
       - backend_network
     command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
-
-  mongodb:
-    image: mongo:6.0
-    container_name: speak_ai_mongodb
-    restart: unless-stopped
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongodb_data:/data/db
-      - ./mongo-init:/docker-entrypoint-initdb.d
-    environment:
-      - MONGO_INITDB_ROOT_USERNAME=${MONGO_ROOT_USERNAME:-admin}
-      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_ROOT_PASSWORD:-password}
-    healthcheck:
-      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    networks:
-      - backend_network
 
 networks:
   backend_network:
     name: speak_ai_backend_network
     driver: bridge
-
-volumes:
-  mongodb_data:
-    name: speak_ai_mongodb_data

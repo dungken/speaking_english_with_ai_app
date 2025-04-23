@@ -1,0 +1,20 @@
+Fetching feedback for message_id: 68070eca141c036cfb108857
+Message found: 68070eca141c036cfb108857, checking for feedback_id
+Found feedback_id: 68070ecf141c036cfb108859, retrieving feedback document
+Feedback document structure: dict, keys: ['_id', 'target_id', 'target_type', 'user_feedback', 'detailed_feedback', 'user_id', 'transcription', 'timestamp']
+Processing feedback document with keys: ['_id', 'target_id', 'target_type', 'user_feedback', 'detailed_feedback', 'user_id', 'transcription', 'timestamp']
+Detailed feedback type: dict
+Successfully processed feedback document
+Fetching feedback for message_id: 68070eca141c036cfb108857
+Message found: 68070eca141c036cfb108857, checking for feedback_id
+Found feedback_id: 68070ecf141c036cfb108859, retrieving feedback document
+Feedback document structure: dict, keys: ['_id', 'target_id', 'target_type', 'user_feedback', 'detailed_feedback', 'user_id', 'transcription', 'timestamp']
+Processing feedback document with keys: ['_id', 'target_id', 'target_type', 'user_feedback', 'detailed_feedback', 'user_id', 'transcription', 'timestamp']
+Successfully processed feedback document
+Fetching feedback for message_id: 68070eca141c036cfb108857
+Message found: 68070eca141c036cfb108857, checking for feedback_id
+Found feedback_id: 68070ecf141c036cfb108859, retrieving feedback document
+Feedback document structure: dict, keys: ['_id', 'target_id', 'target_type', 'user_feedback', 'detailed_feedback', 'user_id', 'transcription', 'timestamp']
+Processing feedback document with keys: ['_id', 'target_id', 'target_type', 'user_feedback', 'detailed_feedback', 'user_id', 'transcription', 'timestamp']
+Detailed feedback type: dict
+Successfully processed feedback document
