@@ -32,12 +32,30 @@ class UserModel {
 
   /// Create a UserModel from JSON
   factory UserModel.fromJson(Map<String, dynamic> json) {
+    print('Debug Parsing JSON: $json');
+
+    // Handle both direct and nested response
+    final user = json['user'] ?? json;
+
+    // Check if the JSON contains only authentication fields
+    if (json.containsKey('access_token') && json.containsKey('token_type')) {
+      return UserModel(
+        id: '', // No ID in authentication response
+        name: '', // No name in authentication response
+        email: '', // No email in authentication response
+        profileImageUrl: null, // No profile image in authentication response
+        token: json['access_token']?.toString() ?? '',
+      );
+    }
+
+    // Safely extract values with proper null handling
     return UserModel(
-      id: json['id'] as String,
-      name: json['name'] as String,
-      email: json['email'] as String,
-      profileImageUrl: json['profileImageUrl'] as String?,
-      token: json['token'] as String,
+      id: (user['_id'] ?? user['id'])?.toString() ?? '',
+      name: user['name']?.toString() ?? '',
+      email: user['email']?.toString() ?? '',
+      profileImageUrl: user['avatar_url']?.toString(),
+      token:
+          json['access_token']?.toString() ?? user['token']?.toString() ?? '',
     );
   }
 

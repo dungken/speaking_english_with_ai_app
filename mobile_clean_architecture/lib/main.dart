@@ -16,11 +16,13 @@ import 'package:get_it/get_it.dart'; // For dependency injection (like a central
 import 'package:hive_flutter/hive_flutter.dart'; // For local database storage (like a filing cabinet)
 import 'package:provider/provider.dart'; // For simpler state management (like a messenger)
 import 'package:shared_preferences/shared_preferences.dart'; // For saving simple app settings (like a notepad)
+import 'package:flutter/foundation.dart' show kIsWeb; // Import kIsWeb for platform detection
 
 // These are imports from our own app code
 import 'core/routes/app_router.dart'; // Controls navigation between screens
 import 'core/theme/app_theme.dart'; // Defines how our app looks (colors, styles)
 import 'core/theme/theme_provider.dart'; // Manages theme changes (light/dark mode)
+import 'core/utils/platform_checker.dart'; // Added platform detection utilities
 import 'features/authentication/data/models/user_model.dart'; // Structure for user data
 import 'features/authentication/di/auth_module.dart'; // Sets up authentication features
 import 'features/conversations/di/conversation_module.dart'; // Sets up conversation features
@@ -53,12 +55,10 @@ void main() async {
 
 /// Initialize core dependencies - sets up the basic services our app needs
 Future<void> initDependencies() async {
-  // Set up Hive database for storing data locally on the device
-  // Like preparing a filing cabinet to store information
+  // Initialize Hive with proper platform detection
   await Hive.initFlutter();
 
   // Tell Hive how to store User objects
-  // Like creating a special folder in our filing cabinet just for user profiles
   if (!Hive.isAdapterRegistered(0)) {
     Hive.registerAdapter(UserAdapter());
   }
@@ -67,21 +67,29 @@ Future<void> initDependencies() async {
   final box = await Hive.openBox<UserModel>('auth_box');
 
   // Register the box with GetIt so any part of the app can access it
-  // Like putting a label on the drawer so everyone knows where user files are kept
   GetIt.instance.registerLazySingleton<Box<UserModel>>(() => box);
 
   // Set up SharedPreferences for storing simple app settings
-  // Like having a notepad to write down basic preferences
   final prefs = await SharedPreferences.getInstance();
 
   // Register SharedPreferences with GetIt for app-wide access
-  // Like putting the notepad where everyone can find it
   GetIt.instance.registerLazySingleton<SharedPreferences>(() => prefs);
 
   // Create a ThemeProvider that will manage app appearance settings
-  // Like hiring a decorator who decides if the house uses bright or dim lighting
   GetIt.instance
       .registerLazySingleton<ThemeProvider>(() => ThemeProvider(prefs));
+      
+  // Print platform info for debugging
+  if (kIsWeb) {
+    print('Application running on Web platform');
+    // Add any web-specific initialization here
+  } else if (PlatformChecker.isMobile) {
+    print('Application running on Mobile platform');
+    // Add any mobile-specific initialization here
+  } else if (PlatformChecker.isDesktop) {
+    print('Application running on Desktop platform');
+    // Add any desktop-specific initialization here
+  }
 }
 
 /// Root widget of the application - this is the main structure of our app

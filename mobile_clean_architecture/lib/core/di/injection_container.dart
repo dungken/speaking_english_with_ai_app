@@ -3,35 +3,26 @@ import 'package:http/http.dart' as http;
 import 'package:internet_connection_checker/internet_connection_checker.dart';
 import 'package:hive/hive.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../features/authentication/data/models/user_model.dart';
+import '../../features/authentication/di/auth_module.dart';
 import '../../features/authentication/data/datasources/auth_local_datasource.dart';
 import '../../features/authentication/data/datasources/auth_remote_datasource.dart';
 import '../../features/authentication/data/repositories/auth_repository_impl.dart';
 import '../../features/authentication/domain/repositories/auth_repository.dart';
-import '../../features/authentication/domain/usecases/get_current_user_usecase.dart';
-import '../../features/authentication/domain/usecases/register_usecase.dart';
-import '../../features/authentication/domain/usecases/sign_in_usecase.dart';
-import '../../features/authentication/domain/usecases/sign_out_usecase.dart';
 import '../../features/authentication/presentation/bloc/auth_bloc.dart';
 import '../network/network_info.dart';
 
-/// Service locator instance
+/// Global ServiceLocator instance
 final sl = GetIt.instance;
 
-/// Initialize dependency injection
+/// Initialize dependencies
 Future<void> init() async {
-  //! Features - Authentication
+  // Features - Authentication
   // Bloc
   sl.registerFactory(
-    () => AuthBloc(),
+    () => AuthBloc(authRepository: sl()),
   );
-
-  // Use cases
-  sl.registerLazySingleton(() => SignInUseCase(sl()));
-  sl.registerLazySingleton(() => RegisterUseCase(sl()));
-  sl.registerLazySingleton(() => SignOutUseCase(sl()));
-  sl.registerLazySingleton(() => GetCurrentUserUseCase(sl()));
 
   // Repository
   sl.registerLazySingleton<AuthRepository>(
@@ -51,17 +42,27 @@ Future<void> init() async {
     () => AuthLocalDataSourceImpl(box: sl()),
   );
 
-  //! Core
+  // Core
   sl.registerLazySingleton<NetworkInfo>(
     () => NetworkInfoImpl(sl()),
   );
 
-  //! External
+  // External
   // Initialize Hive
   await Hive.initFlutter();
-  final box = await Hive.openBox('auth_box');
-  sl.registerLazySingleton(() => box);
+  Hive.registerAdapter(UserAdapter());
+  final box = await Hive.openBox<UserModel>('user_box');
+  sl.registerLazySingleton<Box<UserModel>>(() => box);
 
   sl.registerLazySingleton(() => http.Client());
   sl.registerLazySingleton(() => InternetConnectionChecker());
+
+  // Hive box for local storage
+  // This should be initialized after Hive.init() is called
+  sl.registerLazySingletonAsync<Box>(() async {
+    return await Hive.openBox('auth_box');
+  });
+
+  // Wait for async dependencies to initialize
+  await sl.allReady();
 }

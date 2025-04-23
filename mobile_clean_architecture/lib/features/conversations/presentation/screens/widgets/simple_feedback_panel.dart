@@ -3,15 +3,16 @@ import 'package:flutter/material.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/text_styles.dart';
 
-/// A panel that displays feedback on the user's speech
+/// A simple panel that displays text feedback on the user's speech
 ///
-/// This can be displayed as an overlay or as part of the main layout
-class FeedbackPanel extends StatelessWidget {
+/// This shows only the main feedback text without detailed categories.
+/// It can be displayed as an overlay or as part of the main layout.
+class SimpleFeedbackPanel extends StatelessWidget {
   final String feedback;
   final VoidCallback onClose;
   final bool isOverlay;
 
-  const FeedbackPanel({
+  const SimpleFeedbackPanel({
     Key? key,
     required this.feedback,
     required this.onClose,
@@ -84,13 +85,13 @@ class FeedbackPanel extends StatelessWidget {
                   const SizedBox(height: 16),
                   _buildTipCard(
                     context,
-                    'Remember to apply this feedback in your next response to improve your speaking skills!',
+                    'Apply this feedback in your next response to improve your speaking skills!',
                   ),
                 ],
               ),
             ),
           ),
-          // Actions
+          // Action buttons
           Padding(
             padding: const EdgeInsets.all(16),
             child: Row(

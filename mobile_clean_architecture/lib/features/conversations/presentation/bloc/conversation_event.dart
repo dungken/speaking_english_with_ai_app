@@ -25,48 +25,44 @@ class CreateConversationEvent extends ConversationEvent {
   List<Object?> get props => [userRole, aiRole, situation];
 }
 
-/// Event to load an existing conversation by ID
-class LoadConversationEvent extends ConversationEvent {
+/// Event to get user conversations
+class GetUserConversationsEvent extends ConversationEvent {
+  final int page;
+  final int limit;
+
+  const GetUserConversationsEvent({
+    this.page = 1,
+    this.limit = 10,
+  });
+
+  @override
+  List<Object?> get props => [page, limit];
+}
+
+/// Event to send a speech message in the conversation
+class SendSpeechMessageEvent extends ConversationEvent {
   final String conversationId;
+  final String audioId;
 
-  const LoadConversationEvent({
+  const SendSpeechMessageEvent({
     required this.conversationId,
+    required this.audioId,
   });
 
   @override
-  List<Object?> get props => [conversationId];
+  List<Object?> get props => [conversationId, audioId];
 }
 
-/// Event to send a user message in the conversation
-class SendUserMessageEvent extends ConversationEvent {
-  final String content;
-  final String? audioPath;
-  final String? transcription;
-
-  const SendUserMessageEvent({
-    required this.content,
-    this.audioPath,
-    this.transcription,
-  });
-
-  @override
-  List<Object?> get props => [content, audioPath, transcription];
-}
-
-/// Event to request feedback on a user message
-class RequestFeedbackEvent extends ConversationEvent {
+/// Event to get feedback for a message
+class GetMessageFeedbackEvent extends ConversationEvent {
   final String messageId;
-  final String audioPath;
-  final String transcription;
 
-  const RequestFeedbackEvent({
+  const GetMessageFeedbackEvent({
     required this.messageId,
-    required this.audioPath,
-    required this.transcription,
   });
 
   @override
-  List<Object?> get props => [messageId, audioPath, transcription];
+  List<Object?> get props => [messageId];
 }
 
 /// Event to close the active feedback panel
@@ -81,11 +77,12 @@ class StartRecordingEvent extends ConversationEvent {}
 /// Event to stop recording audio
 class StopRecordingEvent extends ConversationEvent {
   final String filePath;
-  final String transcription;
+  // Adding transcription parameter to match with adapter
+  final String? transcription;
 
   const StopRecordingEvent({
     required this.filePath,
-    required this.transcription,
+    this.transcription,
   });
 
   @override
@@ -94,3 +91,53 @@ class StopRecordingEvent extends ConversationEvent {
 
 /// Event to cancel recording audio
 class CancelRecordingEvent extends ConversationEvent {}
+
+/// Event to load a specific conversation
+class LoadConversationEvent extends ConversationEvent {
+  final String conversationId;
+
+  const LoadConversationEvent({
+    required this.conversationId,
+  });
+
+  @override
+  List<Object?> get props => [conversationId];
+}
+
+/// Event to upload audio file and get transcription
+class UploadAudioEvent extends ConversationEvent {
+  final String filePath;
+
+  const UploadAudioEvent({
+    required this.filePath,
+  });
+
+  @override
+  List<Object?> get props => [filePath];
+}
+
+/// Event to handle successful audio upload
+class AudioUploadedEvent extends ConversationEvent {
+  final String audioId;
+  final String transcription;
+
+  const AudioUploadedEvent({
+    required this.audioId,
+    required this.transcription,
+  });
+
+  @override
+  List<Object?> get props => [audioId, transcription];
+}
+
+/// Event to edit transcription before sending
+class EditTranscriptionEvent extends ConversationEvent {
+  final String transcription;
+
+  const EditTranscriptionEvent({
+    required this.transcription,
+  });
+
+  @override
+  List<Object?> get props => [transcription];
+}

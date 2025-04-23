@@ -9,7 +9,7 @@ import '../datasources/auth_local_datasource.dart';
 import '../datasources/auth_remote_datasource.dart';
 import '../models/user_model.dart';
 
-/// Implementation of AuthRepository using remote and local data sources
+/// Implementation of the [AuthRepository] interface
 class AuthRepositoryImpl implements AuthRepository {
   final AuthRemoteDataSource remoteDataSource;
   final AuthLocalDataSource localDataSource;
@@ -32,12 +32,14 @@ class AuthRepositoryImpl implements AuthRepository {
         await localDataSource.cacheUser(userModel);
         return Right(userModel.toEntity());
       } on ServerException catch (e) {
-        return Left(ServerFailure(e.message));
+        return Left(ServerFailure(message: e.message));
+      } on NetworkException catch (e) {
+        return Left(NetworkFailure(message: e.message));
       } catch (e) {
-        return Left(ServerFailure(e.toString()));
+        return Left(ServerFailure(message: e.toString()));
       }
     } else {
-      return Left(NetworkFailure('No internet connection.'));
+      return const Left(NetworkFailure(message: 'No internet connection'));
     }
   }
 
@@ -49,20 +51,19 @@ class AuthRepositoryImpl implements AuthRepository {
   }) async {
     if (await networkInfo.isConnected) {
       try {
-        final userModel = await remoteDataSource.register(
-          name,
-          email,
-          password,
-        );
+        final userModel =
+            await remoteDataSource.register(name, email, password);
         await localDataSource.cacheUser(userModel);
         return Right(userModel.toEntity());
       } on ServerException catch (e) {
-        return Left(ServerFailure(e.message));
+        return Left(ServerFailure(message: e.message));
+      } on NetworkException catch (e) {
+        return Left(NetworkFailure(message: e.message));
       } catch (e) {
-        return Left(ServerFailure(e.toString()));
+        return Left(ServerFailure(message: e.toString()));
       }
     } else {
-      return Left(NetworkFailure('No internet connection.'));
+      return const Left(NetworkFailure(message: 'No internet connection'));
     }
   }
 
@@ -72,9 +73,9 @@ class AuthRepositoryImpl implements AuthRepository {
       await localDataSource.clearUser();
       return const Right(true);
     } on CacheException catch (e) {
-      return Left(CacheFailure(e.message));
+      return Left(CacheFailure(message: e.message));
     } catch (e) {
-      return Left(CacheFailure(e.toString()));
+      return Left(CacheFailure(message: e.toString()));
     }
   }
 
@@ -84,9 +85,9 @@ class AuthRepositoryImpl implements AuthRepository {
       final userModel = await localDataSource.getLastUser();
       return Right(userModel.toEntity());
     } on CacheException catch (e) {
-      return Left(CacheFailure(e.message));
+      return Left(CacheFailure(message: e.message));
     } catch (e) {
-      return Left(CacheFailure(e.toString()));
+      return Left(CacheFailure(message: e.toString()));
     }
   }
 

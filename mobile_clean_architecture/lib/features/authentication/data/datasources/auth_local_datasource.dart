@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'package:hive/hive.dart';
 
 import '../../../../core/error/exceptions.dart';
@@ -21,7 +20,7 @@ abstract class AuthLocalDataSource {
 
 /// Implementation of authentication local data source using Hive
 class AuthLocalDataSourceImpl implements AuthLocalDataSource {
-  final Box box;
+  final Box<UserModel> box;
 
   static const String userKey = 'CACHED_USER';
 
@@ -30,7 +29,7 @@ class AuthLocalDataSourceImpl implements AuthLocalDataSource {
   @override
   Future<void> cacheUser(UserModel user) async {
     try {
-      await box.put(userKey, jsonEncode(user.toJson()));
+      await box.put(userKey, user);
     } catch (e) {
       throw CacheException(message: 'Failed to cache user: ${e.toString()}');
     }
@@ -39,9 +38,9 @@ class AuthLocalDataSourceImpl implements AuthLocalDataSource {
   @override
   Future<UserModel> getLastUser() async {
     try {
-      final jsonString = box.get(userKey);
-      if (jsonString != null) {
-        return UserModel.fromJson(jsonDecode(jsonString));
+      final user = box.get(userKey);
+      if (user != null) {
+        return user;
       } else {
         throw CacheException(message: 'No cached user found');
       }
@@ -66,8 +65,7 @@ class AuthLocalDataSourceImpl implements AuthLocalDataSource {
   @override
   Future<bool> hasUser() async {
     try {
-      final jsonString = box.get(userKey);
-      return jsonString != null;
+      return box.containsKey(userKey);
     } catch (e) {
       return false;
     }

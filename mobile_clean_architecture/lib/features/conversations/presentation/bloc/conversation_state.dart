@@ -3,6 +3,7 @@ import 'package:equatable/equatable.dart';
 import '../../domain/entities/conversation.dart';
 import '../../domain/entities/feedback.dart';
 import '../../domain/entities/message.dart';
+import '../../domain/repositories/conversation_repository.dart';
 
 /// Recording state for the conversation
 enum RecordingState {
@@ -13,7 +14,10 @@ enum RecordingState {
   recording,
   
   /// Processing the recorded audio
-  processing
+  processing,
+  
+  /// Audio has been processed and transcription is ready
+  transcribed
 }
 
 /// Base class for all conversation states
@@ -31,13 +35,19 @@ class ConversationState extends Equatable {
   final RecordingState recordingState;
   
   /// Currently active feedback, if any
-  final FeedbackResult? activeFeedback;
+  final Feedback? activeFeedback;
   
   /// Path to the last recorded audio file
   final String? lastRecordingPath;
   
-  /// Transcription of the last recording
-  final String? lastTranscription;
+  /// Messages from the latest exchange
+  final ConversationMessages? lastMessages;
+  
+  /// Transcription from the latest audio recording
+  final String? transcription;
+  
+  /// Audio ID from the latest audio upload
+  final String? audioId;
 
   const ConversationState({
     this.conversation,
@@ -46,7 +56,9 @@ class ConversationState extends Equatable {
     this.recordingState = RecordingState.idle,
     this.activeFeedback,
     this.lastRecordingPath,
-    this.lastTranscription,
+    this.lastMessages,
+    this.transcription,
+    this.audioId,
   });
 
   @override
@@ -57,7 +69,9 @@ class ConversationState extends Equatable {
     recordingState, 
     activeFeedback,
     lastRecordingPath,
-    lastTranscription,
+    lastMessages,
+    transcription,
+    audioId,
   ];
 
   /// Creates a copy of this state with specified fields replaced
@@ -66,12 +80,17 @@ class ConversationState extends Equatable {
     bool? isLoading,
     String? errorMessage,
     RecordingState? recordingState,
-    FeedbackResult? activeFeedback,
+    Feedback? activeFeedback,
     String? lastRecordingPath,
-    String? lastTranscription,
+    ConversationMessages? lastMessages,
+    String? transcription,
+    String? audioId,
     bool clearError = false,
     bool clearActiveFeedback = false,
     bool clearLastRecording = false,
+    bool clearLastMessages = false,
+    bool clearTranscription = false,
+    bool clearAudioId = false,
   }) {
     return ConversationState(
       conversation: conversation ?? this.conversation,
@@ -80,7 +99,9 @@ class ConversationState extends Equatable {
       recordingState: recordingState ?? this.recordingState,
       activeFeedback: clearActiveFeedback ? null : (activeFeedback ?? this.activeFeedback),
       lastRecordingPath: clearLastRecording ? null : (lastRecordingPath ?? this.lastRecordingPath),
-      lastTranscription: clearLastRecording ? null : (lastTranscription ?? this.lastTranscription),
+      lastMessages: clearLastMessages ? null : (lastMessages ?? this.lastMessages),
+      transcription: clearTranscription ? null : (transcription ?? this.transcription),
+      audioId: clearAudioId ? null : (audioId ?? this.audioId),
     );
   }
 }
@@ -106,16 +127,60 @@ class ConversationActive extends ConversationState {
   const ConversationActive({
     required Conversation conversation,
     RecordingState recordingState = RecordingState.idle,
-    FeedbackResult? activeFeedback,
+    Feedback? activeFeedback,
     String? lastRecordingPath,
-    String? lastTranscription,
-    bool clearLastRecording = false,
+    ConversationMessages? lastMessages,
+    String? transcription,
+    String? audioId,
   }) : super(
     conversation: conversation,
     recordingState: recordingState,
     activeFeedback: activeFeedback,
-    lastRecordingPath: clearLastRecording ? null : lastRecordingPath,
-    lastTranscription: clearLastRecording ? null : lastTranscription,
+    lastRecordingPath: lastRecordingPath,
+    lastMessages: lastMessages,
+    transcription: transcription,
+    audioId: audioId,
+  );
+}
+
+/// State when audio has been recorded and uploaded
+class AudioUploaded extends ConversationState {
+  const AudioUploaded({
+    required Conversation conversation,
+    required String lastRecordingPath,
+    required String transcription,
+    required String audioId,
+  }) : super(
+    conversation: conversation,
+    recordingState: RecordingState.transcribed,
+    lastRecordingPath: lastRecordingPath,
+    transcription: transcription,
+    audioId: audioId,
+  );
+}
+
+/// State when audio is being uploaded and processed
+class AudioUploading extends ConversationState {
+  const AudioUploading({
+    required Conversation conversation,
+    required String lastRecordingPath,
+  }) : super(
+    conversation: conversation,
+    recordingState: RecordingState.processing,
+    lastRecordingPath: lastRecordingPath,
+    isLoading: true,
+  );
+}
+
+/// State when audio upload has failed
+class AudioUploadFailed extends ConversationState {
+  const AudioUploadFailed({
+    required Conversation conversation,
+    required String errorMessage,
+  }) : super(
+    conversation: conversation,
+    recordingState: RecordingState.idle,
+    errorMessage: errorMessage,
   );
 }
 
@@ -123,7 +188,7 @@ class ConversationActive extends ConversationState {
 class ConversationFeedbackVisible extends ConversationState {
   const ConversationFeedbackVisible({
     required Conversation conversation,
-    required FeedbackResult feedback,
+    required Feedback feedback,
   }) : super(
     conversation: conversation,
     activeFeedback: feedback,
@@ -135,4 +200,118 @@ class ConversationCompleted extends ConversationState {
   const ConversationCompleted({
     required Conversation conversation,
   }) : super(conversation: conversation);
+}
+
+/// State when conversations have been loaded
+class ConversationsLoaded extends ConversationState {
+  final List<Conversation> conversations;
+  final int totalPages;
+  final int currentPage;
+
+  const ConversationsLoaded({
+    required this.conversations,
+    required this.totalPages,
+    required this.currentPage,
+  }) : super();
+
+  @override
+  List<Object?> get props => [...super.props, conversations, totalPages, currentPage];
+}
+
+/// State when message is being sent
+class MessageSending extends ConversationState {
+  const MessageSending({
+    required Conversation conversation,
+    required String audioId,
+    required String transcription,
+  }) : super(
+    conversation: conversation,
+    audioId: audioId,
+    transcription: transcription,
+    isLoading: true,
+  );
+}
+
+/// State when messages have been sent successfully
+class MessagesSent extends ConversationState {
+  const MessagesSent({
+    required Conversation conversation,
+    required ConversationMessages messages,
+  }) : super(
+    conversation: conversation,
+    lastMessages: messages,
+    recordingState: RecordingState.idle,
+  );
+}
+
+/// State when feedback is loading from the API
+class FeedbackLoading extends ConversationState {
+  const FeedbackLoading({
+    required Conversation conversation,
+  }) : super(
+    conversation: conversation,
+    isLoading: true,
+  );
+}
+
+/// State when feedback is still being processed
+class FeedbackProcessing extends ConversationState {
+  final String processingMessage;
+
+  const FeedbackProcessing({
+    required Conversation conversation,
+    required this.processingMessage,
+  }) : super(
+    conversation: conversation,
+  );
+
+  @override
+  List<Object?> get props => [...super.props, processingMessage];
+}
+
+/// State when feedback has loaded successfully
+class FeedbackLoaded extends ConversationState {
+  const FeedbackLoaded({
+    required Conversation conversation,
+    required Feedback feedback,
+  }) : super(
+    conversation: conversation,
+    activeFeedback: feedback,
+  );
+}
+
+/// State when feedback has failed to load
+class FeedbackError extends ConversationState {
+  const FeedbackError({
+    required Conversation conversation,
+    required String errorMessage,
+  }) : super(
+    conversation: conversation,
+    errorMessage: errorMessage,
+  );
+}
+
+/// State when transcription has been edited
+class TranscriptionEdited extends ConversationState {
+  const TranscriptionEdited({
+    required Conversation conversation,
+    required String transcription,
+    required String audioId,
+    required String lastRecordingPath,
+  }) : super(
+    conversation: conversation,
+    transcription: transcription,
+    audioId: audioId,
+    lastRecordingPath: lastRecordingPath,
+    recordingState: RecordingState.transcribed,
+  );
+}
+
+/// State when an error occurs
+class ConversationError extends ConversationState {
+  const ConversationError({
+    required String message,
+  }) : super(
+    errorMessage: message,
+  );
 }

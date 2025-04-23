@@ -8,7 +8,7 @@ import '../../domain/entities/feedback.dart';
 import '../../domain/entities/message.dart';
 import '../../domain/repositories/conversation_repository.dart';
 import '../datasources/conversation_remote_datasource.dart';
-import '../models/conversation_model.dart';
+import '../models/message_model.dart';
 
 /// Implementation of [ConversationRepository]
 ///
@@ -30,45 +30,101 @@ class ConversationRepositoryImpl implements ConversationRepository {
   }) async {
     if (await networkInfo.isConnected) {
       try {
-        final conversation = await remoteDataSource.createConversation(
+        final result = await remoteDataSource.createConversation(
           userRole: userRole,
           aiRole: aiRole,
           situation: situation,
         );
-        return Right(conversation);
+        
+        // Extract conversation and initial message
+        final conversation = result['conversation'] as Conversation;
+        final initialMessage = result['initial_message'] as Message;
+        
+        // Add the initial message to the conversation
+        final updatedMessages = [initialMessage];
+        final updatedConversation = conversation.copyWith(
+          messages: updatedMessages,
+        );
+        
+        return Right(updatedConversation);
       } on ServerException catch (e) {
-        return Left(ServerFailure(e.message));
+        return Left(ServerFailure(message: e.message));
       }
     } else {
-      return Left(NetworkFailure('No internet connection. Please check your connection and try again.'));
+      return const Left(NetworkFailure(
+          message:
+              'No internet connection. Please check your connection and try again.'));
     }
   }
 
   @override
-  Future<Either<Failure, Conversation>> getConversation(String id) async {
+  Future<Either<Failure, List<Conversation>>> getUserConversations({
+    int page = 1,
+    int limit = 10,
+  }) async {
     if (await networkInfo.isConnected) {
       try {
-        final conversation = await remoteDataSource.getConversation(id);
-        return Right(conversation);
-      } on ServerException catch (e) {
-        return Left(ServerFailure(e.message));
-      }
-    } else {
-      return Left(NetworkFailure('No internet connection. Please check your connection and try again.'));
-    }
-  }
-
-  @override
-  Future<Either<Failure, List<Conversation>>> getUserConversations() async {
-    if (await networkInfo.isConnected) {
-      try {
-        final conversations = await remoteDataSource.getUserConversations();
+        final conversations = await remoteDataSource.getUserConversations(
+          page: page,
+          limit: limit,
+        );
         return Right(conversations);
       } on ServerException catch (e) {
-        return Left(ServerFailure(e.message));
+        return Left(ServerFailure(message: e.message));
       }
     } else {
-      return Left(NetworkFailure('No internet connection. Please check your connection and try again.'));
+      return const Left(NetworkFailure(
+          message:
+              'No internet connection. Please check your connection and try again.'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, ConversationMessages>> sendSpeechMessage({
+    required String conversationId,
+    required String audioId,
+  }) async {
+    if (await networkInfo.isConnected) {
+      try {
+        final result = await remoteDataSource.sendSpeechMessage(
+          conversationId: conversationId,
+          audioId: audioId,
+        );
+
+        final userMessage = result['user_message'] as Message;
+        final aiMessage = result['ai_message'] as Message;
+
+        return Right(
+          ConversationMessages(
+            userMessage: userMessage,
+            aiMessage: aiMessage,
+          ),
+        );
+      } on ServerException catch (e) {
+        return Left(ServerFailure(message: e.message));
+      }
+    } else {
+      return const Left(NetworkFailure(
+          message:
+              'No internet connection. Please check your connection and try again.'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, Feedback>> getMessageFeedback(String messageId) async {
+    if (await networkInfo.isConnected) {
+      try {
+        final feedback = await remoteDataSource.getMessageFeedback(messageId);
+        return Right(feedback);
+      } on FeedbackProcessingException catch (e) {
+        return Left(ProcessingFailure(message: e.message));
+      } on ServerException catch (e) {
+        return Left(ServerFailure(message: e.message));
+      }
+    } else {
+      return const Left(NetworkFailure(
+          message:
+              'No internet connection. Please check your connection and try again.'));
     }
   }
 
@@ -80,76 +136,28 @@ class ConversationRepositoryImpl implements ConversationRepository {
     String? audioPath,
     String? transcription,
   }) async {
-    if (await networkInfo.isConnected) {
-      try {
-        final updatedConversation = await remoteDataSource.addMessage(
-          conversationId: conversationId,
-          sender: sender,
-          content: content,
-          audioPath: audioPath,
-          transcription: transcription,
-        );
-        return Right(updatedConversation);
-      } on ServerException catch (e) {
-        return Left(ServerFailure(e.message));
-      }
-    } else {
-      return Left(NetworkFailure('No internet connection. Please check your connection and try again.'));
-    }
+    // Since we're using the sendSpeechMessage with audioId pattern,
+    // we don't implement this method directly anymore
+    return Left(
+      const ServerFailure(
+        message: 'This method is no longer in use. Use sendSpeechMessage instead.',
+      ),
+    );
   }
 
   @override
-  Future<Either<Failure, Message>> getAiResponse({
-    required Conversation conversation,
-  }) async {
+  Future<Either<Failure, Conversation>> getConversation(String id) async {
     if (await networkInfo.isConnected) {
       try {
-        // Convert to model if it's not already a ConversationModel
-        final ConversationModel model = conversation is ConversationModel
-            ? conversation
-            : ConversationModel(
-                id: conversation.id,
-                userRole: conversation.userRole,
-                aiRole: conversation.aiRole,
-                situation: conversation.situation,
-                messages: conversation.messages,
-                startedAt: conversation.startedAt,
-                endedAt: conversation.endedAt,
-              );
-        
-        final response = await remoteDataSource.getAiResponse(
-          conversation: model,
-        );
-        return Right(response);
+        final conversation = await remoteDataSource.getConversation(id);
+        return Right(conversation);
       } on ServerException catch (e) {
-        return Left(ServerFailure(e.message));
+        return Left(ServerFailure(message: e.message));
       }
     } else {
-      return Left(NetworkFailure('No internet connection. Please check your connection and try again.'));
-    }
-  }
-
-  @override
-  Future<Either<Failure, FeedbackResult>> generateFeedback({
-    required String conversationId,
-    required String messageId,
-    required String audioPath,
-    required String transcription,
-  }) async {
-    if (await networkInfo.isConnected) {
-      try {
-        final feedback = await remoteDataSource.generateFeedback(
-          conversationId: conversationId,
-          messageId: messageId,
-          audioPath: audioPath,
-          transcription: transcription,
-        );
-        return Right(feedback);
-      } on ServerException catch (e) {
-        return Left(ServerFailure(e.message));
-      }
-    } else {
-      return Left(NetworkFailure('No internet connection. Please check your connection and try again.'));
+      return const Left(NetworkFailure(
+          message:
+              'No internet connection. Please check your connection and try again.'));
     }
   }
 }

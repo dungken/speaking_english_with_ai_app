@@ -1,16 +1,42 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
-import 'login_page.dart';
+import '../bloc/auth_bloc.dart';
+import '../../domain/entities/user.dart';
 
 /// Home page for authenticated users
 class HomePage extends StatelessWidget {
-  final String name;
-  final String email;
-
-  const HomePage({super.key, required this.name, required this.email});
+  const HomePage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    return BlocListener<AuthBloc, AuthState>(
+      listener: (context, state) {
+        if (state is Unauthenticated) {
+          // Navigate to login when user logs out
+          context.go('/login');
+        }
+      },
+      child: BlocBuilder<AuthBloc, AuthState>(
+        builder: (context, state) {
+          if (state is Authenticated) {
+            final User user = state.user;
+            return _buildHomePage(context, user);
+          }
+
+          // Show loading spinner while authentication state is being determined
+          return const Scaffold(
+            body: Center(
+              child: CircularProgressIndicator(),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildHomePage(BuildContext context, User user) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Home'),
@@ -18,10 +44,10 @@ class HomePage extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () {
-              Navigator.of(context).pushReplacement(
-                MaterialPageRoute(builder: (context) => const LoginPage()),
-              );
+              // Dispatch sign out event to AuthBloc
+              context.read<AuthBloc>().add(SignOutEvent());
             },
+            tooltip: 'Log out',
           ),
         ],
       ),
@@ -41,9 +67,11 @@ class HomePage extends StatelessWidget {
             const SizedBox(height: 40),
             Column(
               children: [
-                Text('Name: $name', style: const TextStyle(fontSize: 16)),
+                Text('Name: ${user.name}',
+                    style: const TextStyle(fontSize: 16)),
                 const SizedBox(height: 8),
-                Text('Email: $email', style: const TextStyle(fontSize: 16)),
+                Text('Email: ${user.email}',
+                    style: const TextStyle(fontSize: 16)),
               ],
             ),
           ],

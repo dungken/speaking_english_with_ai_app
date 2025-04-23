@@ -5,9 +5,10 @@ import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/text_styles.dart';
 import '../../../domain/entities/message.dart';
 
-/// A bubble to display a message in a conversation
+/// Widget that displays a message bubble in the conversation
 ///
-/// Different styling for user and AI messages
+/// Shows different styling for user and AI messages,
+/// and provides a button to request feedback for user messages
 class MessageBubble extends StatelessWidget {
   final Message message;
   final VoidCallback? onFeedbackRequest;
@@ -21,89 +22,131 @@ class MessageBubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isUserMessage = message.sender == SenderType.user;
-    final timeFormat = DateFormat.jm();
-    final timeString = timeFormat.format(message.timestamp);
+    final hasAudio = message.audioPath != null && message.audioPath!.isNotEmpty;
 
-    return Align(
-      alignment: isUserMessage ? Alignment.centerRight : Alignment.centerLeft,
-      child: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxWidth: MediaQuery.of(context).size.width * 0.75,
-        ),
-        child: Card(
-          color: isUserMessage
-              ? AppColors.primary.withOpacity(0.8)
-              : AppColors.getSurfaceColor(false),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          elevation: 1,
-          margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-          child: Padding(
-            padding: const EdgeInsets.all(12),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Row(
+        mainAxisAlignment: isUserMessage ? MainAxisAlignment.end : MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (!isUserMessage) _buildAvatar(isUserMessage),
+          const SizedBox(width: 8),
+          Flexible(
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: isUserMessage ? CrossAxisAlignment.end : CrossAxisAlignment.start,
               children: [
-                Text(
-                  message.content,
-                  style: TextStyles.body(
-                    context,
-                    isDarkMode: isUserMessage,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      timeString,
-                      style: TextStyles.caption(
-                        context,
-                        isDarkMode: isUserMessage,
-                      ),
-                    ),
-                    if (isUserMessage && onFeedbackRequest != null) ...[
-                      const SizedBox(width: 8),
-                      InkWell(
-                        onTap: onFeedbackRequest,
-                        borderRadius: BorderRadius.circular(12),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppColors.primary.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.feedback_outlined,
-                                size: 14,
-                                color: AppColors.getTextColor(isUserMessage),
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                'Feedback',
-                                style: TextStyles.caption(
-                                  context,
-                                  isDarkMode: isUserMessage,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: isUserMessage
+                        ? AppColors.primary.withOpacity(0.9)
+                        : AppColors.getSurfaceColor(false),
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 2,
+                        offset: const Offset(0, 1),
                       ),
                     ],
-                  ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        message.content,
+                        style: TextStyles.body(
+                          context,
+                          color: isUserMessage ? Colors.white : null,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            _formatTime(message.timestamp),
+                            style: TextStyles.caption(
+                              context,
+                              color: isUserMessage
+                                  ? Colors.white.withOpacity(0.7)
+                                  : Colors.grey,
+                            ),
+                          ),
+                          if (isUserMessage && hasAudio && onFeedbackRequest != null) ...[
+                            const SizedBox(width: 8),
+                            InkWell(
+                              onTap: onFeedbackRequest,
+                              borderRadius: BorderRadius.circular(12),
+                              child: Padding(
+                                padding: const EdgeInsets.all(4.0),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.lightbulb_outline,
+                                      size: 14,
+                                      color: Colors.white.withOpacity(0.9),
+                                    ),
+                                    const SizedBox(width: 2),
+                                    Text(
+                                      'Feedback',
+                                      style: TextStyles.caption(
+                                        context,
+                                        color: Colors.white.withOpacity(0.9),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
+                if (message.feedbackId != null && !isUserMessage)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Text(
+                      'Feedback available',
+                      style: TextStyles.caption(
+                        context,
+                        color: AppColors.accent,
+                      ),
+                    ),
+                  ),
               ],
             ),
           ),
+          const SizedBox(width: 8),
+          if (isUserMessage) _buildAvatar(isUserMessage),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAvatar(bool isUser) {
+    return Container(
+      width: 32,
+      height: 32,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: isUser ? AppColors.primary : AppColors.accent,
+      ),
+      child: Center(
+        child: Icon(
+          isUser ? Icons.person : Icons.smart_toy,
+          color: Colors.white,
+          size: 16,
         ),
       ),
     );
+  }
+
+  String _formatTime(DateTime time) {
+    return DateFormat('h:mm a').format(time);
   }
 }

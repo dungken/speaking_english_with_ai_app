@@ -5,8 +5,8 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../authentication/presentation/bloc/auth_bloc.dart';
 import '../../domain/entities/home_type.dart';
 import '../bloc/user_bloc.dart';
 import '../widgets/home_card.dart';
@@ -77,88 +77,111 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  void _handleSignOut() {
+    // Dispatch sign out event to the AuthBloc
+    context.read<AuthBloc>().add(SignOutEvent());
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Speak AI'),
-        elevation: 0,
-        backgroundColor: Colors.transparent,
-        actions: [
-          IconButton(
-            padding: const EdgeInsets.only(right: 10),
-            onPressed: _toggleTheme,
-            icon: Icon(
-              _isDarkMode
-                  ? Icons.brightness_2_rounded // 🌙 Dark Mode Icon
-                  : Icons.brightness_5_rounded, // ☀️ Light Mode Icon
-              size: 26,
+    // Add an AuthBloc listener to handle navigation on sign out
+    return BlocListener<AuthBloc, AuthState>(
+      listener: (context, state) {
+        if (state is Unauthenticated) {
+          // Navigate to auth screen when user logs out
+          context.go('/auth');
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Speak AI'),
+          elevation: 0,
+          backgroundColor: Colors.transparent,
+          actions: [
+            IconButton(
+              padding: const EdgeInsets.only(right: 10),
+              onPressed: _toggleTheme,
+              icon: Icon(
+                _isDarkMode
+                    ? Icons.brightness_2_rounded // 🌙 Dark Mode Icon
+                    : Icons.brightness_5_rounded, // ☀️ Light Mode Icon
+                size: 26,
+              ),
+            ),
+            IconButton(
+              padding: const EdgeInsets.only(right: 10),
+              onPressed: _handleSignOut,
+              icon: const Icon(
+                Icons.logout,
+                size: 26,
+              ),
+              tooltip: 'Sign Out',
+            ),
+          ],
+        ),
+        body: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Theme.of(context).brightness == Brightness.dark
+                    ? Colors.blue.shade900.withOpacity(0.3)
+                    : Colors.blue.shade50,
+                Theme.of(context).brightness == Brightness.dark
+                    ? Colors.purple.shade900.withOpacity(0.3)
+                    : Colors.purple.shade50,
+              ],
             ),
           ),
-        ],
-      ),
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Theme.of(context).brightness == Brightness.dark
-                  ? Colors.blue.shade900.withOpacity(0.3)
-                  : Colors.blue.shade50,
-              Theme.of(context).brightness == Brightness.dark
-                  ? Colors.purple.shade900.withOpacity(0.3)
-                  : Colors.purple.shade50,
-            ],
-          ),
-        ),
-        child: BlocBuilder<HomeCubit, dynamic>(
-          builder: (context, state) {
-            // Simple approach without pattern matching
-            if (state.toString().contains('initial') ||
-                state.toString().contains('loading')) {
-              return const Center(child: CircularProgressIndicator());
-            } else if (state.toString().contains('loaded')) {
-              // Extract homeTypes from the state
-              final homeTypes = (state as dynamic).homeTypes as List<dynamic>;
+          child: BlocBuilder<HomeCubit, dynamic>(
+            builder: (context, state) {
+              // Simple approach without pattern matching
+              if (state.toString().contains('initial') ||
+                  state.toString().contains('loading')) {
+                return const Center(child: CircularProgressIndicator());
+              } else if (state.toString().contains('loaded')) {
+                // Extract homeTypes from the state
+                final homeTypes = (state as dynamic).homeTypes as List<dynamic>;
 
-              return ListView(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
-                ),
-                children: [
-                  const UserProfileCard()
-                      .animate()
-                      .fadeIn(duration: 600.ms)
-                      .slideY(begin: 0.2, end: 0),
-                  const SizedBox(height: 24),
-                  const Padding(
-                    padding: EdgeInsets.only(left: 4, bottom: 12),
-                    child: Text(
-                      'Learning Tools',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
+                return ListView(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  children: [
+                    const UserProfileCard()
+                        .animate()
+                        .fadeIn(duration: 600.ms)
+                        .slideY(begin: 0.2, end: 0),
+                    const SizedBox(height: 24),
+                    const Padding(
+                      padding: EdgeInsets.only(left: 4, bottom: 12),
+                      child: Text(
+                        'Learning Tools',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                    ),
-                  ).animate().fadeIn(duration: 600.ms, delay: 400.ms),
-                  ...homeTypes.map((type) => HomeCard(homeType: type)),
-                ],
-              );
-            } else if (state.toString().contains('error')) {
-              // Extract message from the state
-              final message = (state as dynamic).message as String;
+                    ).animate().fadeIn(duration: 600.ms, delay: 400.ms),
+                    ...homeTypes.map((type) => HomeCard(homeType: type)),
+                  ],
+                );
+              } else if (state.toString().contains('error')) {
+                // Extract message from the state
+                final message = (state as dynamic).message as String;
 
-              return Center(
-                child: Text(
-                  'Error: $message',
-                  style: const TextStyle(color: Colors.red),
-                ),
-              );
-            }
-            return const Center(child: CircularProgressIndicator());
-          },
+                return Center(
+                  child: Text(
+                    'Error: $message',
+                    style: const TextStyle(color: Colors.red),
+                  ),
+                );
+              }
+              return const Center(child: CircularProgressIndicator());
+            },
+          ),
         ),
       ),
     );

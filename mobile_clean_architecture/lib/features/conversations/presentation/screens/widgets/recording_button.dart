@@ -1,13 +1,15 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/text_styles.dart';
 
-/// A button for recording audio in conversations
+/// Widget that provides audio recording functionality with visual feedback
 ///
-/// Shows different states for idle, recording, and processing
-class RecordingButton extends StatelessWidget {
+/// Displays different states based on recording status and provides
+/// buttons for starting, stopping, and canceling recording
+class RecordingButton extends StatefulWidget {
   final bool isRecording;
   final bool isProcessing;
   final VoidCallback onRecordingStarted;
@@ -24,41 +26,111 @@ class RecordingButton extends StatelessWidget {
   }) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
-    if (isProcessing) {
-      return _buildProcessingState(context);
-    }
+  State<RecordingButton> createState() => _RecordingButtonState();
+}
 
-    if (isRecording) {
-      return _buildRecordingState(context);
-    }
+class _RecordingButtonState extends State<RecordingButton>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _animationController;
+  late Animation<double> _pulseAnimation;
+  int _recordingSeconds = 0;
+  Timer? _timer;
 
-    return _buildIdleState(context);
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1000),
+    );
+    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.2).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: Curves.easeInOut,
+      ),
+    );
+    _animationController.repeat(reverse: true);
   }
 
-  Widget _buildIdleState(BuildContext context) {
+  @override
+  void dispose() {
+    _animationController.dispose();
+    _stopTimer();
+    super.dispose();
+  }
+
+  @override
+  void didUpdateWidget(RecordingButton oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.isRecording && !oldWidget.isRecording) {
+      _startTimer();
+    } else if (!widget.isRecording && oldWidget.isRecording) {
+      _stopTimer();
+    }
+  }
+
+  void _startTimer() {
+    _recordingSeconds = 0;
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      setState(() {
+        _recordingSeconds++;
+      });
+    });
+  }
+
+  void _stopTimer() {
+    _timer?.cancel();
+    _timer = null;
+  }
+
+  String _formatDuration() {
+    final minutes = (_recordingSeconds ~/ 60).toString().padLeft(2, '0');
+    final seconds = (_recordingSeconds % 60).toString().padLeft(2, '0');
+    return '$minutes:$seconds';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.isProcessing) {
+      return _buildProcessingButton();
+    } else if (widget.isRecording) {
+      return _buildActiveRecordingButton();
+    } else {
+      return _buildIdleButton();
+    }
+  }
+
+  Widget _buildIdleButton() {
     return Column(
-      mainAxisSize: MainAxisSize.min,
       children: [
         Text(
-          'Tap the microphone to respond',
+          'Tap to speak',
           style: TextStyles.secondary(context),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 8),
         InkWell(
-          onTap: onRecordingStarted,
-          borderRadius: BorderRadius.circular(32),
+          onTap: widget.onRecordingStarted,
+          customBorder: const CircleBorder(),
           child: Container(
             width: 64,
             height: 64,
-            decoration: BoxDecoration(
-              color: AppColors.primary,
+            decoration: const BoxDecoration(
               shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              Icons.mic,
               color: Colors.white,
-              size: 28,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black12,
+                  blurRadius: 10,
+                  spreadRadius: 2,
+                )
+              ],
+            ),
+            child: Center(
+              child: Icon(
+                Icons.mic,
+                color: AppColors.primary,
+                size: 32,
+              ),
             ),
           ),
         ),
@@ -66,59 +138,71 @@ class RecordingButton extends StatelessWidget {
     );
   }
 
-  Widget _buildRecordingState(BuildContext context) {
+  Widget _buildActiveRecordingButton() {
     return Column(
-      mainAxisSize: MainAxisSize.min,
       children: [
         Text(
-          'Recording... Tap to stop',
+          _formatDuration(),
           style: TextStyles.secondary(context),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 8),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            // Cancel button
             InkWell(
-              onTap: onRecordingCancelled,
-              borderRadius: BorderRadius.circular(24),
+              onTap: widget.onRecordingCancelled,
+              customBorder: const CircleBorder(),
               child: Container(
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: AppColors.error.withOpacity(0.1),
                   shape: BoxShape.circle,
+                  color: Colors.grey.shade200,
                 ),
-                child: Icon(
-                  Icons.close,
-                  color: AppColors.error,
-                  size: 24,
+                child: const Center(
+                  child: Icon(
+                    Icons.close,
+                    color: Colors.grey,
+                    size: 24,
+                  ),
                 ),
               ),
             ),
-            const SizedBox(width: 24),
+            const SizedBox(width: 16),
+            // Recording button (pulsing)
             InkWell(
-              onTap: onRecordingStopped,
-              borderRadius: BorderRadius.circular(32),
-              child: Container(
-                width: 64,
-                height: 64,
-                decoration: BoxDecoration(
-                  color: AppColors.error,
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.stop,
-                  color: Colors.white,
-                  size: 28,
-                ),
-              ).animate(
-                onPlay: (controller) => controller.repeat(),
-              ).fadeOut(
-                duration: 1000.ms,
-                curve: Curves.easeInOut,
-              ).then().fadeIn(
-                duration: 1000.ms,
-                curve: Curves.easeInOut,
+              onTap: widget.onRecordingStopped,
+              customBorder: const CircleBorder(),
+              child: AnimatedBuilder(
+                animation: _pulseAnimation,
+                builder: (context, child) {
+                  return Transform.scale(
+                    scale: _pulseAnimation.value,
+                    child: Container(
+                      width: 64,
+                      height: 64,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.red.shade500,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.red.withOpacity(0.3),
+                            blurRadius: 10,
+                            spreadRadius: 2,
+                          )
+                        ],
+                      ),
+                      child: const Center(
+                        child: Icon(
+                          Icons.stop,
+                          color: Colors.white,
+                          size: 32,
+                        ),
+                      ),
+                    ),
+                  );
+                },
               ),
             ),
           ],
@@ -127,33 +211,20 @@ class RecordingButton extends StatelessWidget {
     );
   }
 
-  Widget _buildProcessingState(BuildContext context) {
+  Widget _buildProcessingButton() {
     return Column(
-      mainAxisSize: MainAxisSize.min,
       children: [
         Text(
-          'Processing your response...',
+          'Processing...',
           style: TextStyles.secondary(context),
         ),
-        const SizedBox(height: 12),
-        Container(
-          width: 64,
-          height: 64,
-          decoration: BoxDecoration(
-            color: AppColors.primary.withOpacity(0.2),
-            shape: BoxShape.circle,
-          ),
-          child: Center(
-            child: SizedBox(
-              width: 32,
-              height: 32,
-              child: CircularProgressIndicator(
-                strokeWidth: 3,
-                valueColor: AlwaysStoppedAnimation<Color>(
-                  AppColors.primary,
-                ),
-              ),
-            ),
+        const SizedBox(height: 16),
+        SizedBox(
+          width: 48,
+          height: 48,
+          child: CircularProgressIndicator(
+            strokeWidth: 3,
+            valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
           ),
         ),
       ],

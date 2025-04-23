@@ -14,7 +14,7 @@ class HomeCubit extends Cubit<HomeState> {
     try {
       final result = await getHomeTypes(const NoParams());
       result.fold(
-        (failure) => emit(HomeState.error(failure.message)),
+        (failure) => emit(HomeState.error(failure.message ?? 'Unknown error')),
         (homeTypes) => emit(HomeState.loaded(homeTypes)),
       );
     } catch (e) {

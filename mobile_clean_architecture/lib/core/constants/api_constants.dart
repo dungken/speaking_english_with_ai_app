@@ -1,20 +1,35 @@
 /// API constants used throughout the application
 class ApiConstants {
   /// Base URL for API requests
-  static const String baseUrl = 'http://127.0.0.1:8000/api';
+  // Local backend URL (commented out)
+  // static const String baseUrl = 'http://10.0.2.2:8000';
+
+  // Production URL - using the deployed API
+  static const String baseUrl =
+      'https://speak-ai-api-hkd7gwgwcxdqc2gy.eastus-01.azurewebsites.net';
 
   /// Authentication endpoints
-  static const String loginEndpoint = '/users/login';
-  static const String registerEndpoint = '/users/register';
+  static const String loginEndpoint = '/api/users/login';
+  static const String registerEndpoint = '/api/users/register';
+
+  /// Conversation endpoints
+  static const String conversationsEndpoint = '/api/conversations';
+  static const String messageEndpoint =
+      '/api/conversations/{conversation_id}/message';
+  static const String feedbackEndpoint = '/api/messages/{message_id}/feedback';
+
+  /// Audio processing endpoint
+  static const String audioToTextEndpoint = '/api/audio2text';
 
   /// Authentication token
   /// In a real app, this would be stored securely and retrieved dynamically
   static String token = '';
 
   /// Headers
-  static const Map<String, String> headers = {
-    'Content-Type': 'application/json',
-  };
+  static Map<String, String> get authHeaders => {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      };
 
   /// Default timeout duration in seconds
   static const int timeoutDuration = 30;

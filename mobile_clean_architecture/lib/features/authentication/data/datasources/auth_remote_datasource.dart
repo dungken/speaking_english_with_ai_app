@@ -23,13 +23,16 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   @override
   Future<UserModel> signIn(String email, String password) async {
     try {
-      final response = await client
-          .post(
-            Uri.parse('${ApiConstants.baseUrl}${ApiConstants.loginEndpoint}'),
-            headers: ApiConstants.headers,
-            body: jsonEncode({'email': email, 'password': password}),
-          )
-          .timeout(Duration(seconds: ApiConstants.timeoutDuration));
+      final response = await client.post(
+        Uri.parse('${ApiConstants.baseUrl}${ApiConstants.loginEndpoint}'),
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: {
+          'username': email, // OAuth2 expects 'username' instead of 'email'
+          'password': password,
+        },
+      ).timeout(Duration(seconds: ApiConstants.timeoutDuration));
 
       if (response.statusCode == 200) {
         return UserModel.fromJson(jsonDecode(response.body));
@@ -55,7 +58,9 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
             Uri.parse(
               '${ApiConstants.baseUrl}${ApiConstants.registerEndpoint}',
             ),
-            headers: ApiConstants.headers,
+            headers: {
+              'Content-Type': 'application/json',
+            },
             body: jsonEncode({
               'name': name,
               'email': email,

@@ -10,7 +10,7 @@ class HomeRepositoryImpl implements HomeRepository {
       // In a real app, this would come from an API or local storage
       return Right(HomeType.values.toList());
     } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      return Left(ServerFailure(message: e.toString()));
     }
   }
 
@@ -24,7 +24,7 @@ class HomeRepositoryImpl implements HomeRepository {
         'avatar': null,
       });
     } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      return Left(ServerFailure(message: e.toString()));
     }
   }
 
@@ -35,7 +35,7 @@ class HomeRepositoryImpl implements HomeRepository {
       // In a real app, this would update an API or local storage
       return const Right(null);
     } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      return Left(ServerFailure(message: e.toString()));
     }
   }
 }

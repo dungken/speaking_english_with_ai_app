@@ -1,14 +1,18 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 
+import '../../../../core/constants/api_constants.dart';
 import '../../domain/entities/user.dart';
+import '../../domain/repositories/auth_repository.dart';
 
 part 'auth_event.dart';
 part 'auth_state.dart';
 
 /// Authentication bloc that handles user authentication state
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
-  AuthBloc() : super(AuthInitial()) {
+  final AuthRepository authRepository;
+
+  AuthBloc({required this.authRepository}) : super(AuthInitial()) {
     on<SignInEvent>(_onSignInRequested);
     on<RegisterEvent>(_onRegisterRequested);
     on<SignOutEvent>(_onSignOutRequested);
@@ -21,18 +25,18 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     emit(AuthLoading());
     try {
-      // TODO: Implement actual sign in logic
-      await Future.delayed(const Duration(seconds: 1));
-      emit(
-        Authenticated(
-          const User(
-            id: '1',
-            name: 'Test User',
-            email: 'test@example.com',
-            profileImageUrl: null,
-            token: 'test_token',
-          ),
-        ),
+      final result = await authRepository.signIn(
+        email: event.email,
+        password: event.password,
+      );
+
+      result.fold(
+        (failure) => emit(AuthError(failure.message ?? 'Sign in failed')),
+        (user) {
+          // Set the API token for requests
+          ApiConstants.token = user.token;
+          emit(Authenticated(user));
+        },
       );
     } catch (e) {
       emit(AuthError(e.toString()));
@@ -45,18 +49,19 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     emit(AuthLoading());
     try {
-      // TODO: Implement actual registration logic
-      await Future.delayed(const Duration(seconds: 1));
-      emit(
-        Authenticated(
-          User(
-            id: '1',
-            name: event.name,
-            email: event.email,
-            profileImageUrl: null,
-            token: 'test_token',
-          ),
-        ),
+      final result = await authRepository.register(
+        name: event.name,
+        email: event.email,
+        password: event.password,
+      );
+
+      result.fold(
+        (failure) => emit(AuthError(failure.message ?? 'Registration failed')),
+        (user) {
+          // Set the API token for requests
+          ApiConstants.token = user.token;
+          emit(Authenticated(user));
+        },
       );
     } catch (e) {
       emit(AuthError(e.toString()));
@@ -69,9 +74,16 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     emit(AuthLoading());
     try {
-      // TODO: Implement actual sign out logic
-      await Future.delayed(const Duration(milliseconds: 500));
-      emit(Unauthenticated());
+      final result = await authRepository.signOut();
+
+      result.fold(
+        (failure) => emit(AuthError(failure.message ?? 'Sign out failed')),
+        (_) {
+          // Clear the API token
+          ApiConstants.token = '';
+          emit(Unauthenticated());
+        },
+      );
     } catch (e) {
       emit(AuthError(e.toString()));
     }
@@ -83,19 +95,24 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     emit(AuthLoading());
     try {
-      // TODO: Implement actual get current user logic
-      await Future.delayed(const Duration(milliseconds: 500));
-      emit(
-        Authenticated(
-          const User(
-            id: '1',
-            name: 'Test User',
-            email: 'test@example.com',
-            profileImageUrl: null,
-            token: 'test_token',
-          ),
-        ),
-      );
+      // Check if the user is authenticated
+      final isAuthenticated = await authRepository.isAuthenticated();
+
+      if (isAuthenticated) {
+        // Get the current user
+        final result = await authRepository.getCurrentUser();
+
+        result.fold(
+          (failure) => emit(Unauthenticated()),
+          (user) {
+            // Set the API token for requests
+            ApiConstants.token = user.token;
+            emit(Authenticated(user));
+          },
+        );
+      } else {
+        emit(Unauthenticated());
+      }
     } catch (e) {
       emit(Unauthenticated());
     }
