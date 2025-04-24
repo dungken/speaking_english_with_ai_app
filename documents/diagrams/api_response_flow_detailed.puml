@@ -1,0 +1,94 @@
+@startuml API Response Flow (Detailed)
+
+skinparam BoxPadding 10
+skinparam ParticipantPadding 30
+skinparam sequenceArrowThickness 2
+skinparam roundcorner 5
+skinparam MaxMessageSize 200
+skinparam sequenceGroupBorderThickness 2
+
+actor "User" as User
+
+box "Presentation Layer" #LightBlue
+participant "login_page.dart\n_LoginPageState._signIn()" as LoginPage
+participant "auth_bloc.dart\nAuthBloc._onSignInRequested()" as AuthBloc
+end box
+
+box "Domain Layer" #LightYellow
+participant "auth_repository.dart\nAuthRepository.signIn()" as AuthRepo
+end box
+
+box "Data Layer" #Pink
+participant "auth_repository_impl.dart\nAuthRepositoryImpl.signIn()" as RepoImpl
+participant "auth_remote_datasource.dart\nAuthRemoteDataSourceImpl.signIn()" as RemoteDS
+participant "auth_local_datasource.dart\nAuthLocalDataSourceImpl.cacheUser()" as LocalDS
+end box
+
+box "External" #Red 
+participant "HTTP Client\nclient.post()" as API
+database "Hive\nBox<UserModel>" as Hive
+end box
+
+== API Response Flow (Login Example) ==
+
+User -> LoginPage: Tap Login Button
+activate LoginPage
+
+LoginPage -> AuthBloc: add(SignInEvent())
+activate AuthBloc
+
+AuthBloc -> AuthRepo: signIn(email, password)
+activate AuthRepo
+
+AuthRepo -> RepoImpl: signIn(email, password)
+activate RepoImpl
+
+RepoImpl -> RemoteDS: signIn(email, password)
+activate RemoteDS
+
+RemoteDS -> API: post('/auth/login')
+activate API
+
+API --> RemoteDS: JSON Response
+deactivate API
+
+RemoteDS -> RemoteDS: UserModel.fromJson()
+note right: Parses JSON to UserModel\nin user_model.dart
+
+RemoteDS --> RepoImpl: return UserModel
+deactivate RemoteDS
+
+RepoImpl -> LocalDS: cacheUser(userModel)
+activate LocalDS
+
+LocalDS -> Hive: put('CACHED_USER', userModel)
+activate Hive
+Hive --> LocalDS: Storage confirmation
+deactivate Hive
+
+LocalDS --> RepoImpl: void
+deactivate LocalDS
+
+RepoImpl -> RepoImpl: userModel.toEntity()
+note right: Converts UserModel to User entity
+
+RepoImpl --> AuthRepo: Right(User)
+deactivate RepoImpl
+
+AuthRepo --> AuthBloc: Right(User)
+deactivate AuthRepo
+
+AuthBloc -> AuthBloc: emit(Authenticated(user))
+note right: Updates state with user data
+
+AuthBloc --> LoginPage: state changed to Authenticated
+deactivate AuthBloc
+
+LoginPage -> LoginPage: BlocListener.listener()
+LoginPage -> LoginPage: context.go('/home')
+note right: Navigates to home page
+
+LoginPage --> User: Display Home Screen
+deactivate LoginPage
+
+@enduml

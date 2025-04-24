@@ -12,6 +12,7 @@ import 'package:record/record.dart';
 import '../constants/api_constants.dart';
 import '../error/exceptions.dart';
 import '../utils/platform_checker.dart';
+import '../utils/rendering/surface_view_optimizer.dart';
 
 class AudioService {
   final _audioRecorder = AudioRecorder();
@@ -26,6 +27,11 @@ class AudioService {
     if (!await checkPermission()) {
       throw Exception('Microphone permission not granted');
     }
+
+    // Initialize SurfaceView optimizations on Android to prevent BLASTBufferQueue errors
+    if (PlatformChecker.isAndroid) {
+      await SurfaceViewOptimizer.initialize();
+    }
   }
 
   Future<void> startRecording() async {
@@ -36,22 +42,33 @@ class AudioService {
     }
 
     try {
+      // Prepare the renderer for intensive SurfaceView usage on Android
+      if (PlatformChecker.isAndroid) {
+        SurfaceViewOptimizer.prepareForSurfaceView();
+      }
+
       if (kIsWeb) {
         // For web platform, we don't specify a path
         throw Exception('Recording not supported on web platform');
       } else {
         // For mobile/desktop platforms
         final directory = await getTemporaryDirectory();
+        // Ensure we use .wav extension consistently
         final recordingPath =
-            '${directory.path}/audio_${DateTime.now().millisecondsSinceEpoch}.m4a';
+            '${directory.path}/audio_${DateTime.now().millisecondsSinceEpoch}.wav';
         _currentRecordingPath = recordingPath;
 
+        // Standardize recording configuration across platforms
+        // Using settings that are most compatible with speech recognition
+        const RecordConfig config = RecordConfig(
+          encoder: AudioEncoder.wav,
+          bitRate: 128000,
+          sampleRate: 16000, // 16kHz is standard for speech recognition
+          numChannels: 1, // Mono recording is better for speech
+        );
+
         await _audioRecorder.start(
-          const RecordConfig(
-            encoder: AudioEncoder.aacLc,
-            bitRate: 128000,
-            sampleRate: 44100,
-          ),
+          config,
           path: recordingPath,
         );
       }
@@ -69,6 +86,12 @@ class AudioService {
     try {
       await _audioRecorder.stop();
       _isRecording = false;
+
+      // Clean up SurfaceView optimizations on Android
+      if (PlatformChecker.isAndroid) {
+        SurfaceViewOptimizer.cleanupAfterSurfaceView();
+      }
+
       return _currentRecordingPath;
     } catch (e) {
       throw Exception('Failed to stop recording: $e');
@@ -175,11 +198,21 @@ class AudioService {
       }
 
       _currentRecordingPath = null;
+
+      // Clean up SurfaceView optimizations on Android
+      if (PlatformChecker.isAndroid) {
+        SurfaceViewOptimizer.cleanupAfterSurfaceView();
+      }
     }
   }
 
   void dispose() {
     cancelRecording();
     _audioRecorder.dispose();
+
+    // Make sure we clean up any surface view optimizations on dispose
+    if (PlatformChecker.isAndroid) {
+      SurfaceViewOptimizer.dispose();
+    }
   }
 }

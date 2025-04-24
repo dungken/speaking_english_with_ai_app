@@ -22,23 +22,20 @@ import 'widgets/simple_feedback_panel.dart';
 import 'widgets/message_bubble.dart';
 import 'widgets/simplified_recording_button.dart';
 
-/// Screen for active conversation
-///
-/// Displays the conversation between user and AI, allowing the user
-/// to record responses and view feedback
-class ConversationScreen extends StatefulWidget {
+/// Optimized conversation screen that prevents unnecessary rebuilds
+class ConversationScreenOptimized extends StatefulWidget {
   final Conversation conversation;
 
-  const ConversationScreen({
+  const ConversationScreenOptimized({
     Key? key,
     required this.conversation,
   }) : super(key: key);
 
   @override
-  State<ConversationScreen> createState() => _ConversationScreenState();
+  State<ConversationScreenOptimized> createState() => _ConversationScreenOptimizedState();
 }
 
-class _ConversationScreenState extends State<ConversationScreen> {
+class _ConversationScreenOptimizedState extends State<ConversationScreenOptimized> {
   final _scrollController = ScrollController();
   bool _showSituation = true;
   TextEditingController _transcriptionEditController = TextEditingController();
@@ -46,10 +43,9 @@ class _ConversationScreenState extends State<ConversationScreen> {
   @override
   void initState() {
     super.initState();
-    // Start buffer monitoring when the screen initializes
     BufferQueueManager.startMonitoring();
 
-    // Make sure we're working with the latest conversation state
+    // Initialize conversation if needed
     if (widget.conversation.id !=
         (context.read<ConversationBloc>().state.conversation?.id ?? '')) {
       context.read<ConversationBloc>().add(
@@ -60,7 +56,6 @@ class _ConversationScreenState extends State<ConversationScreen> {
 
   @override
   void dispose() {
-    // Stop buffer monitoring when the screen is disposed
     BufferQueueManager.stopMonitoring();
     _scrollController.dispose();
     _transcriptionEditController.dispose();
@@ -86,13 +81,8 @@ class _ConversationScreenState extends State<ConversationScreen> {
   }
 
   void _stopRecording() {
-    // This will be handled by the bloc, which will now:
-    // 1. Stop recording
-    // 2. Upload the audio to get transcription and audioId
-    // 3. Show the transcription to the user
     context.read<ConversationBloc>().add(StopRecordingEvent(
-          filePath:
-              'placeholder', // This will be replaced by the actual audio service
+          filePath: 'placeholder',
         ));
   }
 
@@ -139,8 +129,7 @@ class _ConversationScreenState extends State<ConversationScreen> {
     context.read<ConversationBloc>().add(CompleteConversationEvent());
   }
 
-  Widget _buildSituationHeader(
-      BuildContext context, Conversation conversation) {
+  Widget _buildSituationHeader(BuildContext context, Conversation conversation) {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
       height: _showSituation ? null : 60,
@@ -337,40 +326,44 @@ class _ConversationScreenState extends State<ConversationScreen> {
     );
   }
 
-  Widget _buildPortraitLayout(BuildContext context, ConversationState state) {
+  Widget _buildConversationContent(BuildContext context, ConversationState state) {
     final messages = ConversationStateAdapter.getMessagesFromState(state);
-    return Column(
-      children: [
-        _buildSituationHeader(context, state.conversation!),
-        _buildMessageList(context, messages),
-        _buildInputArea(context),
-      ],
-    );
-  }
-
-  Widget _buildLandscapeLayout(BuildContext context, ConversationState state) {
-    final messages = ConversationStateAdapter.getMessagesFromState(state);
-    return Row(
-      children: [
-        Expanded(
-          flex: 3,
-          child: Column(
+    
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (ResponsiveLayout.isLargeScreen(context)) {
+          return Row(
+            children: [
+              Expanded(
+                flex: 3,
+                child: Column(
+                  children: [
+                    _buildSituationHeader(context, state.conversation!),
+                    _buildMessageList(context, messages),
+                    _buildInputArea(context),
+                  ],
+                ),
+              ),
+              if (state.activeFeedback != null)
+                Expanded(
+                  flex: 2,
+                  child: SimpleFeedbackPanel(
+                    feedback: state.activeFeedback!.userFeedback,
+                    onClose: _closeFeedback,
+                  ),
+                ),
+            ],
+          );
+        } else {
+          return Column(
             children: [
               _buildSituationHeader(context, state.conversation!),
               _buildMessageList(context, messages),
               _buildInputArea(context),
             ],
-          ),
-        ),
-        if (state.activeFeedback != null)
-          Expanded(
-            flex: 2,
-            child: SimpleFeedbackPanel(
-              feedback: state.activeFeedback!.userFeedback,
-              onClose: _closeFeedback,
-            ),
-          ),
-      ],
+          );
+        }
+      },
     );
   }
 
@@ -399,7 +392,6 @@ class _ConversationScreenState extends State<ConversationScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Set up error boundary for BLASTBufferQueue errors
     return ErrorBoundary(
       onError: (error, stackTrace) {
         BufferQueueErrorHandler.handleBufferQueueError(
@@ -407,130 +399,112 @@ class _ConversationScreenState extends State<ConversationScreen> {
           error.toString(),
         );
       },
-      child: _buildScreen(context),
-    );
-  }
-
-  Widget _buildScreen(BuildContext context) {
-    return BlocBuilder<ConversationBloc, ConversationState>(
-      // Only rebuild when conversation is null/loaded or error occurs
-      buildWhen: (previous, current) {
-        return previous.conversation != current.conversation ||
-            previous.errorMessage != current.errorMessage ||
-            (previous.conversation == null && current.conversation != null);
-      },
-      builder: (context, state) {
-        if (state.conversation == null) {
-          if (state.isLoading) {
-            return const Scaffold(
-              body: Center(
-                child: CircularProgressIndicator(),
-              ),
-            );
+      child: BlocBuilder<ConversationBloc, ConversationState>(
+        // Only rebuild when conversation is null/loaded or error occurs
+        buildWhen: (previous, current) {
+          return previous.conversation != current.conversation ||
+              previous.errorMessage != current.errorMessage ||
+              (previous.conversation == null && current.conversation != null);
+        },
+        builder: (context, state) {
+          if (state.conversation == null) {
+            if (state.isLoading) {
+              return _buildLoadingScreen();
+            }
+            return _buildErrorScreen(
+                state.errorMessage ?? 'Conversation not found');
           }
-          return _buildErrorScreen(
-              state.errorMessage ?? 'Conversation not found');
-        }
 
-        final conversation = state.conversation!;
+          final conversation = state.conversation!;
 
-        return Scaffold(
-          appBar: AppBar(
-            title: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'Role Play',
-                  style: TextStyles.h3(context, isDarkMode: false),
-                ),
-                Text(
-                  '${conversation.userRole} & ${conversation.aiRole}',
-                  style: TextStyles.caption(context, isDarkMode: false),
+          return Scaffold(
+            appBar: AppBar(
+              title: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Role Play',
+                    style: TextStyles.h3(context, isDarkMode: false),
+                  ),
+                  Text(
+                    '${conversation.userRole} & ${conversation.aiRole}',
+                    style: TextStyles.caption(context, isDarkMode: false),
+                  ),
+                ],
+              ),
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.check_circle_outline),
+                  onPressed: _completeConversation,
+                  tooltip: 'Complete conversation',
                 ),
               ],
             ),
-            actions: [
-              IconButton(
-                icon: const Icon(Icons.check_circle_outline),
-                onPressed: _completeConversation,
-                tooltip: 'Complete conversation',
-              ),
-            ],
-          ),
-          body: SafeArea(
-            child: Stack(
-              children: [
-                // Main conversation content
-                BlocBuilder<ConversationBloc, ConversationState>(
-                  builder: (context, state) {
-                    return LayoutBuilder(
-                      builder: (context, constraints) {
-                        if (ResponsiveLayout.isLargeScreen(context)) {
-                          return _buildLandscapeLayout(context, state);
-                        } else {
-                          return _buildPortraitLayout(context, state);
-                        }
-                      },
-                    );
-                  },
-                ),
-                // Feedback overlay (only rebuilds when feedback changes)
-                BlocSelector<ConversationBloc, ConversationState, bool>(
-                  selector: (state) => state.activeFeedback != null && 
-                      !ResponsiveLayout.isLargeScreen(context),
-                  builder: (context, showFeedbackOverlay) {
-                    if (showFeedbackOverlay) {
-                      return BlocSelector<ConversationBloc, ConversationState, String?>(
-                        selector: (state) => state.activeFeedback?.userFeedback,
-                        builder: (context, feedbackText) {
-                          return Positioned.fill(
-                            child: SimpleFeedbackPanel(
-                              feedback: feedbackText ?? '',
-                              onClose: _closeFeedback,
-                              isOverlay: true,
-                            ),
-                          );
-                        },
-                      );
-                    }
-                    return const SizedBox.shrink();
-                  },
-                ),
-                // Error message (only rebuilds when error changes)
-                BlocSelector<ConversationBloc, ConversationState, String?>(
-                  selector: (state) => state.errorMessage,
-                  builder: (context, errorMessage) {
-                    if (errorMessage != null) {
-                      return Positioned(
-                        bottom: 80,
-                        left: 16,
-                        right: 16,
-                        child: Material(
-                          elevation: 4,
-                          borderRadius: BorderRadius.circular(8),
-                          color: Colors.red.shade700,
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 10,
-                            ),
-                            child: Text(
-                              errorMessage,
-                              style: TextStyles.body(context, color: Colors.white),
+            body: SafeArea(
+              child: Stack(
+                children: [
+                  // Main conversation content
+                  BlocBuilder<ConversationBloc, ConversationState>(
+                    builder: (context, state) => _buildConversationContent(context, state),
+                  ),
+                  // Feedback overlay (only rebuilds when feedback changes)
+                  BlocSelector<ConversationBloc, ConversationState, bool>(
+                    selector: (state) => state.activeFeedback != null && 
+                        !ResponsiveLayout.isLargeScreen(context),
+                    builder: (context, showFeedbackOverlay) {
+                      if (showFeedbackOverlay) {
+                        return BlocSelector<ConversationBloc, ConversationState, String?>(
+                          selector: (state) => state.activeFeedback?.userFeedback,
+                          builder: (context, feedbackText) {
+                            return Positioned.fill(
+                              child: SimpleFeedbackPanel(
+                                feedback: feedbackText ?? '',
+                                onClose: _closeFeedback,
+                                isOverlay: true,
+                              ),
+                            );
+                          },
+                        );
+                      }
+                      return const SizedBox.shrink();
+                    },
+                  ),
+                  // Error message (only rebuilds when error changes)
+                  BlocSelector<ConversationBloc, ConversationState, String?>(
+                    selector: (state) => state.errorMessage,
+                    builder: (context, errorMessage) {
+                      if (errorMessage != null) {
+                        return Positioned(
+                          bottom: 80,
+                          left: 16,
+                          right: 16,
+                          child: Material(
+                            elevation: 4,
+                            borderRadius: BorderRadius.circular(8),
+                            color: Colors.red.shade700,
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 10,
+                              ),
+                              child: Text(
+                                errorMessage,
+                                style: TextStyles.body(context, color: Colors.white),
+                              ),
                             ),
                           ),
-                        ),
-                      );
-                    }
-                    return const SizedBox.shrink();
-                  },
-                ),
-              ],
+                        );
+                      }
+                      return const SizedBox.shrink();
+                    },
+                  ),
+                ],
+              ),
             ),
-          ),
-        );
-      },
+          );
+        },
+      ),
     );
   }
 }

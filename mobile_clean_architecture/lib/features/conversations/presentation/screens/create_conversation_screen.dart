@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../core/utils/smooth_transition_manager.dart';
 
 import '../../../../core/presentation/widgets/buttons/primary_button.dart';
 import '../../../../core/presentation/widgets/inputs/app_text_input.dart';
@@ -19,7 +20,8 @@ class CreateConversationScreen extends StatefulWidget {
   const CreateConversationScreen({Key? key}) : super(key: key);
 
   @override
-  State<CreateConversationScreen> createState() => _CreateConversationScreenState();
+  State<CreateConversationScreen> createState() =>
+      _CreateConversationScreenState();
 }
 
 class _CreateConversationScreenState extends State<CreateConversationScreen> {
@@ -50,7 +52,7 @@ class _CreateConversationScreenState extends State<CreateConversationScreen> {
     final isValid = _userRoleController.text.isNotEmpty &&
         _aiRoleController.text.isNotEmpty &&
         _situationController.text.isNotEmpty;
-    
+
     if (isValid != _isFormValid) {
       setState(() {
         _isFormValid = isValid;
@@ -61,10 +63,10 @@ class _CreateConversationScreenState extends State<CreateConversationScreen> {
   void _createConversation() {
     if (_formKey.currentState?.validate() ?? false) {
       context.read<ConversationBloc>().add(CreateConversationEvent(
-        userRole: _userRoleController.text,
-        aiRole: _aiRoleController.text,
-        situation: _situationController.text,
-      ));
+            userRole: _userRoleController.text,
+            aiRole: _aiRoleController.text,
+            situation: _situationController.text,
+          ));
     }
   }
 
@@ -208,7 +210,8 @@ class _CreateConversationScreenState extends State<CreateConversationScreen> {
                             ),
                             _buildFormField(
                               label: 'AI Role',
-                              hint: 'e.g., Interviewer, Customer service, Doctor',
+                              hint:
+                                  'e.g., Interviewer, Customer service, Doctor',
                               controller: _aiRoleController,
                             ),
                             _buildFormField(
@@ -240,20 +243,24 @@ class _CreateConversationScreenState extends State<CreateConversationScreen> {
   Widget build(BuildContext context) {
     return BlocListener<ConversationBloc, ConversationState>(
       listener: (context, state) {
-        if (state is ConversationActive) {
-          // Navigate to the conversation screen when conversation is created
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(
-              builder: (_) => ConversationScreen(
-                conversation: state.conversation!,
-              ),
-            ),
+        if (state is ConversationActive && state.conversation != null) {
+          print('DEBUG NAV: Navigation to conversation screen triggered');
+          // Use smooth transition to prevent frame skipping
+          SmoothTransitionManager.executeWithProperTiming(
+            callback: () {
+              if (context.mounted) {
+                context.go('/conversation/${state.conversation!.id}',
+                    extra: state.conversation);
+              }
+            },
+            isHeavyOperation: true, // Screen transitions are heavy operations
           );
         } else if (state is ConversationCreationFailed) {
           // Show error snackbar
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(state.errorMessage ?? 'Failed to create conversation'),
+              content:
+                  Text(state.errorMessage ?? 'Failed to create conversation'),
               backgroundColor: AppColors.error,
             ),
           );

@@ -22,25 +22,23 @@ class CreateConversationParams {
 ///
 /// This class implements the [UseCase] interface, taking [CreateConversationParams]
 /// and returning a [Conversation] wrapped in an [Either] to handle potential failures.
-class CreateConversationUseCase implements UseCase<Conversation, CreateConversationParams> {
+class CreateConversationUseCase
+    implements UseCase<Conversation, CreateConversationParams> {
   final ConversationRepository repository;
 
   CreateConversationUseCase(this.repository);
 
   @override
   Future<Either<Failure, Conversation>> call(CreateConversationParams params) {
-    // Enhance the situation if it's too brief
-    final enhancedSituation = _enhanceContextIfNeeded(params.situation);
-    
     return repository.createConversation(
       userRole: params.userRole,
       aiRole: params.aiRole,
-      situation: enhancedSituation,
+      situation: _enhanceContextIfNeeded(params.situation),
     );
   }
 
   /// Helper method to enhance a situation context if it's too brief
-  /// 
+  ///
   /// If the situation provided by the user is very brief, this adds more
   /// detail to make the role-play more immersive and effective.
   String _enhanceContextIfNeeded(String situation) {
@@ -48,11 +46,11 @@ class CreateConversationUseCase implements UseCase<Conversation, CreateConversat
     if (situation.length > 50) {
       return situation;
     }
-    
+
     // Otherwise, enhance it with more details
     // In a real implementation, this might call an AI service to expand the context
     return '$situation. This conversation is taking place in a professional setting. '
-           'The atmosphere is friendly yet formal, and both participants are focused '
-           'on having a productive exchange.';
+        'The atmosphere is friendly yet formal, and both participants are focused '
+        'on having a productive exchange.';
   }
 }

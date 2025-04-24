@@ -24,15 +24,35 @@ class MessageModel extends Message {
 
   /// Creates a MessageModel from a JSON object
   factory MessageModel.fromJson(Map<String, dynamic> json) {
+    // Handle timestamp parsing safely
+    DateTime timestamp;
+    try {
+      timestamp = json['timestamp'] != null
+          ? DateTime.parse(json['timestamp'])
+          : DateTime.now();
+    } catch (e) {
+      print('Error parsing message timestamp: $e');
+      timestamp = DateTime.now();
+    }
+
+    final String senderId =
+        json['_id']?.toString() ?? json['id']?.toString() ?? '';
+
+    final String convId = json['conversation_id']?.toString() ?? '';
+
+    // Determine sender type safely
+    final senderString = json['sender']?.toString().toLowerCase() ?? 'ai';
+    final senderType = senderString == 'user' ? SenderType.user : SenderType.ai;
+
     return MessageModel(
-      id: json['_id'] ?? json['id'],
-      conversationId: json['conversation_id'],
-      sender: json['sender'] == 'user' ? SenderType.user : SenderType.ai,
-      content: json['content'],
-      timestamp: DateTime.parse(json['timestamp']),
-      audioPath: json['audio_path'],
-      transcription: json['transcription'],
-      feedbackId: json['feedback_id'],
+      id: senderId,
+      conversationId: convId,
+      sender: senderType,
+      content: json['content']?.toString() ?? '',
+      timestamp: timestamp,
+      audioPath: json['audio_path']?.toString(),
+      transcription: json['transcription']?.toString(),
+      feedbackId: json['feedback_id']?.toString(),
     );
   }
 

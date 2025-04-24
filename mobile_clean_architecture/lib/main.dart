@@ -10,19 +10,26 @@
 
 // These are packages we need to import from Flutter and third-party libraries
 // Think of imports like borrowing tools from different toolboxes to use in our app
+import 'dart:async'; // For async operations and error zones
+import 'dart:ui' as ui; // For fine-grained control over rendering
 import 'package:flutter/material.dart'; // Core Flutter UI components
+import 'package:flutter/services.dart'; // For platform channels and hardware optimization
 import 'package:flutter_bloc/flutter_bloc.dart'; // For BLoC state management (like a brain for our app)
 import 'package:get_it/get_it.dart'; // For dependency injection (like a central supply station)
 import 'package:hive_flutter/hive_flutter.dart'; // For local database storage (like a filing cabinet)
 import 'package:provider/provider.dart'; // For simpler state management (like a messenger)
 import 'package:shared_preferences/shared_preferences.dart'; // For saving simple app settings (like a notepad)
-import 'package:flutter/foundation.dart' show kIsWeb; // Import kIsWeb for platform detection
+import 'package:flutter/foundation.dart'
+    show kIsWeb, debugPrint; // Import kIsWeb for platform detection
 
 // These are imports from our own app code
 import 'core/routes/app_router.dart'; // Controls navigation between screens
 import 'core/theme/app_theme.dart'; // Defines how our app looks (colors, styles)
 import 'core/theme/theme_provider.dart'; // Manages theme changes (light/dark mode)
 import 'core/utils/platform_checker.dart'; // Added platform detection utilities
+import 'core/utils/rendering/surface_view_lifecycle_observer.dart'; // Lifecycle management for SurfaceViews
+import 'core/utils/rendering/surface_view_optimizer.dart'; // Surface rendering optimization
+import 'core/utils/performance_monitor.dart'; // Performance monitoring
 import 'features/authentication/data/models/user_model.dart'; // Structure for user data
 import 'features/authentication/di/auth_module.dart'; // Sets up authentication features
 import 'features/conversations/di/conversation_module.dart'; // Sets up conversation features
@@ -34,23 +41,71 @@ import 'features/authentication/presentation/bloc/auth_bloc.dart'; // Controls a
 /// Application entry point - like the "main door" to our app
 /// The async keyword means this function can wait for tasks to complete
 void main() async {
-  // This line makes sure Flutter is ready before we do anything else
-  // Like warming up a car engine before driving
-  WidgetsFlutterBinding.ensureInitialized();
+  // Run everything in a consistent zone to avoid zone mismatch errors
+  await runZonedGuarded(() async {
+    // This line makes sure Flutter is ready before we do anything else
+    // Like warming up a car engine before driving
+    WidgetsFlutterBinding.ensureInitialized();
 
-  // Set up the basic services our app needs
-  // This is like setting up utilities before people move into a house
-  await initDependencies();
+  // Optimize the Android hardware rendering for SurfaceView usage
+  // This helps prevent BLASTBufferQueue errors without modifying MainActivity.kt
+  if (!kIsWeb && PlatformChecker.isAndroid) {
+    // Initialize our SurfaceView lifecycle observer to manage resources throughout the app lifecycle
+    SurfaceViewLifecycleObserver().initialize();
 
-  // Set up specific features of our app
-  // Like arranging furniture in different rooms of the house
-  initAuthModule(); // Set up login/signup features
-  initHomeModule(); // Set up home screen features
-  initConversationModule(); // Set up conversation features
+    // Initialize our custom SurfaceView optimizer - this is our key fix for the BLASTBufferQueue errors
+    await SurfaceViewOptimizer.initialize();
 
-  // Start the app by creating the main widget
-  // Like opening the front door and welcoming guests in
-  runApp(const MyApp());
+    // Additional optimizations to reduce buffer contention
+    SystemChrome.setSystemUIChangeCallback((systemOverlaysAreVisible) async {
+      // This callback helps smooth transitions when system UI changes visibility
+      return;
+    });
+
+    // Set Android-specific rendering optimizations
+    await SystemChrome.setPreferredOrientations([
+      // Limiting orientations can help with rendering stability in some cases
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+    ]);
+  }
+
+    // Set up global error handling
+    FlutterError.onError = (details) {
+      FlutterError.presentError(details);
+      // You could add error reporting service calls here
+    };
+
+    try {
+      // Set up the basic services our app needs
+      await initDependencies();
+
+      // Set up specific features of our app in parallel for faster startup
+      await Future.wait([
+        Future(() => initAuthModule()),
+        Future(() => initHomeModule()),
+        Future(() => initConversationModule()),
+      ]);
+
+      // Start the app by creating the main widget
+      runApp(const MyApp());
+      
+      // Enable performance monitoring in debug mode
+      assert(() {
+        PerformanceMonitor.startMonitoring();
+        return true;
+      }());
+    } catch (error, stackTrace) {
+      debugPrint('Initialization error: $error');
+      debugPrint(stackTrace.toString());
+      // Handle startup errors gracefully - could show error UI instead of crashing
+    }
+    }, (error, stack) {
+    // Handle any uncaught errors that occur during app execution
+    debugPrint('Uncaught error: $error');
+    debugPrint(stack.toString());
+    // You could log errors to a service here
+  });
 }
 
 /// Initialize core dependencies - sets up the basic services our app needs
@@ -78,18 +133,19 @@ Future<void> initDependencies() async {
   // Create a ThemeProvider that will manage app appearance settings
   GetIt.instance
       .registerLazySingleton<ThemeProvider>(() => ThemeProvider(prefs));
-      
-  // Print platform info for debugging
-  if (kIsWeb) {
-    print('Application running on Web platform');
-    // Add any web-specific initialization here
-  } else if (PlatformChecker.isMobile) {
-    print('Application running on Mobile platform');
-    // Add any mobile-specific initialization here
-  } else if (PlatformChecker.isDesktop) {
-    print('Application running on Desktop platform');
-    // Add any desktop-specific initialization here
-  }
+
+  // Only log platform info in debug mode
+  assert(() {
+    final platform = kIsWeb
+        ? 'Web'
+        : PlatformChecker.isMobile
+            ? 'Mobile'
+            : PlatformChecker.isDesktop
+                ? 'Desktop'
+                : 'Unknown';
+    debugPrint('Application running on $platform platform');
+    return true;
+  }());
 }
 
 /// Root widget of the application - this is the main structure of our app

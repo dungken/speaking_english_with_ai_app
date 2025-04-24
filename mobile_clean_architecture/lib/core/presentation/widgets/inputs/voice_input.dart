@@ -2,7 +2,10 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../../../theme/app_colors.dart';
 import '../../../theme/text_styles.dart';
+import '../../../utils/platform_checker.dart';
+import '../../../utils/rendering/surface_view_optimizer.dart';
 import '../../../utils/ui_config.dart';
+import '../../widgets/wrapper/surface_view_wrapper.dart';
 import '../buttons/mic_button.dart';
 
 class VoiceInput extends StatefulWidget {
@@ -66,6 +69,11 @@ class _VoiceInputState extends State<VoiceInput>
     if (widget.isRecording) {
       _animationController.repeat(reverse: true);
     }
+
+    // Prepare the SurfaceView environment when recording begins
+    if (widget.isRecording && PlatformChecker.isAndroid) {
+      SurfaceViewOptimizer.prepareForSurfaceView();
+    }
   }
 
   @override
@@ -80,8 +88,18 @@ class _VoiceInputState extends State<VoiceInput>
       if (widget.isRecording) {
         _animationController.repeat(reverse: true);
         _generateRandomWaveform();
+
+        // Optimize for SurfaceView when recording starts
+        if (PlatformChecker.isAndroid) {
+          SurfaceViewOptimizer.prepareForSurfaceView();
+        }
       } else {
         _animationController.stop();
+
+        // Clean up SurfaceView optimizations when recording stops
+        if (PlatformChecker.isAndroid) {
+          SurfaceViewOptimizer.cleanupAfterSurfaceView();
+        }
       }
     }
   }
@@ -103,6 +121,12 @@ class _VoiceInputState extends State<VoiceInput>
   void dispose() {
     _textController.dispose();
     _animationController.dispose();
+
+    // Ensure we clean up any SurfaceView optimizations
+    if (PlatformChecker.isAndroid) {
+      SurfaceViewOptimizer.cleanupAfterSurfaceView();
+    }
+
     super.dispose();
   }
 
@@ -110,6 +134,21 @@ class _VoiceInputState extends State<VoiceInput>
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
+    // If we're on Android, wrap with SurfaceViewWrapper to prevent BLASTBufferQueue errors
+    // otherwise just return the normal widget
+    Widget voiceInputWidget = _buildVoiceInputContent(isDarkMode);
+
+    if (!PlatformChecker.isAndroid) {
+      return voiceInputWidget;
+    }
+
+    return SurfaceViewWrapper(
+      isActiveMedia: widget.isRecording,
+      child: voiceInputWidget,
+    );
+  }
+
+  Widget _buildVoiceInputContent(bool isDarkMode) {
     return Container(
       decoration: BoxDecoration(
         color: isDarkMode
@@ -155,26 +194,28 @@ class _VoiceInputState extends State<VoiceInput>
                 ),
               ],
 
-              // Microphone control
-              Container(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                decoration: BoxDecoration(
-                  color: isDarkMode
-                      ? Colors.black.withOpacity(0.2)
-                      : Colors.grey.shade100,
-                  borderRadius: const BorderRadius.only(
-                    bottomLeft: Radius.circular(16),
-                    bottomRight: Radius.circular(16),
+              // Microphone control - wrapped with RepaintBoundary to optimize rendering
+              RepaintBoundary(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  decoration: BoxDecoration(
+                    color: isDarkMode
+                        ? Colors.black.withOpacity(0.2)
+                        : Colors.grey.shade100,
+                    borderRadius: const BorderRadius.only(
+                      bottomLeft: Radius.circular(16),
+                      bottomRight: Radius.circular(16),
+                    ),
                   ),
-                ),
-                child: Center(
-                  child: MicButton(
-                    isRecording: widget.isRecording,
-                    onRecordingStarted: widget.onRecordingStarted,
-                    onRecordingStopped: widget.onRecordingStopped,
-                    maxDuration: widget.maxDuration,
-                    pulseAnimation: true,
-                    visualizeMicInput: widget.showWaveform,
+                  child: Center(
+                    child: MicButton(
+                      isRecording: widget.isRecording,
+                      onRecordingStarted: widget.onRecordingStarted,
+                      onRecordingStopped: widget.onRecordingStopped,
+                      maxDuration: widget.maxDuration,
+                      pulseAnimation: true,
+                      visualizeMicInput: widget.showWaveform,
+                    ),
                   ),
                 ),
               ),

@@ -29,3 +29,8 @@ class NetworkFailure extends Failure {
 class ProcessingFailure extends Failure {
   const ProcessingFailure({String? message}) : super(message: message);
 }
+
+/// Represents a validation failure (invalid user input)
+class ValidationFailure extends Failure {
+  const ValidationFailure({String? message}) : super(message: message);
+}

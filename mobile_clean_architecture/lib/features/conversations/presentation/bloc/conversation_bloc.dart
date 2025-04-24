@@ -1,7 +1,10 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/error/failures.dart';
 import '../../../../core/services/audio_services.dart';
+import '../../domain/entities/conversation.dart';
+import '../../domain/entities/message.dart';
 import '../../domain/repositories/conversation_repository.dart';
 import '../../domain/usecases/upload_audio_usecase.dart';
 import 'conversation_event.dart';
@@ -16,6 +19,9 @@ class ConversationBloc extends Bloc<ConversationEvent, ConversationState> {
   final ConversationRepository repository;
   final AudioService audioService;
   final UploadAudioUseCase uploadAudioUseCase;
+
+  // Only enable detailed logging in debug mode
+  final bool _enableLogging = kDebugMode;
 
   ConversationBloc({
     required this.repository,
@@ -37,9 +43,17 @@ class ConversationBloc extends Bloc<ConversationEvent, ConversationState> {
     on<AudioUploadedEvent>(_onAudioUploaded);
   }
 
+  /// Log debug messages only in debug mode
+  void _log(String message) {
+    if (_enableLogging) {
+      debugPrint('ConversationBloc: $message');
+    }
+  }
+
   /// Handles the CreateConversationEvent
   Future<void> _onCreateConversation(
       CreateConversationEvent event, Emitter<ConversationState> emit) async {
+    _log('Creating conversation');
     emit(const ConversationCreating());
 
     final result = await repository.createConversation(
@@ -49,16 +63,23 @@ class ConversationBloc extends Bloc<ConversationEvent, ConversationState> {
     );
 
     emit(result.fold(
-      (failure) => ConversationCreationFailed(
-        errorMessage: _mapFailureToMessage(failure),
-      ),
-      (conversation) => ConversationActive(conversation: conversation),
+      (failure) {
+        _log('Create conversation failed: ${failure.message}');
+        return ConversationCreationFailed(
+          errorMessage: _mapFailureToMessage(failure),
+        );
+      },
+      (conversation) {
+        _log('Conversation created successfully');
+        return ConversationActive(conversation: conversation);
+      },
     ));
   }
 
   /// Handles the GetUserConversationsEvent
   Future<void> _onGetUserConversations(
       GetUserConversationsEvent event, Emitter<ConversationState> emit) async {
+    _log('Getting user conversations');
     emit(state.copyWith(isLoading: true, clearError: true));
 
     final result = await repository.getUserConversations(
@@ -79,6 +100,7 @@ class ConversationBloc extends Bloc<ConversationEvent, ConversationState> {
   /// Handles loading a specific conversation
   Future<void> _onLoadConversation(
       LoadConversationEvent event, Emitter<ConversationState> emit) async {
+    _log('Loading conversation: ${event.conversationId}');
     emit(state.copyWith(isLoading: true, clearError: true));
 
     final result = await repository.getConversation(event.conversationId);
@@ -97,6 +119,7 @@ class ConversationBloc extends Bloc<ConversationEvent, ConversationState> {
       return;
     }
 
+    _log('Sending speech message');
     emit(MessageSending(
       conversation: state.conversation!,
       audioId: event.audioId,
@@ -114,16 +137,16 @@ class ConversationBloc extends Bloc<ConversationEvent, ConversationState> {
         errorMessage: _mapFailureToMessage(failure),
       ),
       (messages) {
-        final updatedConversation = state.conversation!.copyWith(
-          messages: [
-            ...state.conversation!.messages,
-            messages.userMessage,
-            messages.aiMessage,
-          ],
-        );
-
+        // Instead of using compute which was causing issues, just process directly
+        // This is simpler and should work fine for most message counts
         return MessagesSent(
-          conversation: updatedConversation,
+          conversation: state.conversation!.copyWith(
+            messages: [
+              ...state.conversation!.messages,
+              messages.userMessage,
+              messages.aiMessage,
+            ],
+          ),
           messages: messages,
         );
       },
@@ -196,11 +219,13 @@ class ConversationBloc extends Bloc<ConversationEvent, ConversationState> {
   /// Handles the StartRecordingEvent
   Future<void> _onStartRecording(
       StartRecordingEvent event, Emitter<ConversationState> emit) async {
+    // Clear all previous recording data to ensure a fresh start
     emit(state.copyWith(
       recordingState: RecordingState.recording,
       clearLastRecording: true,
       clearTranscription: true,
       clearAudioId: true,
+      clearError: true, // Also clear any previous errors
     ));
 
     try {
@@ -225,7 +250,7 @@ class ConversationBloc extends Bloc<ConversationEvent, ConversationState> {
 
     try {
       final filePath = await audioService.stopRecording();
-      
+
       if (filePath != null) {
         // After stopping recording, trigger audio upload
         add(UploadAudioEvent(filePath: filePath));

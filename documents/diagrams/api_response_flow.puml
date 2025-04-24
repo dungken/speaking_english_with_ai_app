@@ -1,0 +1,80 @@
+@startuml API Response Flow
+
+skinparam BoxPadding 10
+skinparam ParticipantPadding 30
+skinparam sequenceArrowThickness 2
+skinparam roundcorner 5
+skinparam MaxMessageSize 200
+skinparam sequenceGroupBorderThickness 2
+
+actor User
+participant "UI\n(Widget)" as UI #LightBlue
+participant "BLoC/Cubit" as BLOC #LightGreen
+participant "Use Case" as UseCase #LightYellow
+participant "Repository\nInterface" as Repository #LightPink
+participant "Repository\nImplementation" as RepoImpl #Pink
+participant "Remote Data\nSource" as RemoteDS #Orange
+participant "Local Data\nSource" as LocalDS #Purple
+participant "API Service" as API #Red
+database "Local Storage\n(Hive)" as Hive #LightGray
+
+== API Response Flow ==
+
+User -> UI: Interaction (e.g., login, fetch data)
+activate UI
+
+UI -> BLOC: Event/Method call
+activate BLOC
+
+BLOC -> UseCase: Execute use case
+activate UseCase
+
+UseCase -> Repository: Call repository method
+activate Repository
+
+Repository -> RepoImpl: Delegate to implementation
+activate RepoImpl
+
+RepoImpl -> RemoteDS: Request data from API
+activate RemoteDS
+
+RemoteDS -> API: HTTP request
+activate API
+
+API --> RemoteDS: JSON response
+deactivate API
+
+RemoteDS -> RemoteDS: Parse JSON to UserModel
+RemoteDS --> RepoImpl: Return UserModel
+deactivate RemoteDS
+
+RepoImpl -> LocalDS: Cache UserModel
+activate LocalDS
+
+LocalDS -> Hive: Store UserModel
+activate Hive
+Hive --> LocalDS: Storage confirmation
+deactivate Hive
+
+LocalDS --> RepoImpl: Caching confirmation
+deactivate LocalDS
+
+RepoImpl -> RepoImpl: Convert UserModel to User entity
+RepoImpl --> Repository: Return User entity with Either<Failure, User>
+deactivate RepoImpl
+
+Repository --> UseCase: Return User entity with Either<Failure, User>
+deactivate Repository
+
+UseCase --> BLOC: Return User entity with Either<Failure, User>
+deactivate UseCase
+
+BLOC -> BLOC: Update state based on response
+BLOC --> UI: Emit new state
+deactivate BLOC
+
+UI -> UI: Update UI based on state
+UI --> User: Display updated UI/feedback
+deactivate UI
+
+@enduml

@@ -9,7 +9,7 @@ import '../../../../core/theme/text_styles.dart';
 import '../bloc/conversation_bloc.dart';
 import '../bloc/conversation_event.dart';
 import '../bloc/conversation_state.dart';
-import 'conversation_page.dart';
+import 'loading_conversation_illustration_page.dart';
 
 class CreateConversationPage extends StatefulWidget {
   const CreateConversationPage({Key? key}) : super(key: key);
@@ -43,7 +43,7 @@ class _CreateConversationPageState extends State<CreateConversationPage> {
           if (state is ConversationActive) {
             Navigator.of(context).pushReplacement(
               MaterialPageRoute(
-                builder: (context) => ConversationPage(
+                builder: (context) => LoadingConversationIllustrationPage(
                   conversation: state.conversation!,
                   initialMessage: state.conversation!.messages.isNotEmpty
                       ? state.conversation!.messages.first
@@ -138,6 +138,14 @@ class _CreateConversationPageState extends State<CreateConversationPage> {
                     isLoading: state is ConversationCreating,
                     onPressed: () {
                       if (_formKey.currentState!.validate()) {
+                        debugPrint(
+                            'DEBUG: Dispatching CreateConversationEvent');
+                        debugPrint(
+                            'DEBUG: User Role: ${_userRoleController.text}');
+                        debugPrint('DEBUG: AI Role: ${_aiRoleController.text}');
+                        debugPrint(
+                            'DEBUG: Situation: ${_situationController.text}');
+
                         context.read<ConversationBloc>().add(
                               CreateConversationEvent(
                                 userRole: _userRoleController.text,

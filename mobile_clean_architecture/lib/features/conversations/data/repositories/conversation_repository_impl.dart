@@ -8,7 +8,6 @@ import '../../domain/entities/feedback.dart';
 import '../../domain/entities/message.dart';
 import '../../domain/repositories/conversation_repository.dart';
 import '../datasources/conversation_remote_datasource.dart';
-import '../models/message_model.dart';
 
 /// Implementation of [ConversationRepository]
 ///
@@ -29,28 +28,39 @@ class ConversationRepositoryImpl implements ConversationRepository {
     required String situation,
   }) async {
     if (await networkInfo.isConnected) {
+      print('DEBUG REPO: Network is connected, calling remote data source');
       try {
         final result = await remoteDataSource.createConversation(
           userRole: userRole,
           aiRole: aiRole,
           situation: situation,
         );
-        
+        print('DEBUG REPO: Remote data source returned successfully');
+
         // Extract conversation and initial message
+        print('DEBUG REPO: Extracting conversation and initial message');
         final conversation = result['conversation'] as Conversation;
         final initialMessage = result['initial_message'] as Message;
-        
+
         // Add the initial message to the conversation
+        print('DEBUG REPO: Creating updated conversation with initial message');
         final updatedMessages = [initialMessage];
         final updatedConversation = conversation.copyWith(
           messages: updatedMessages,
         );
-        
+
+        print('DEBUG REPO: Returning Right(updatedConversation)');
         return Right(updatedConversation);
       } on ServerException catch (e) {
+        print('DEBUG REPO: ServerException caught: ${e.message}');
         return Left(ServerFailure(message: e.message));
+      } catch (e) {
+        // Add generic exception handling
+        print('DEBUG REPO: Unexpected exception caught: $e');
+        return Left(ServerFailure(message: 'Unexpected error: $e'));
       }
     } else {
+      print('DEBUG REPO: No network connection');
       return const Left(NetworkFailure(
           message:
               'No internet connection. Please check your connection and try again.'));
@@ -140,7 +150,8 @@ class ConversationRepositoryImpl implements ConversationRepository {
     // we don't implement this method directly anymore
     return Left(
       const ServerFailure(
-        message: 'This method is no longer in use. Use sendSpeechMessage instead.',
+        message:
+            'This method is no longer in use. Use sendSpeechMessage instead.',
       ),
     );
   }

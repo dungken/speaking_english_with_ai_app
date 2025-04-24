@@ -335,12 +335,20 @@ async def analyze_speech(
         
         # Include context in the prompt 
         prompt = (
-            f"You are {conversation['ai_role']}, and the user is {conversation['user_role']}. "
-            f"The situation is: {conversation['situation']}. "
-            f"Here's the conversation so far:\n" +
-            "\n".join([f"{msg['sender']}: {msg['content']}" for msg in messages]) +
-            f"\nRespond as {conversation['ai_role']}."
+        f"You are playing the role of {conversation['ai_role']} and the user is {conversation['user_role']}. "
+        f"The situation is: {conversation['situation']}. "
+        f"Stay fully in character as {conversation['ai_role']}. "
+        f"Use natural, simple English that new and intermediate learners can easily understand. "
+        f"Keep your response short and friendly (1 to 3 sentences). "
+        f"Avoid special characters like brackets or symbols. "
+        f"Do not refer to the user with any placeholder like a name in brackets. "
+        f"Ask an open-ended question that fits the situation and encourages the user to speak more."
+        f"\nHere is the conversation so far:\n" +
+        "\n".join([f"{msg['sender']}: {msg['content']}" for msg in messages]) +
+        f"\nNow respond as {conversation['ai_role']}."
         )
+
+
         
         # Generate AI response
         ai_text = generate_response(prompt)

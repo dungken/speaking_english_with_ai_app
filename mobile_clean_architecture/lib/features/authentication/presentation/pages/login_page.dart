@@ -4,6 +4,16 @@ import 'package:go_router/go_router.dart';
 
 import '../bloc/auth_bloc.dart';
 
+// User enters credentials and clicks Sign In
+// UI dispatches SignInEvent to AuthBloc
+// AuthBloc calls SignInUseCase
+// SignInUseCase calls AuthRepository
+// AuthRepositoryImpl calls AuthRemoteDataSource
+// AuthRemoteDataSource makes HTTP request to API
+// API responds with user data and token
+// Response flows back through the layers
+// UI updates based on success/failure
+
 /// Login page for the application
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});

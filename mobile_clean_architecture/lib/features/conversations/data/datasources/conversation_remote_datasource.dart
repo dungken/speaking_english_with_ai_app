@@ -3,7 +3,6 @@ import 'package:http/http.dart' as http;
 
 import '../../../../core/constants/api_constants.dart';
 import '../../../../core/error/exceptions.dart';
-import '../../domain/entities/message.dart';
 import '../models/conversation_model.dart';
 import '../models/feedback_model.dart';
 import '../models/message_model.dart';
@@ -47,7 +46,6 @@ abstract class ConversationRemoteDataSource {
 
 class ConversationRemoteDataSourceImpl implements ConversationRemoteDataSource {
   final http.Client client;
-
   ConversationRemoteDataSourceImpl({required this.client});
 
   @override
@@ -56,9 +54,14 @@ class ConversationRemoteDataSourceImpl implements ConversationRemoteDataSource {
     required String aiRole,
     required String situation,
   }) async {
+    print('api call conversation starting');
     try {
+      // Log request data for debugging
+      print(
+          'Request data: userRole=$userRole, aiRole=$aiRole, situation=$situation');
       final response = await client.post(
-        Uri.parse('${ApiConstants.baseUrl}${ApiConstants.conversationsEndpoint}'),
+        Uri.parse(
+            '${ApiConstants.baseUrl}${ApiConstants.conversationsEndpoint}'),
         headers: ApiConstants.authHeaders,
         body: jsonEncode({
           'user_role': userRole,
@@ -67,28 +70,42 @@ class ConversationRemoteDataSourceImpl implements ConversationRemoteDataSource {
         }),
       );
 
+      print("Response body: ${response.body}");
+
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);
-        
-        // Extract the conversation and initial message from response
-        final conversationData = responseData['conversation'];
-        final initialMessageData = responseData['initial_message'];
-        
-        // Parse into models
-        final conversation = ConversationModel.fromJson(conversationData);
-        final initialMessage = MessageModel.fromJson(initialMessageData);
-        
+
+        // Validate the expected structure exists before trying to access it
+        if (responseData['conversation'] == null) {
+          throw ServerException(
+            message: 'Server response missing conversation data',
+            statusCode: response.statusCode,
+          );
+        }
+
+        if (responseData['initial_message'] == null) {
+          throw ServerException(
+            message: 'Server response missing initial_message data',
+            statusCode: response.statusCode,
+          );
+        }
+
+        print('Successfully parsed conversation data');
         return {
-          'conversation': conversation,
-          'initial_message': initialMessage,
+          'conversation':
+              ConversationModel.fromJson(responseData['conversation']),
+          'initial_message':
+              MessageModel.fromJson(responseData['initial_message']),
         };
       } else {
         throw ServerException(
-          message: 'Failed to create conversation: ${response.statusCode} - ${response.body}',
+          message:
+              'Failed to create conversation: ${response.statusCode} - ${response.body}',
           statusCode: response.statusCode,
         );
       }
     } catch (e) {
+      print('Error in createConversation: $e');
       if (e is ServerException) {
         rethrow;
       }
@@ -119,7 +136,8 @@ class ConversationRemoteDataSourceImpl implements ConversationRemoteDataSource {
             .toList();
       } else {
         throw ServerException(
-          message: 'Failed to get conversations: ${response.statusCode} - ${response.body}',
+          message:
+              'Failed to get conversations: ${response.statusCode} - ${response.body}',
           statusCode: response.statusCode,
         );
       }
@@ -143,32 +161,27 @@ class ConversationRemoteDataSourceImpl implements ConversationRemoteDataSource {
       final endpoint = ApiConstants.messageEndpoint
           .replaceFirst('{conversation_id}', conversationId);
 
+      // Construct the URL with audio_id as a query parameter
+      final url = Uri.parse('${ApiConstants.baseUrl}$endpoint').replace(
+        queryParameters: {'audio_id': audioId},
+      );
+
+      // Send POST request with audio_id in query parameters
       final response = await client.post(
-        Uri.parse('${ApiConstants.baseUrl}$endpoint'),
+        url,
         headers: ApiConstants.authHeaders,
-        body: jsonEncode({
-          'audio_id': audioId,
-        }),
       );
 
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);
-        
-        // Extract user message and AI message
-        final userMessageData = responseData['user_message'];
-        final aiMessageData = responseData['ai_message'];
-        
-        // Parse into model objects
-        final userMessage = MessageModel.fromJson(userMessageData);
-        final aiMessage = MessageModel.fromJson(aiMessageData);
-        
         return {
-          'user_message': userMessage,
-          'ai_message': aiMessage,
+          'user_message': MessageModel.fromJson(responseData['user_message']),
+          'ai_message': MessageModel.fromJson(responseData['ai_message']),
         };
       } else {
         throw ServerException(
-          message: 'Failed to send message: ${response.statusCode} - ${response.body}',
+          message:
+              'Failed to send message: ${response.statusCode} - ${response.body}',
           statusCode: response.statusCode,
         );
       }
@@ -199,27 +212,33 @@ class ConversationRemoteDataSourceImpl implements ConversationRemoteDataSource {
 
         if (responseData['is_ready'] == true) {
           final feedbackData = responseData['user_feedback'];
-          
-          // Parse the simplified feedback structure
-          return FeedbackModel(
-            id: feedbackData is Map<String, dynamic> ? feedbackData['id'] ?? messageId : messageId,
-            userFeedback: feedbackData is Map<String, dynamic> ? 
-                         feedbackData['user_feedback'] ?? 'Feedback unavailable' : 
-                         feedbackData.toString(),
-            createdAt: feedbackData is Map<String, dynamic> && feedbackData.containsKey('created_at') ?
-                      DateTime.parse(feedbackData['created_at']) : 
-                      DateTime.now(),
-            detailedFeedback: null, // No detailed feedback in the API response
-          );
+
+          // Handle different feedback formats
+          if (feedbackData is String) {
+            // Simple string feedback
+            return FeedbackModel(
+              id: messageId,
+              userFeedback: feedbackData,
+              createdAt: DateTime.now(),
+              detailedFeedback: null,
+            );
+          } else if (feedbackData is Map<String, dynamic>) {
+            // Full feedback object
+            return FeedbackModel.fromJson(feedbackData);
+          } else {
+            throw FormatException('Unexpected feedback format: $feedbackData');
+          }
         } else {
           // Feedback not ready yet
           throw const FeedbackProcessingException(
-            message: 'Feedback is still being generated. Please try again in a moment.',
+            message:
+                'Feedback is still being generated. Please try again in a moment.',
           );
         }
       } else {
         throw ServerException(
-          message: 'Failed to get feedback: ${response.statusCode} - ${response.body}',
+          message:
+              'Failed to get feedback: ${response.statusCode} - ${response.body}',
           statusCode: response.statusCode,
         );
       }
@@ -238,7 +257,8 @@ class ConversationRemoteDataSourceImpl implements ConversationRemoteDataSource {
   Future<ConversationModel> getConversation(String id) async {
     try {
       final response = await client.get(
-        Uri.parse('${ApiConstants.baseUrl}${ApiConstants.conversationsEndpoint}/$id'),
+        Uri.parse(
+            '${ApiConstants.baseUrl}${ApiConstants.conversationsEndpoint}/$id'),
         headers: ApiConstants.authHeaders,
       );
 
@@ -247,7 +267,8 @@ class ConversationRemoteDataSourceImpl implements ConversationRemoteDataSource {
         return ConversationModel.fromJson(responseData);
       } else {
         throw ServerException(
-          message: 'Failed to get conversation: ${response.statusCode} - ${response.body}',
+          message:
+              'Failed to get conversation: ${response.statusCode} - ${response.body}',
           statusCode: response.statusCode,
         );
       }
