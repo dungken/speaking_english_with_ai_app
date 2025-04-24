@@ -1,0 +1,217 @@
+@startuml Conversation Flow (Detailed)
+
+skinparam BoxPadding 10
+skinparam ParticipantPadding 30
+skinparam sequenceArrowThickness 2
+skinparam roundcorner 5
+skinparam MaxMessageSize 200
+skinparam sequenceGroupBorderThickness 2
+
+actor User
+
+box "Presentation Layer" #LightBlue
+participant "create_conversation_screen.dart\n_CreateConversationScreenState" as CreateConvScreen
+participant "conversation_screen.dart\nConversationScreen" as ConvScreen
+participant "conversation_bloc.dart\nConversationBloc" as ConvBloc
+end box
+
+box "Domain Layer" #LightYellow
+participant "create_conversation_usecase.dart\nCreateConversationUseCase" as CreateConvUseCase
+participant "conversation_repository.dart\nConversationRepository" as ConvRepo
+participant "send_speech_message_usecase.dart\nSendSpeechMessageUseCase" as SendMsgUseCase
+end box
+
+box "Data Layer" #Pink
+participant "conversation_repository_impl.dart\nConversationRepositoryImpl" as RepoImpl
+participant "conversation_remote_datasource.dart\nConversationRemoteDataSourceImpl" as RemoteDS
+end box
+
+box "External" #Red
+participant "HTTP Client\nclient.post()" as API
+participant "AudioService\naudioService" as AudioSvc
+end box
+
+== Create Conversation Flow ==
+
+User -> CreateConvScreen: Fill form & tap "Start Conversation"
+activate CreateConvScreen
+
+CreateConvScreen -> ConvBloc: add(CreateConversationEvent(userRole, aiRole, situation))
+activate ConvBloc
+
+ConvBloc -> ConvBloc: _onCreateConversation()
+ConvBloc -> CreateConvUseCase: call(CreateConversationParams)
+activate CreateConvUseCase
+
+CreateConvUseCase -> CreateConvUseCase: _enhanceContextIfNeeded(situation)
+CreateConvUseCase -> ConvRepo: createConversation(userRole, aiRole, situation)
+activate ConvRepo
+
+ConvRepo -> RepoImpl: createConversation(userRole, aiRole, situation)
+activate RepoImpl
+
+RepoImpl -> RemoteDS: createConversation(userRole, aiRole, situation)
+activate RemoteDS
+
+RemoteDS -> API: POST /conversations {user_role, ai_role, situation}
+activate API
+
+API --> RemoteDS: Response {conversation, initial_message}
+deactivate API
+
+RemoteDS -> RemoteDS: ConversationModel.fromJson(responseData['conversation'])
+RemoteDS -> RemoteDS: MessageModel.fromJson(responseData['initial_message'])
+RemoteDS --> RepoImpl: return {conversation, initial_message}
+deactivate RemoteDS
+
+RepoImpl -> RepoImpl: conversation.copyWith(messages: [initialMessage])
+RepoImpl --> ConvRepo: Right(updatedConversation)
+deactivate RepoImpl
+
+ConvRepo --> CreateConvUseCase: Right(conversation)
+deactivate ConvRepo
+
+CreateConvUseCase --> ConvBloc: Right(conversation)
+deactivate CreateConvUseCase
+
+ConvBloc -> ConvBloc: emit(ConversationActive(conversation: conversation))
+ConvBloc --> CreateConvScreen: state changed to ConversationActive
+deactivate ConvBloc
+
+CreateConvScreen -> CreateConvScreen: Navigate to ConversationScreen
+CreateConvScreen --> User: Display conversation screen with AI's first message
+deactivate CreateConvScreen
+
+== Send Message Flow ==
+
+User -> ConvScreen: Tap record button
+activate ConvScreen
+
+ConvScreen -> ConvBloc: add(StartRecordingEvent())
+activate ConvBloc
+
+ConvBloc -> AudioSvc: startRecording()
+activate AudioSvc
+AudioSvc --> ConvBloc: void
+deactivate AudioSvc
+
+ConvBloc -> ConvBloc: emit(state.copyWith(recordingState: RecordingState.recording))
+ConvBloc --> ConvScreen: state changed (isRecording = true)
+deactivate ConvBloc
+
+ConvScreen --> User: Show recording UI
+User -> ConvScreen: Tap stop button
+activate ConvScreen
+
+ConvScreen -> ConvBloc: add(StopRecordingEvent(filePath))
+activate ConvBloc
+
+ConvBloc -> AudioSvc: stopRecording()
+activate AudioSvc
+AudioSvc --> ConvBloc: filePath
+deactivate AudioSvc
+
+ConvBloc -> ConvBloc: add(UploadAudioEvent(filePath))
+ConvBloc -> AudioSvc: uploadAudio(filePath)
+activate AudioSvc
+
+AudioSvc -> API: POST /audio2text (audioData)
+activate API
+API --> AudioSvc: {audio_id, transcription}
+deactivate API
+
+AudioSvc --> ConvBloc: AudioUploadResponse
+deactivate AudioSvc
+
+ConvBloc -> ConvBloc: emit(AudioUploaded(transcription, audioId))
+ConvBloc --> ConvScreen: state changed (AudioUploaded)
+deactivate ConvBloc
+
+ConvScreen --> User: Display transcription and "Send" button
+User -> ConvScreen: Tap "Send"
+activate ConvScreen
+
+ConvScreen -> ConvBloc: add(SendSpeechMessageEvent(conversationId, audioId))
+activate ConvBloc
+
+ConvBloc -> ConvBloc: _onSendSpeechMessage()
+ConvBloc -> SendMsgUseCase: call(SendSpeechMessageParams)
+activate SendMsgUseCase
+
+SendMsgUseCase -> ConvRepo: sendSpeechMessage(conversationId, audioId)
+activate ConvRepo
+
+ConvRepo -> RepoImpl: sendSpeechMessage(conversationId, audioId)
+activate RepoImpl
+
+RepoImpl -> RemoteDS: sendSpeechMessage(conversationId, audioId)
+activate RemoteDS
+
+RemoteDS -> API: POST /conversations/{id}/message {audio_id}
+activate API
+
+API --> RemoteDS: {user_message, ai_message}
+deactivate API
+
+RemoteDS -> RemoteDS: MessageModel.fromJson for user & AI messages
+RemoteDS --> RepoImpl: {user_message, ai_message}
+deactivate RemoteDS
+
+RepoImpl --> ConvRepo: Right(ConversationMessages(userMessage, aiMessage))
+deactivate RepoImpl
+
+ConvRepo --> SendMsgUseCase: Right(ConversationMessages)
+deactivate ConvRepo
+
+SendMsgUseCase --> ConvBloc: Right(ConversationMessages)
+deactivate SendMsgUseCase
+
+ConvBloc -> ConvBloc: Add messages to conversation & emit MessagesSent
+ConvBloc --> ConvScreen: state.lastMessages (user & AI messages)
+deactivate ConvBloc
+
+ConvScreen -> ConvScreen: Update UI with new messages
+ConvScreen --> User: Display AI response
+deactivate ConvScreen
+
+== Request Feedback Flow ==
+
+User -> ConvScreen: Tap "Get Feedback" on message
+activate ConvScreen
+
+ConvScreen -> ConvBloc: add(GetMessageFeedbackEvent(messageId))
+activate ConvBloc
+
+ConvBloc -> ConvRepo: getMessageFeedback(messageId)
+activate ConvRepo
+
+ConvRepo -> RepoImpl: getMessageFeedback(messageId)
+activate RepoImpl
+
+RepoImpl -> RemoteDS: getMessageFeedback(messageId)
+activate RemoteDS
+
+RemoteDS -> API: GET /messages/{messageId}/feedback
+activate API
+
+API --> RemoteDS: {user_feedback, is_ready}
+deactivate API
+
+RemoteDS --> RepoImpl: FeedbackModel
+deactivate RemoteDS
+
+RepoImpl --> ConvRepo: Right(feedback)
+deactivate RepoImpl
+
+ConvRepo --> ConvBloc: Right(feedback)
+deactivate ConvRepo
+
+ConvBloc -> ConvBloc: emit(FeedbackLoaded(feedback))
+ConvBloc --> ConvScreen: state changed (FeedbackLoaded)
+deactivate ConvBloc
+
+ConvScreen -> ConvScreen: Display feedback panel
+ConvScreen --> User: Show detailed language feedback
+deactivate ConvScreen
+
+@enduml
