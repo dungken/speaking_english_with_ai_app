@@ -11,7 +11,7 @@ import '../../../../core/utils/responsive_layout.dart';
 import '../bloc/conversation_bloc.dart';
 import '../bloc/conversation_event.dart';
 import '../bloc/conversation_state.dart';
-import 'conversation_screen.dart';
+import '../pages/loading_conversation_illustration_page.dart';
 
 /// Screen for creating a new conversation
 ///
@@ -249,8 +249,18 @@ class _CreateConversationScreenState extends State<CreateConversationScreen> {
           SmoothTransitionManager.executeWithProperTiming(
             callback: () {
               if (context.mounted) {
-                context.go('/conversation/${state.conversation!.id}',
-                    extra: state.conversation);
+                // Use GoRouter for consistent navigation throughout the app
+                // This replaces the current route with the loading page
+                // and ensures proper back navigation to home screen
+                context.push(
+                  '/loading-conversation',
+                  extra: {
+                    'conversation': state.conversation!,
+                    'initialMessage': state.conversation!.messages.isNotEmpty
+                        ? state.conversation!.messages.first
+                        : null,
+                  },
+                );
               }
             },
             isHeavyOperation: true, // Screen transitions are heavy operations
@@ -274,14 +284,45 @@ class _CreateConversationScreenState extends State<CreateConversationScreen> {
             onPressed: () => context.pop(),
           ),
         ),
-        body: LayoutBuilder(
-          builder: (context, constraints) {
-            if (ResponsiveLayout.isLargeScreen(context)) {
-              return _buildLandscapeLayout(context);
-            } else {
-              return _buildPortraitLayout(context);
-            }
-          },
+        body: Stack(
+          children: [
+            LayoutBuilder(
+              builder: (context, constraints) {
+                if (ResponsiveLayout.isLargeScreen(context)) {
+                  return _buildLandscapeLayout(context);
+                } else {
+                  return _buildPortraitLayout(context);
+                }
+              },
+            ),
+            // Show loading overlay while creating conversation
+            BlocBuilder<ConversationBloc, ConversationState>(
+              builder: (context, state) {
+                if (state is ConversationCreating) {
+                  return Container(
+                    color: Colors.black.withOpacity(0.3),
+                    alignment: Alignment.center,
+                    child: Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          CircularProgressIndicator(),
+                          SizedBox(height: 20),
+                          Text('Creating your conversation...'),
+                        ],
+                      ),
+                    ),
+                  );
+                }
+                return const SizedBox.shrink();
+              },
+            ),
+          ],
         ),
       ),
     );

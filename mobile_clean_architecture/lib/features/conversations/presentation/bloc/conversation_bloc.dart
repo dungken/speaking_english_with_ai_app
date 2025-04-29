@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:mobile_clean_architecture/features/conversations/domain/entities/feedback.dart';
 
 import '../../../../core/error/failures.dart';
 import '../../../../core/services/audio_services.dart';
@@ -161,8 +162,23 @@ class ConversationBloc extends Bloc<ConversationEvent, ConversationState> {
       return;
     }
 
+    // Check if we already have this feedback in the cache
+    if (state.feedbackCache.containsKey(event.messageId)) {
+      _log('Using cached feedback for message ${event.messageId}');
+      // Use the cached feedback instead of making an API call
+      emit(FeedbackLoaded(
+        conversation: state.conversation!,
+        feedback: state.feedbackCache[event.messageId]!,
+        feedbackCache: state.feedbackCache,
+      ));
+      return;
+    }
+
     // Emit FeedbackLoading state to show loading indicator
-    emit(FeedbackLoading(conversation: state.conversation!));
+    emit(FeedbackLoading(
+      conversation: state.conversation!,
+      feedbackCache: state.feedbackCache,
+    ));
 
     final result = await repository.getMessageFeedback(event.messageId);
 
@@ -173,17 +189,26 @@ class ConversationBloc extends Bloc<ConversationEvent, ConversationState> {
             conversation: state.conversation!,
             processingMessage: failure.message ??
                 'Feedback is still being generated. Please try again in a moment.',
+            feedbackCache: state.feedbackCache,
           );
         }
         return FeedbackError(
           conversation: state.conversation!,
           errorMessage: _mapFailureToMessage(failure),
+          feedbackCache: state.feedbackCache,
         );
       },
-      (feedback) => FeedbackLoaded(
-        conversation: state.conversation!,
-        feedback: feedback,
-      ),
+      (feedback) {
+        // Add the feedback to the cache
+        final updatedCache = Map<String, Feedback>.from(state.feedbackCache);
+        updatedCache[event.messageId] = feedback;
+
+        return FeedbackLoaded(
+          conversation: state.conversation!,
+          feedback: feedback,
+          feedbackCache: updatedCache,
+        );
+      },
     ));
   }
 
@@ -192,6 +217,8 @@ class ConversationBloc extends Bloc<ConversationEvent, ConversationState> {
       CloseFeedbackEvent event, Emitter<ConversationState> emit) {
     if (state.conversation == null) return;
 
+    // Emit a ConversationActive state that preserves all the current state
+    // but clears the activeFeedback
     emit(ConversationActive(
       conversation: state.conversation!,
       recordingState: state.recordingState,
@@ -199,6 +226,9 @@ class ConversationBloc extends Bloc<ConversationEvent, ConversationState> {
       lastMessages: state.lastMessages,
       transcription: state.transcription,
       audioId: state.audioId,
+      // Preserve the feedback cache to avoid re-fetching feedbacks
+      feedbackCache: state.feedbackCache,
+      // No activeFeedback since we're closing it
     ));
   }
 

@@ -70,8 +70,6 @@ class ConversationRemoteDataSourceImpl implements ConversationRemoteDataSource {
         }),
       );
 
-      print("Response body: ${response.body}");
-
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);
 
