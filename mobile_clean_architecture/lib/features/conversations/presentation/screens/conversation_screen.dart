@@ -222,13 +222,9 @@ class _ConversationScreenState extends State<ConversationScreen> {
   }
 
   Widget _buildTranscriptionEditor(BuildContext context, String transcription) {
-    // Always update the controller when transcription changes
+    // Always update the controller when transcription changes to maintain the reference
     if (_transcriptionEditController.text != transcription) {
       _transcriptionEditController.text = transcription;
-      // Set the cursor to the end of the text
-      _transcriptionEditController.selection = TextSelection.fromPosition(
-        TextPosition(offset: transcription.length),
-      );
     }
 
     return Container(
@@ -246,14 +242,8 @@ class _ConversationScreenState extends State<ConversationScreen> {
             style: TextStyles.secondary(context, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 4),
-          TextFormField(
-            controller: _transcriptionEditController,
-            maxLines: 3,
-            onChanged: _editTranscription,
-            decoration: const InputDecoration(
-              hintText: 'Edit your response if needed',
-              border: InputBorder.none,
-            ),
+          Text(
+            transcription,
             style: TextStyles.body(context),
           ),
         ],
@@ -262,17 +252,22 @@ class _ConversationScreenState extends State<ConversationScreen> {
   }
 
   Widget _buildInputArea(BuildContext context) {
-    return BlocSelector<ConversationBloc, ConversationState, ({
-      bool isRecording,
-      bool isProcessing,
-      String? transcription,
-      bool isTranscriptionReady,
-    })>(
+    return BlocSelector<
+        ConversationBloc,
+        ConversationState,
+        ({
+          bool isRecording,
+          bool isProcessing,
+          String? transcription,
+          bool isTranscriptionReady,
+        })>(
       selector: (state) => (
         isRecording: ConversationStateAdapter.isRecording(state),
         isProcessing: ConversationStateAdapter.isProcessing(state),
-        transcription: ConversationStateAdapter.getTranscriptionFromState(state),
-        isTranscriptionReady: ConversationStateAdapter.isTranscriptionReady(state),
+        transcription:
+            ConversationStateAdapter.getTranscriptionFromState(state),
+        isTranscriptionReady:
+            ConversationStateAdapter.isTranscriptionReady(state),
       ),
       builder: (context, inputState) {
         return AndroidRecordingOptimizer.wrapRecordingWidget(
@@ -295,8 +290,10 @@ class _ConversationScreenState extends State<ConversationScreen> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    if (inputState.isTranscriptionReady && inputState.transcription != null) ...[
-                      _buildTranscriptionEditor(context, inputState.transcription!),
+                    if (inputState.isTranscriptionReady &&
+                        inputState.transcription != null) ...[
+                      _buildTranscriptionEditor(
+                          context, inputState.transcription!),
                       const SizedBox(height: 8),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.end,
@@ -477,11 +474,13 @@ class _ConversationScreenState extends State<ConversationScreen> {
                 ),
                 // Feedback overlay (only rebuilds when feedback changes)
                 BlocSelector<ConversationBloc, ConversationState, bool>(
-                  selector: (state) => state.activeFeedback != null && 
+                  selector: (state) =>
+                      state.activeFeedback != null &&
                       !ResponsiveLayout.isLargeScreen(context),
                   builder: (context, showFeedbackOverlay) {
                     if (showFeedbackOverlay) {
-                      return BlocSelector<ConversationBloc, ConversationState, String?>(
+                      return BlocSelector<ConversationBloc, ConversationState,
+                          String?>(
                         selector: (state) => state.activeFeedback?.userFeedback,
                         builder: (context, feedbackText) {
                           return Positioned.fill(
@@ -517,7 +516,8 @@ class _ConversationScreenState extends State<ConversationScreen> {
                             ),
                             child: Text(
                               errorMessage,
-                              style: TextStyles.body(context, color: Colors.white),
+                              style:
+                                  TextStyles.body(context, color: Colors.white),
                             ),
                           ),
                         ),
