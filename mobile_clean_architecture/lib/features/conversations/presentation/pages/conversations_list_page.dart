@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
+import 'package:mobile_clean_architecture/features/conversations/presentation/pages/conversation_page.dart';
+import 'package:mobile_clean_architecture/features/conversations/presentation/pages/create_conversation_page.dart';
 
 import '../../../../core/presentation/widgets/buttons/primary_button.dart';
 import '../../../../core/presentation/widgets/layout/app_scaffold.dart';
@@ -10,8 +12,6 @@ import '../../domain/entities/conversation.dart';
 import '../bloc/conversation_bloc.dart';
 import '../bloc/conversation_event.dart';
 import '../bloc/conversation_state.dart';
-import 'conversation_page.dart';
-import 'create_conversation_page.dart';
 
 class ConversationsListPage extends StatelessWidget {
   const ConversationsListPage({Key? key}) : super(key: key);

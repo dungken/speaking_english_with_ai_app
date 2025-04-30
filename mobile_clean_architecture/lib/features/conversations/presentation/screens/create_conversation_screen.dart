@@ -11,7 +11,6 @@ import '../../../../core/utils/responsive_layout.dart';
 import '../bloc/conversation_bloc.dart';
 import '../bloc/conversation_event.dart';
 import '../bloc/conversation_state.dart';
-import '../pages/loading_conversation_illustration_page.dart';
 
 /// Screen for creating a new conversation
 ///
@@ -31,6 +30,7 @@ class _CreateConversationScreenState extends State<CreateConversationScreen> {
   final _situationController = TextEditingController();
 
   bool _isFormValid = false;
+  bool _hasNavigated = false; // Flag to track if navigation has occurred
 
   @override
   void initState() {
@@ -38,6 +38,7 @@ class _CreateConversationScreenState extends State<CreateConversationScreen> {
     _userRoleController.addListener(_validateForm);
     _aiRoleController.addListener(_validateForm);
     _situationController.addListener(_validateForm);
+    _hasNavigated = false; // Reset navigation flag when screen initializes
   }
 
   @override
@@ -242,24 +243,40 @@ class _CreateConversationScreenState extends State<CreateConversationScreen> {
   @override
   Widget build(BuildContext context) {
     return BlocListener<ConversationBloc, ConversationState>(
+      listenWhen: (previous, current) {
+        // Only trigger listener when state changes FROM something else TO ConversationActive or ConversationCreationFailed
+        // And prevent re-triggering when returning from another screen with the same state
+        return (previous is! ConversationActive &&
+                current is ConversationActive &&
+                !_hasNavigated) ||
+            (previous is! ConversationCreationFailed &&
+                current is ConversationCreationFailed);
+      },
       listener: (context, state) {
-        if (state is ConversationActive && state.conversation != null) {
-          print('DEBUG NAV: Navigation to conversation screen triggered');
+        if (state is ConversationActive &&
+            state.conversation != null &&
+            !_hasNavigated) {
+          // Set the flag before doing anything to prevent multiple executions
+          setState(() {
+            _hasNavigated = true;
+          });
+
           // Use smooth transition to prevent frame skipping
           SmoothTransitionManager.executeWithProperTiming(
             callback: () {
               if (context.mounted) {
-                // Use GoRouter for consistent navigation throughout the app
-                // This replaces the current route with the loading page
-                // and ensures proper back navigation to home screen
+                // Show success message and navigate in the callback to ensure proper timing
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                      content: Text('Conversation created successfully!'),
+                      backgroundColor: AppColors.success),
+                );
+
+                // Navigate directly to conversation screen instead of loading page
                 context.push(
-                  '/loading-conversation',
-                  extra: {
-                    'conversation': state.conversation!,
-                    'initialMessage': state.conversation!.messages.isNotEmpty
-                        ? state.conversation!.messages.first
-                        : null,
-                  },
+                  '/conversation/${state.conversation!.id}',
+                  extra: state
+                      .conversation!, // Pass the conversation object directly
                 );
               }
             },

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:mobile_clean_architecture/features/conversations/presentation/pages/loading_conversation_illustration_page.dart';
 
 import '../../../../core/presentation/widgets/inputs/app_text_field.dart';
 import '../../../../core/presentation/widgets/buttons/primary_button.dart';
@@ -9,7 +10,7 @@ import '../../../../core/theme/text_styles.dart';
 import '../bloc/conversation_bloc.dart';
 import '../bloc/conversation_event.dart';
 import '../bloc/conversation_state.dart';
-import 'loading_conversation_illustration_page.dart';
+import 'create_conversation_page.dart';
 
 class CreateConversationPage extends StatefulWidget {
   const CreateConversationPage({Key? key}) : super(key: key);
