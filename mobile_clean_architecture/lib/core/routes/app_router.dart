@@ -9,13 +9,9 @@
 /// - Maps URL paths to their corresponding pages
 /// - Uses GoRouter for declarative routing
 
-import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-
 import '../../features/authentication/presentation/screens/auth_screen.dart';
 import '../../features/conversations/domain/entities/conversation.dart';
-import '../../features/conversations/domain/entities/message.dart';
-import '../../features/conversations/presentation/pages/loading_conversation_illustration_page.dart';
 import '../../features/conversations/presentation/screens/conversation_screen.dart';
 import '../../features/conversations/presentation/screens/create_conversation_screen.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
@@ -64,20 +60,7 @@ class AppRouter {
         builder: (context, state) => const CreateConversationScreen(),
       ),
       // Loading conversation route
-      GoRoute(
-        path: '/loading-conversation',
-        builder: (context, state) {
-          final Map<String, dynamic> extras =
-              state.extra as Map<String, dynamic>;
-          final conversation = extras['conversation'] as Conversation;
-          final initialMessage = extras['initialMessage'] as Message?;
 
-          return LoadingConversationIllustrationPage(
-            conversation: conversation,
-            initialMessage: initialMessage,
-          );
-        },
-      ),
       GoRoute(
         path: '/conversation/:id',
         builder: (context, state) {
