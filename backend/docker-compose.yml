@@ -5,8 +5,13 @@ services:
       dockerfile: Dockerfile
     container_name: speak_ai_backend
     restart: unless-stopped
+    # Removing host network mode and using explicit port mapping instead
+    # network_mode: host
+    
+    # Explicitly map ports from all network interfaces to allow external connections
     ports:
-      - "8000:8000"
+      - "0.0.0.0:8000:8000"
+    
     volumes:
       - ./:/app
       - ./logs:/app/logs
@@ -25,11 +30,11 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-    networks:
-      - backend_network
+    # networks:
+    #   - backend_network
     command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
 
-networks:
-  backend_network:
-    name: speak_ai_backend_network
-    driver: bridge
+# networks:
+#   backend_network:
+#     name: speak_ai_backend_network
+#     driver: bridge

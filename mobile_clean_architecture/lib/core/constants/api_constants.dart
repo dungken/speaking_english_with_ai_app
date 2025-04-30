@@ -5,8 +5,7 @@ class ApiConstants {
   // static const String baseUrl = 'http://10.0.2.2:8000';
 
   // Production URL - using the deployed API
-  static const String baseUrl =
-      'https://speak-ai-api-hkd7gwgwcxdqc2gy.eastus-01.azurewebsites.net';
+  static const String baseUrl = 'http://172.16.10.146:8000';
 
   /// Authentication endpoints
   static const String loginEndpoint = '/api/users/login';
