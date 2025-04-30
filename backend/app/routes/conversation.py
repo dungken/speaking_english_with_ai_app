@@ -232,32 +232,73 @@ async def turn_to_text(
             - role: User's role
     
     Returns:
-        str: The ID of the saved audio record in the database.
-            This ID can be used in subsequent API calls to reference the audio.
+        dict: A dictionary containing:
+            - audio_id: The ID of the saved audio record (if successful)
+            - transcription: The transcribed text or an error message
+            - success: Boolean indicating whether transcription was successful
     """
     # Initialize services
     from app.utils.speech_service import SpeechService
     speech_service = SpeechService()
     user_id = str(current_user["_id"])
-  
-    # Step 1: Save the audio file
-    file_path, audio_model = speech_service.save_audio_file(audio_file, user_id)
-    audio_id = str(audio_model._id)
     
-    # Step 2: Transcribe the audio file
-    transcription = speech_service.transcribe_audio(Path(file_path))
+    # Step 1: Try to transcribe the audio from a temporary file
+    transcription, temp_file_path = speech_service.transcribe_from_upload(audio_file)
     
-    # Ensure we have a valid transcription to work with
-    if not transcription or not transcription.strip():
-        return "Audio content could not be transcribed. Please try again with a different file format or check audio quality."
+    # Step 2: Check if transcription was successful
+    transcription_error_message = "Audio content could not be transcribed. Please try again with a different file format or check audio quality."
+    transcription_successful = transcription != transcription_error_message and transcription.strip() != ""
     
-    # Update audio record with transcription
-    db.audio.update_one(
-        {"_id": ObjectId(audio_id)},
-        {"$set": {"transcription": transcription}}
-    )
-
-    return { "audio_id": audio_id, "transcription": transcription}
+    # Step 3: If transcription was successful, save the file permanently
+    if transcription_successful:
+        try:
+            # Reset file pointer to beginning of file for save operation
+            audio_file.file.seek(0)
+            
+            # Now save the audio file permanently since transcription was successful
+            file_path, audio_model = speech_service.save_audio_file(audio_file, user_id)
+            audio_id = str(audio_model._id)
+            
+            # Update audio record with transcription
+            db.audio.update_one(
+                {"_id": ObjectId(audio_id)},
+                {"$set": {"transcription": transcription, "has_error": False}}
+            )
+            
+            # Clean up the temporary file since we've saved it properly now
+            import os
+            if temp_file_path and os.path.exists(temp_file_path):
+                os.unlink(temp_file_path)
+                
+            # Return success response
+            return {
+                "audio_id": audio_id,
+                "transcription": transcription,
+                "success": True
+            }
+            
+        except Exception as e:
+            logger.error(f"Error saving audio after successful transcription: {str(e)}")
+            # Even if saving fails, return the transcription to the user
+            return {
+                "audio_id": None,
+                "transcription": transcription,
+                "success": True,
+                "warning": "Transcription successful but audio storage failed"
+            }
+    else:
+        # Transcription failed - clean up temp file and return error
+        if temp_file_path:
+            import os
+            if os.path.exists(temp_file_path):
+                os.unlink(temp_file_path)
+                
+        # Return error response with consistent format
+        return {
+            "audio_id": None,
+            "transcription": transcription_error_message,
+            "success": False
+        }
         
  
 

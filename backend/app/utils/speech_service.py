@@ -28,6 +28,48 @@ class SpeechService:
     2. Save audio files to disk with proper organization
     """
     
+    def transcribe_from_upload(self, audio_file: UploadFile, language_code: str = "en-US") -> Tuple[str, Path]:
+        """
+        Create a temporary file from upload and transcribe it without storing in DB first.
+        
+        This optimized method creates a temporary file, transcribes it, and returns the
+        transcription without adding it to the database until we know transcription was successful.
+        
+        Args:
+            audio_file: The audio file from the upload
+            language_code: Language code for transcription (default: en-US)
+            
+        Returns:
+            A tuple containing (transcription text, temporary file path)
+            
+        Raises:
+            TranscriptionError: If transcription fails
+        """
+        try:
+            import tempfile
+            import os
+            
+            # Create a temporary file with the same extension as the uploaded file
+            _, ext = os.path.splitext(audio_file.filename)
+            with tempfile.NamedTemporaryFile(delete=False, suffix=ext) as tmp_file:
+                # Copy uploaded file to temporary file
+                shutil.copyfileobj(audio_file.file, tmp_file)
+                tmp_path = Path(tmp_file.name)
+            
+            # Make sure we reset the file pointer for potential future use
+            audio_file.file.seek(0)
+            
+            # Transcribe the temporary file
+            transcription = self.transcribe_audio(tmp_path, language_code)
+            
+            # Return both the transcription and the path to the temporary file
+            return transcription, tmp_path
+            
+        except Exception as e:
+            logger.error(f"Error transcribing from upload: {str(e)}")
+            # Return the error message and None for the file path
+            return self._try_fallback_transcription(Path(""), language_code), None
+    
     def transcribe_audio(self, audio_file: Path, language_code: str = "en-US") -> str:
         """
         Transcribe audio to text using the appropriate service.
@@ -176,4 +218,4 @@ class SpeechService:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Failed to save audio file: {str(e)}"
-            ) 
+            )
