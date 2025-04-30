@@ -90,6 +90,12 @@ class ConversationStateAdapter {
         state.transcription!.isNotEmpty;
   }
 
+  /// Check if the transcription was successful
+  static bool isTranscriptionSuccessful(ConversationState state) {
+    return state.transcriptionSuccess ??
+        false; // Default to true for backward compatibility
+  }
+
   /// Get the recording path from state
   static String? getRecordingPath(ConversationState state) {
     return state.lastRecordingPath;

@@ -252,6 +252,7 @@ class _ConversationScreenOptimizedState
           bool isProcessing,
           String? transcription,
           bool isTranscriptionReady,
+          bool isTranscriptionSuccessful,
         })>(
       selector: (state) => (
         isRecording: ConversationStateAdapter.isRecording(state),
@@ -260,6 +261,8 @@ class _ConversationScreenOptimizedState
             ConversationStateAdapter.getTranscriptionFromState(state),
         isTranscriptionReady:
             ConversationStateAdapter.isTranscriptionReady(state),
+        isTranscriptionSuccessful:
+            ConversationStateAdapter.isTranscriptionSuccessful(state),
       ),
       builder: (context, inputState) {
         return AndroidRecordingOptimizer.wrapRecordingWidget(
@@ -296,15 +299,16 @@ class _ConversationScreenOptimizedState
                             icon: Icons.mic,
                           ),
                           const SizedBox(width: 8),
-                          BlocBuilder<ConversationBloc, ConversationState>(
-                            builder: (context, state) {
-                              return PrimaryButton(
-                                text: 'Send',
-                                onPressed: () => _sendMessage(state),
-                                icon: Icons.send,
-                              );
-                            },
-                          ),
+                          if (inputState.isTranscriptionSuccessful)
+                            BlocBuilder<ConversationBloc, ConversationState>(
+                              builder: (context, state) {
+                                return PrimaryButton(
+                                  text: 'Send',
+                                  onPressed: () => _sendMessage(state),
+                                  icon: Icons.send,
+                                );
+                              },
+                            ),
                         ],
                       ),
                     ] else ...[

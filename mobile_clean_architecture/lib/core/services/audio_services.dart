@@ -137,10 +137,15 @@ class AudioService {
         try {
           // Parse the response based on the API documentation format
           final responseData = json.decode(response.body);
+          final transcription = responseData["transcription"] ?? "";
+          final isErrorTranscription =
+              transcription.contains("Audio content could not be transcribed");
 
           return {
             "audio_id": responseData["audio_id"] ?? "",
-            "transcription": responseData["transcription"] ?? ""
+            "transcription": transcription,
+            "success": responseData["success"] ??
+                !isErrorTranscription // If success is not provided, use transcription to determine
           };
         } catch (e) {
           throw ServerException(

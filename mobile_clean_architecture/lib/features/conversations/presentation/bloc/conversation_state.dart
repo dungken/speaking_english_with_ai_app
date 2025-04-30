@@ -49,6 +49,9 @@ class ConversationState extends Equatable {
   /// Audio ID from the latest audio upload
   final String? audioId;
 
+  /// Flag indicating if the transcription was successful
+  final bool? transcriptionSuccess;
+
   /// Cache of feedback results by message ID to prevent redundant API calls
   final Map<String, Feedback> feedbackCache;
 
@@ -62,6 +65,7 @@ class ConversationState extends Equatable {
     this.lastMessages,
     this.transcription,
     this.audioId,
+    this.transcriptionSuccess,
     this.feedbackCache = const {},
   });
 
@@ -76,6 +80,7 @@ class ConversationState extends Equatable {
         lastMessages,
         transcription,
         audioId,
+        transcriptionSuccess,
         feedbackCache,
       ];
 
@@ -90,6 +95,7 @@ class ConversationState extends Equatable {
     ConversationMessages? lastMessages,
     String? transcription,
     String? audioId,
+    bool? transcriptionSuccess,
     Map<String, Feedback>? feedbackCache,
     bool clearError = false,
     bool clearActiveFeedback = false,
@@ -113,6 +119,7 @@ class ConversationState extends Equatable {
       transcription:
           clearTranscription ? null : (transcription ?? this.transcription),
       audioId: clearAudioId ? null : (audioId ?? this.audioId),
+      transcriptionSuccess: transcriptionSuccess ?? this.transcriptionSuccess,
       feedbackCache: feedbackCache ?? this.feedbackCache,
     );
   }
@@ -144,6 +151,7 @@ class ConversationActive extends ConversationState {
     ConversationMessages? lastMessages,
     String? transcription,
     String? audioId,
+    bool? transcriptionSuccess,
     Map<String, Feedback> feedbackCache = const {},
   }) : super(
           conversation: conversation,
@@ -153,6 +161,7 @@ class ConversationActive extends ConversationState {
           lastMessages: lastMessages,
           transcription: transcription,
           audioId: audioId,
+          transcriptionSuccess: transcriptionSuccess,
           feedbackCache: feedbackCache,
         );
 }
@@ -164,6 +173,7 @@ class AudioUploaded extends ConversationState {
     required String lastRecordingPath,
     required String transcription,
     required String audioId,
+    bool? transcriptionSuccess,
     Map<String, Feedback> feedbackCache = const {},
   }) : super(
           conversation: conversation,
@@ -171,6 +181,7 @@ class AudioUploaded extends ConversationState {
           lastRecordingPath: lastRecordingPath,
           transcription: transcription,
           audioId: audioId,
+          transcriptionSuccess: transcriptionSuccess,
           feedbackCache: feedbackCache,
         );
 }
@@ -249,11 +260,13 @@ class MessageSending extends ConversationState {
     required Conversation conversation,
     required String audioId,
     required String transcription,
+    bool? transcriptionSuccess,
     Map<String, Feedback> feedbackCache = const {},
   }) : super(
           conversation: conversation,
           audioId: audioId,
           transcription: transcription,
+          transcriptionSuccess: transcriptionSuccess,
           isLoading: true,
           feedbackCache: feedbackCache,
         );
@@ -264,11 +277,13 @@ class MessagesSent extends ConversationState {
   const MessagesSent({
     required Conversation conversation,
     required ConversationMessages messages,
+    bool? transcriptionSuccess,
     Map<String, Feedback> feedbackCache = const {},
   }) : super(
           conversation: conversation,
           lastMessages: messages,
           recordingState: RecordingState.idle,
+          transcriptionSuccess: transcriptionSuccess,
           feedbackCache: feedbackCache,
         );
 }
@@ -335,12 +350,14 @@ class TranscriptionEdited extends ConversationState {
     required String transcription,
     required String audioId,
     required String lastRecordingPath,
+    bool? transcriptionSuccess,
     Map<String, Feedback> feedbackCache = const {},
   }) : super(
           conversation: conversation,
           transcription: transcription,
           audioId: audioId,
           lastRecordingPath: lastRecordingPath,
+          transcriptionSuccess: transcriptionSuccess,
           recordingState: RecordingState.transcribed,
           feedbackCache: feedbackCache,
         );

@@ -344,6 +344,7 @@ class ConversationBloc extends Bloc<ConversationEvent, ConversationState> {
         lastRecordingPath: event.filePath,
         transcription: response.transcription,
         audioId: response.audioId,
+        transcriptionSuccess: response.success,
       ),
     ));
   }

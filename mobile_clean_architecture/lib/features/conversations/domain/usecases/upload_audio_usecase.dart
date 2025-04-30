@@ -15,21 +15,25 @@ class UploadAudioParams {
 class AudioUploadResponse {
   final String audioId;
   final String transcription;
+  final bool success;
 
   AudioUploadResponse({
     required this.audioId,
     required this.transcription,
+    this.success = true,
   });
 }
 
 /// Usecase for uploading an audio file and getting transcription
-class UploadAudioUseCase implements UseCase<AudioUploadResponse, UploadAudioParams> {
+class UploadAudioUseCase
+    implements UseCase<AudioUploadResponse, UploadAudioParams> {
   final AudioService audioService;
 
   UploadAudioUseCase({required this.audioService});
 
   @override
-  Future<Either<Failure, AudioUploadResponse>> call(UploadAudioParams params) async {
+  Future<Either<Failure, AudioUploadResponse>> call(
+      UploadAudioParams params) async {
     try {
       final result = await audioService.uploadAudioAndGetTranscription(
         params.audioFilePath,
@@ -39,6 +43,7 @@ class UploadAudioUseCase implements UseCase<AudioUploadResponse, UploadAudioPara
         AudioUploadResponse(
           audioId: result['audio_id'] ?? '',
           transcription: result['transcription'] ?? '',
+          success: result['success'] ?? true,
         ),
       );
     } catch (e) {
