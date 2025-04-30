@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/utils/buffer_queue_error_handler.dart';
 import '../../../../core/utils/rendering/buffer_queue_manager.dart';
 import '../../../../core/utils/android_recording_optimizer.dart';
@@ -15,7 +16,6 @@ import '../../domain/entities/conversation.dart';
 import '../../domain/entities/message.dart';
 import '../bloc/conversation_bloc.dart';
 import '../bloc/conversation_event.dart';
-import '../bloc/conversation_event_adapter.dart';
 import '../bloc/conversation_state.dart';
 import '../bloc/conversation_state_adapter.dart';
 import 'widgets/simple_feedback_panel.dart';
@@ -437,6 +437,12 @@ class _ConversationScreenState extends State<ConversationScreen> {
 
         return Scaffold(
           appBar: AppBar(
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back),
+              onPressed: () {
+                context.go('/home');
+              },
+            ),
             title: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
@@ -504,7 +510,9 @@ class _ConversationScreenState extends State<ConversationScreen> {
                 BlocSelector<ConversationBloc, ConversationState, String?>(
                   selector: (state) {
                     // Filter out recording initialization errors
-                    if (state.errorMessage != null && state.errorMessage!.contains('Failed to start recording')) {
+                    if (state.errorMessage != null &&
+                        state.errorMessage!
+                            .contains('Failed to start recording')) {
                       return null;
                     }
                     return state.errorMessage;
