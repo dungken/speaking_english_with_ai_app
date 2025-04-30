@@ -502,7 +502,13 @@ class _ConversationScreenState extends State<ConversationScreen> {
                 ),
                 // Error message (only rebuilds when error changes)
                 BlocSelector<ConversationBloc, ConversationState, String?>(
-                  selector: (state) => state.errorMessage,
+                  selector: (state) {
+                    // Filter out recording initialization errors
+                    if (state.errorMessage != null && state.errorMessage!.contains('Failed to start recording')) {
+                      return null;
+                    }
+                    return state.errorMessage;
+                  },
                   builder: (context, errorMessage) {
                     if (errorMessage != null) {
                       return Positioned(
