@@ -43,6 +43,8 @@ class _ConversationScreenState extends State<ConversationScreen> {
   bool _showSituation = true;
   TextEditingController _transcriptionEditController = TextEditingController();
 
+  // Initializes the screen and sets up buffer monitoring and conversation state.
+  // This ensures the screen is ready to handle user interactions and displays the correct conversation.
   @override
   void initState() {
     super.initState();
@@ -58,6 +60,8 @@ class _ConversationScreenState extends State<ConversationScreen> {
     }
   }
 
+  // Cleans up resources like buffer monitoring and controllers when the screen is disposed.
+  // This prevents memory leaks and ensures proper cleanup when the user leaves the screen.
   @override
   void dispose() {
     // Stop buffer monitoring when the screen is disposed
@@ -67,6 +71,8 @@ class _ConversationScreenState extends State<ConversationScreen> {
     super.dispose();
   }
 
+  // Scrolls the message list to the bottom to show the latest messages.
+  // This is used after sending a message or when new messages are added.
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scrollController.hasClients) {
@@ -79,12 +85,16 @@ class _ConversationScreenState extends State<ConversationScreen> {
     });
   }
 
+  // Starts a new voice recording and clears the transcription text.
+  // This is the first step in capturing user input for the conversation.
   void _startRecording() {
     // Clear the transcription text controller when starting a new recording
     _transcriptionEditController.clear();
     context.read<ConversationBloc>().add(StartRecordingEvent());
   }
 
+  // Stops the current recording and triggers transcription processing.
+  // This is used to convert the user's audio input into text for the conversation.
   void _stopRecording() {
     // This will be handled by the bloc, which will now:
     // 1. Stop recording
@@ -96,10 +106,14 @@ class _ConversationScreenState extends State<ConversationScreen> {
         ));
   }
 
+  // Cancels the current recording session.
+  // This is used when the user decides not to send the recorded message.
   void _cancelRecording() {
     context.read<ConversationBloc>().add(CancelRecordingEvent());
   }
 
+  // Sends the user's message (audio and transcription) to the conversation.
+  // This is the final step in user input, adding the message to the conversation flow.
   void _sendMessage(ConversationState state) {
     final conversationId = state.conversation?.id ?? '';
     final audioId = state.audioId;
@@ -115,6 +129,8 @@ class _ConversationScreenState extends State<ConversationScreen> {
     }
   }
 
+  // Updates the transcription text when the user edits it.
+  // This allows the user to refine their input before sending it.
   void _editTranscription(String newTranscription) {
     context.read<ConversationBloc>().add(
           EditTranscriptionEvent(
@@ -123,6 +139,8 @@ class _ConversationScreenState extends State<ConversationScreen> {
         );
   }
 
+  // Requests feedback for a specific message in the conversation.
+  // This is used to provide the user with insights or corrections on their input.
   void _requestFeedback(String messageId) {
     context.read<ConversationBloc>().add(
           GetMessageFeedbackEvent(
@@ -131,14 +149,20 @@ class _ConversationScreenState extends State<ConversationScreen> {
         );
   }
 
+  // Closes the feedback panel.
+  // This is used to hide feedback when the user is done reviewing it.
   void _closeFeedback() {
     context.read<ConversationBloc>().add(CloseFeedbackEvent());
   }
 
+  // Marks the conversation as complete.
+  // This is used to signal the end of the conversation session.
   void _completeConversation() {
     context.read<ConversationBloc>().add(CompleteConversationEvent());
   }
 
+  // Builds the header displaying the conversation's situation and roles.
+  // This provides context to the user about their role and the AI's role in the conversation.
   Widget _buildSituationHeader(
       BuildContext context, Conversation conversation) {
     return AnimatedContainer(
@@ -200,6 +224,8 @@ class _ConversationScreenState extends State<ConversationScreen> {
     );
   }
 
+  // Builds the list of messages in the conversation.
+  // This displays the conversation history between the user and the AI.
   Widget _buildMessageList(BuildContext context, List<Message> messages) {
     _scrollToBottom();
     return Expanded(
@@ -221,6 +247,8 @@ class _ConversationScreenState extends State<ConversationScreen> {
     );
   }
 
+  // Builds the transcription editor for the user's response.
+  // This allows the user to review and edit their transcribed message before sending it.
   Widget _buildTranscriptionEditor(BuildContext context, String transcription) {
     // Always update the controller when transcription changes to maintain the reference
     if (_transcriptionEditController.text != transcription) {
@@ -251,6 +279,8 @@ class _ConversationScreenState extends State<ConversationScreen> {
     );
   }
 
+  // Builds the input area for recording and sending messages.
+  // This is the main interaction point for the user to contribute to the conversation.
   Widget _buildInputArea(BuildContext context) {
     return BlocSelector<
         ConversationBloc,
@@ -338,6 +368,8 @@ class _ConversationScreenState extends State<ConversationScreen> {
     );
   }
 
+  // Builds the layout for portrait orientation.
+  // This organizes the conversation components vertically for smaller screens.
   Widget _buildPortraitLayout(BuildContext context, ConversationState state) {
     final messages = ConversationStateAdapter.getMessagesFromState(state);
     return Column(
@@ -349,6 +381,8 @@ class _ConversationScreenState extends State<ConversationScreen> {
     );
   }
 
+  // Builds the layout for landscape orientation.
+  // This organizes the conversation components horizontally for larger screens.
   Widget _buildLandscapeLayout(BuildContext context, ConversationState state) {
     final messages = ConversationStateAdapter.getMessagesFromState(state);
     return Row(
@@ -375,6 +409,8 @@ class _ConversationScreenState extends State<ConversationScreen> {
     );
   }
 
+  // Builds a loading screen while the conversation is being loaded.
+  // This provides feedback to the user during data fetching.
   Widget _buildLoadingScreen() {
     return const Scaffold(
       body: Center(
@@ -383,6 +419,8 @@ class _ConversationScreenState extends State<ConversationScreen> {
     );
   }
 
+  // Builds an error screen when the conversation fails to load.
+  // This informs the user about issues and prevents a blank screen.
   Widget _buildErrorScreen(String message) {
     return Scaffold(
       appBar: AppBar(
@@ -398,6 +436,8 @@ class _ConversationScreenState extends State<ConversationScreen> {
     );
   }
 
+  // Wraps the screen with an error boundary to handle buffer queue errors.
+  // This ensures the app remains stable even if errors occur.
   @override
   Widget build(BuildContext context) {
     // Set up error boundary for BLASTBufferQueue errors
@@ -412,6 +452,8 @@ class _ConversationScreenState extends State<ConversationScreen> {
     );
   }
 
+  // Builds the main screen layout based on the conversation state.
+  // This dynamically updates the UI to reflect the current state of the conversation.
   Widget _buildScreen(BuildContext context) {
     return BlocBuilder<ConversationBloc, ConversationState>(
       // Only rebuild when conversation is null/loaded or error occurs
