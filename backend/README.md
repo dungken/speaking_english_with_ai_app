@@ -101,48 +101,6 @@ pytest
 - Azure Speech Services account
 - Gemini AI API key
 
-### Environment Setup
-
-1. Clone the repository
-2. Copy `env.txt` to `.env` and fill in the required environment variables:
-
-```
-# MongoDB Configuration
-MONGODB_URL=mongodb://localhost:27017
-DATABASE_NAME=speak_ai_db
-
-# Authentication
-JWT_SECRET_KEY=your_jwt_secret_key
-ACCESS_TOKEN_EXPIRE_MINUTES=30
-REFRESH_TOKEN_EXPIRE_DAYS=7
-
-# Azure Speech Services
-AZURE_SPEECH_KEY=your_azure_speech_key
-AZURE_SPEECH_REGION=eastus
-
-# Gemini AI for Feedback Generation
-GEMINI_API_KEY=your_gemini_api_key
-```
-
-### Running Locally
-
-1. Create and activate a virtual environment:
-   ```
-   python -m venv .venv
-   source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-   ```
-
-2. Install dependencies:
-   ```
-   pip install -r requirements.txt
-   ```
-
-3. Start the FastAPI server:
-   ```
-   uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
-   ```
-
-4. Visit `http://localhost:8000/docs` to access the Swagger documentation
 
 ### Running with Docker
 
