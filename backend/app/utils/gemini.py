@@ -15,7 +15,7 @@ if not api_key:
 genai.configure(api_key=api_key)
 
 # Initialize the Gemini model
-model = genai.GenerativeModel("gemini-1.5-flash")
+model = genai.GenerativeModel("gemini-2.0-flash")
 
 def generate_response(prompt: str):
     """

@@ -176,7 +176,7 @@ class FeedbackService:
             Formatted prompt string for Gemini
         """
         prompt = """
-        You are an expert English teacher providing feedback on a student's speech.
+        You are an expert English teacher  providing feedback on a student's speech.
         """
         
         # Add context if available
@@ -197,8 +197,12 @@ class FeedbackService:
         
         Generate two types of feedback in JSON format:
         
-        1. user_feedback: Friendly, encouraging feedback that focuses on 1-2 key improvements and at least one positive aspect. This should be written in natural language, ready to show to the user.
-        
+        1. user_feedback: Hãy đưa ra nhận xét và hướng dẫn như một người bản xứ nói tiếng Anh có thể sử dụng tiếng Việt để giải thích:
+              -Phân tích câu trả lời của người học và chỉ ra các lỗi về ngữ pháp và từ vựng.
+              -Cung cấp gợi ý hoặc ví dụ về cách dùng từ/cụm từ tốt hơn để diễn đạt tự nhiên hơn
+              -Đưa ra phiên bản câu hoàn chỉnh hơn, sát với câu gốc nhưng đúng hơn, phù hợp với trình độ người học.
+              -Phân tích cấu trúc ngữ pháp (mental model) của câu ví dụ bạn đưa ra: chỉ ra chủ ngữ, động từ, bổ ngữ, cách dùng mệnh đề phụ (nếu có), và chức năng giao tiếp của từng phần trong câu. ( nhớ so sánh  với câu gốc của người học)
+              -Nếu câu trả lời của người học ngắn, chưa rõ ý, hoặc sai lệch hoàn toàn, hãy đưa ra một câu trả lời mẫu đơn giản hơn để họ có thể hình dung cách diễn đạt đúng, nhưng không nâng cấp quá xa so với trình độ hiện tại của họ.
         2. detailed_feedback: Structured, detailed analysis with these exact fields:
           - grammar_issues: Array of objects with fields:
             - issue: The exact problematic text
