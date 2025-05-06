@@ -23,6 +23,18 @@ class SurfaceViewOptimizer {
   /// A flag to track if we're in a safe frame to apply UI changes
   static bool _safeToModifyBinding = true;
 
+  static void setupLogFiltering() {
+    final originalDebugPrint = debugPrint;
+    debugPrint = (String? message, {int? wrapWidth}) {
+      if (message == null) return;
+      if (message.contains('BLASTBufferQueue') ||
+          message.contains('acquireNextBufferLocked')) {
+        return; // Skip these noisy messages
+      }
+      originalDebugPrint(message, wrapWidth: wrapWidth);
+    };
+  }
+
   /// Initialize the surface view optimization
   /// Should be called when the app starts or before using Surface-heavy features
   static Future<void> initialize() async {

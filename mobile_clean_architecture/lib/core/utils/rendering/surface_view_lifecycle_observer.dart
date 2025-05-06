@@ -31,6 +31,19 @@ class SurfaceViewLifecycleObserver with WidgetsBindingObserver {
     });
   }
 
+  /// Set up log filtering to hide known SurfaceView errors
+  static void setupLogFiltering() {
+    final originalDebugPrint = debugPrint;
+    debugPrint = (String? message, {int? wrapWidth}) {
+      if (message == null) return;
+      if (message.contains('BLASTBufferQueue') ||
+          message.contains('acquireNextBufferLocked')) {
+        return; // Skip these noisy messages
+      }
+      originalDebugPrint(message, wrapWidth: wrapWidth);
+    };
+  }
+
   /// Clean up resources when the observer is no longer needed
   void dispose() {
     if (!_isInitialized) return;

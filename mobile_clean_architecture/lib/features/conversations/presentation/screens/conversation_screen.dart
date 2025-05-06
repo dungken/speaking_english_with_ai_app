@@ -48,9 +48,12 @@ class _ConversationScreenState extends State<ConversationScreen> {
   @override
   void initState() {
     super.initState();
+
+    // Filter out BLASTBufferQueue errors
+    BufferQueueErrorHandler.filterBLASTBufferQueueErrors();
+
     // Start buffer monitoring when the screen initializes
     BufferQueueManager.startMonitoring();
-
     // Make sure we're working with the latest conversation state
     if (widget.conversation.id !=
         (context.read<ConversationBloc>().state.conversation?.id ?? '')) {

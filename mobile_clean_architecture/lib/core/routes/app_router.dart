@@ -20,6 +20,7 @@ import '../../features/onboarding/presentation/screens/onboarding_screen.dart';
 import '../../features/practice_mistakes/presentation/screens/practice_mistakes_screen.dart';
 import '../../features/profile/presentation/screens/profile_screen.dart';
 import '../../features/settings/presentation/screens/settings_screen.dart';
+import '../utils/buffer_queue_error_handler.dart';
 
 /// Central router configuration for the application
 ///
@@ -64,6 +65,9 @@ class AppRouter {
       GoRoute(
         path: '/conversation/:id',
         builder: (context, state) {
+          // Filter out BLASTBufferQueue errors when entering conversation screen
+          BufferQueueErrorHandler.filterBLASTBufferQueueErrors();
+
           final conversationId = state.pathParameters['id'] ?? '';
           final conversation = state.extra as Conversation?;
 

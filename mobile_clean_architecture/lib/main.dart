@@ -47,28 +47,28 @@ void main() async {
     // Like warming up a car engine before driving
     WidgetsFlutterBinding.ensureInitialized();
 
-  // Optimize the Android hardware rendering for SurfaceView usage
-  // This helps prevent BLASTBufferQueue errors without modifying MainActivity.kt
-  if (!kIsWeb && PlatformChecker.isAndroid) {
-    // Initialize our SurfaceView lifecycle observer to manage resources throughout the app lifecycle
-    SurfaceViewLifecycleObserver().initialize();
+    // Optimize the Android hardware rendering for SurfaceView usage
+    // This helps prevent BLASTBufferQueue errors without modifying MainActivity.kt
+    if (!kIsWeb && PlatformChecker.isAndroid) {
+      // Initialize our SurfaceView lifecycle observer to manage resources throughout the app lifecycle
+      SurfaceViewLifecycleObserver().initialize();
 
-    // Initialize our custom SurfaceView optimizer - this is our key fix for the BLASTBufferQueue errors
-    await SurfaceViewOptimizer.initialize();
+      // Initialize our custom SurfaceView optimizer - this is our key fix for the BLASTBufferQueue errors
+      await SurfaceViewOptimizer.initialize();
 
-    // Additional optimizations to reduce buffer contention
-    SystemChrome.setSystemUIChangeCallback((systemOverlaysAreVisible) async {
-      // This callback helps smooth transitions when system UI changes visibility
-      return;
-    });
+      // Additional optimizations to reduce buffer contention
+      SystemChrome.setSystemUIChangeCallback((systemOverlaysAreVisible) async {
+        // This callback helps smooth transitions when system UI changes visibility
+        return;
+      });
 
-    // Set Android-specific rendering optimizations
-    await SystemChrome.setPreferredOrientations([
-      // Limiting orientations can help with rendering stability in some cases
-      DeviceOrientation.portraitUp,
-      DeviceOrientation.portraitDown,
-    ]);
-  }
+      // Set Android-specific rendering optimizations
+      await SystemChrome.setPreferredOrientations([
+        // Limiting orientations can help with rendering stability in some cases
+        DeviceOrientation.portraitUp,
+        DeviceOrientation.portraitDown,
+      ]);
+    }
 
     // Set up global error handling
     FlutterError.onError = (details) {
@@ -89,7 +89,7 @@ void main() async {
 
       // Start the app by creating the main widget
       runApp(const MyApp());
-      
+
       // Enable performance monitoring in debug mode
       assert(() {
         PerformanceMonitor.startMonitoring();
@@ -100,7 +100,7 @@ void main() async {
       debugPrint(stackTrace.toString());
       // Handle startup errors gracefully - could show error UI instead of crashing
     }
-    }, (error, stack) {
+  }, (error, stack) {
     // Handle any uncaught errors that occur during app execution
     debugPrint('Uncaught error: $error');
     debugPrint(stack.toString());

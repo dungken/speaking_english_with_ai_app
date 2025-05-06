@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../../utils/platform_checker.dart';
 import '../../../utils/rendering/surface_view_optimizer.dart';
+import '../../../utils/rendering/buffer_queue_manager.dart';
 
 /// A widget wrapper that optimizes Android SurfaceView rendering to prevent BLASTBufferQueue errors
 ///
@@ -40,49 +41,110 @@ class SurfaceViewWrapper extends StatefulWidget {
   State<SurfaceViewWrapper> createState() => _SurfaceViewWrapperState();
 }
 
-class _SurfaceViewWrapperState extends State<SurfaceViewWrapper> {
+class _SurfaceViewWrapperState extends State<SurfaceViewWrapper>
+    with WidgetsBindingObserver {
+  bool _wasActiveMedia = false;
+  Timer? _bufferCleanupTimer;
+
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _wasActiveMedia = widget.isActiveMedia;
 
-    // Apply optimizations after the widget is fully initialized,
-    // deferring to a microtask to avoid triggering during build phase
-    if (widget.isActiveMedia && PlatformChecker.isAndroid) {
-      scheduleMicrotask(() {
-        // Only apply if the widget is still mounted
-        if (mounted) {
-          SurfaceViewOptimizer.prepareForSurfaceView();
-        }
-      });
+    // Register frame acquisition when active
+    if (_wasActiveMedia && PlatformChecker.isAndroid) {
+      _registerFrameAcquisition();
     }
+  }
+
+  void _registerFrameAcquisition() {
+    // Delay acquisition slightly to avoid build phase issues
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        BufferQueueManager.registerBufferAcquisition();
+        SurfaceViewOptimizer.prepareForSurfaceView();
+
+        // Schedule periodic buffer cleanup
+        _startPeriodicCleanup();
+      }
+    });
+  }
+
+  void _startPeriodicCleanup() {
+    _bufferCleanupTimer?.cancel();
+    _bufferCleanupTimer = Timer.periodic(const Duration(seconds: 3), (_) {
+      if (mounted && widget.isActiveMedia) {
+        // Force a buffer refresh
+        BufferQueueManager.registerBufferRelease();
+        BufferQueueManager.registerBufferAcquisition();
+      }
+    });
   }
 
   @override
   void didUpdateWidget(SurfaceViewWrapper oldWidget) {
     super.didUpdateWidget(oldWidget);
 
-    // Apply or remove optimizations when isActiveMedia changes,
-    // but defer to post-frame callback to avoid build phase issues
-    if (PlatformChecker.isAndroid &&
-        widget.isActiveMedia != oldWidget.isActiveMedia) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        // Only apply if the widget is still mounted
-        if (!mounted) return;
+    // Handle changes in activity state
+    if (!_wasActiveMedia && widget.isActiveMedia) {
+      if (PlatformChecker.isAndroid) {
+        _registerFrameAcquisition();
+      }
+      _wasActiveMedia = true;
+    } else if (_wasActiveMedia && !widget.isActiveMedia) {
+      if (PlatformChecker.isAndroid) {
+        _releaseFrames();
+      }
+      _wasActiveMedia = false;
+    }
+  }
 
-        if (widget.isActiveMedia) {
-          SurfaceViewOptimizer.prepareForSurfaceView();
-        } else {
-          SurfaceViewOptimizer.cleanupAfterSurfaceView();
-        }
-      });
+  void _releaseFrames() {
+    // Cancel cleanup timer
+    _bufferCleanupTimer?.cancel();
+    _bufferCleanupTimer = null;
+
+    // Release buffers
+    BufferQueueManager.registerBufferRelease();
+    SurfaceViewOptimizer.cleanupAfterSurfaceView();
+
+    // Force a frame to ensure buffers are properly released
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        BufferQueueManager.resetAllBuffers();
+      }
+    });
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+
+    // When app goes to background, release all buffers
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.inactive) {
+      if (_wasActiveMedia && PlatformChecker.isAndroid) {
+        _releaseFrames();
+      }
+    } else if (state == AppLifecycleState.resumed) {
+      // When returning to foreground, re-acquire if needed
+      if (widget.isActiveMedia &&
+          PlatformChecker.isAndroid &&
+          _wasActiveMedia) {
+        _registerFrameAcquisition();
+      }
     }
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _bufferCleanupTimer?.cancel();
+
     // Clean up optimizations when the widget is removed
-    // This is safe because dispose happens outside the build phase
-    if (widget.isActiveMedia && PlatformChecker.isAndroid) {
+    if (_wasActiveMedia && PlatformChecker.isAndroid) {
+      BufferQueueManager.registerBufferRelease();
       SurfaceViewOptimizer.cleanupAfterSurfaceView();
     }
     super.dispose();
@@ -95,10 +157,11 @@ class _SurfaceViewWrapperState extends State<SurfaceViewWrapper> {
       return widget.child;
     }
 
-    // For Android, apply special optimizations using a simpler approach
-    // Avoid complex layout builders that might trigger build assertions
+    // For Android, apply special optimizations with a deeper isolation approach
     return RepaintBoundary(
-      child: widget.child,
+      child: ClipRect(
+        child: widget.child,
+      ),
     );
   }
 }
