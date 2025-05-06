@@ -4,7 +4,7 @@ import '../../../utils/responsive_layout.dart';
 
 /// A section displaying quick access items in a grid layout.
 /// This component provides rapid navigation to frequently used features.
-/// 
+///
 /// Implements a responsive grid that adapts based on screen size and orientation
 /// to maintain an optimal user experience across different devices.
 class QuickAccessSection extends StatelessWidget {
@@ -18,7 +18,7 @@ class QuickAccessSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final titleSize = ResponsiveLayout.getTitleTextSize(context);
-    
+
     return Column(
       children: [
         _buildSectionHeader(context, titleSize),
@@ -70,24 +70,25 @@ class QuickAccessSection extends StatelessWidget {
     final orientation = MediaQuery.of(context).orientation;
     final screenSize = MediaQuery.of(context).size;
     final screenType = ResponsiveLayout.getScreenType(context);
-    
+
     // Determine optimal number of columns based on screen type
     int columns;
     if (orientation == Orientation.portrait) {
       // Portrait mode columns
-      columns = screenType == ScreenType.extraSmall || screenType == ScreenType.small 
-          ? 3  // Smaller phones show 3 columns
-          : 4; // Larger phones show 4 columns
+      columns =
+          screenType == ScreenType.extraSmall || screenType == ScreenType.small
+              ? 3 // Smaller phones show 3 columns
+              : 4; // Larger phones show 4 columns
     } else {
       // Landscape mode columns
-      columns = screenType == ScreenType.tablet 
-          ? 8  // Tablets can show more columns
+      columns = screenType == ScreenType.tablet
+          ? 8 // Tablets can show more columns
           : 6; // Phones in landscape show 6 columns
     }
-    
+
     // Calculate spacing based on screen size
     final spacing = ResponsiveLayout.getSpacing(context);
-    
+
     // Quick access items to display
     final quickAccessItems = [
       _QuickAccessData(
@@ -111,7 +112,7 @@ class QuickAccessSection extends StatelessWidget {
         route: '/history',
       ),
     ];
-    
+
     return LayoutBuilder(
       builder: (context, constraints) {
         // Calculate optimal child aspect ratio based on available width
@@ -120,7 +121,7 @@ class QuickAccessSection extends StatelessWidget {
           columns,
           spacing,
         );
-        
+
         return GridView.builder(
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: columns,
@@ -154,18 +155,24 @@ class QuickAccessSection extends StatelessWidget {
     // Adjust icon and text sizes based on screen dimensions
     final screenWidth = MediaQuery.of(context).size.width;
     final screenType = ResponsiveLayout.getScreenType(context);
-    
+
     // Adjust icon container size based on screen width
-    final iconContainerSize = screenType == ScreenType.extraSmall ? 32.0 : 
-                            screenType == ScreenType.small ? 36.0 : 40.0;
-                            
+    final iconContainerSize = screenType == ScreenType.extraSmall
+        ? 32.0
+        : screenType == ScreenType.small
+            ? 36.0
+            : 40.0;
+
     // Adjust icon size based on container
     final iconSize = iconContainerSize * 0.5;
-    
+
     // Smaller text on smaller screens
-    final fontSize = screenType == ScreenType.extraSmall ? 10.0 : 
-                    screenType == ScreenType.small ? 11.0 : 12.0;
-    
+    final fontSize = screenType == ScreenType.extraSmall
+        ? 10.0
+        : screenType == ScreenType.small
+            ? 11.0
+            : 12.0;
+
     return Material(
       color: Colors.transparent,
       borderRadius: BorderRadius.circular(16),
@@ -193,13 +200,15 @@ class QuickAccessSection extends StatelessWidget {
                 width: iconContainerSize,
                 height: iconContainerSize,
                 decoration: BoxDecoration(
-                  color: isDarkMode ? Colors.grey.shade700 : Colors.grey.shade100,
+                  color:
+                      isDarkMode ? Colors.grey.shade700 : Colors.grey.shade100,
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
                   icon,
                   size: iconSize,
-                  color: isDarkMode ? Colors.grey.shade300 : Colors.grey.shade700,
+                  color:
+                      isDarkMode ? Colors.grey.shade300 : Colors.grey.shade700,
                 ),
               ),
               const SizedBox(height: 6),
@@ -209,7 +218,8 @@ class QuickAccessSection extends StatelessWidget {
                 style: TextStyle(
                   fontSize: fontSize,
                   fontWeight: FontWeight.w500,
-                  color: isDarkMode ? Colors.grey.shade300 : Colors.grey.shade700,
+                  color:
+                      isDarkMode ? Colors.grey.shade300 : Colors.grey.shade700,
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -220,7 +230,7 @@ class QuickAccessSection extends StatelessWidget {
       ),
     );
   }
-  
+
   /// Calculate the optimal aspect ratio based on available width
   double _calculateAspectRatio(
     double availableWidth,
@@ -231,11 +241,11 @@ class QuickAccessSection extends StatelessWidget {
     // Calculate item width
     final totalSpacing = spacing * (columns - 1);
     final itemWidth = (availableWidth - totalSpacing) / columns;
-    
+
     // For very small items, make them more square
     if (itemWidth < 80) {
       return 1.0;
-    } 
+    }
     // For small items, reduce height slightly
     else if (itemWidth < 100) {
       return 0.95;
