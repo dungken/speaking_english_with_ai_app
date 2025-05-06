@@ -59,7 +59,7 @@ class SimpleFeedbackPanel extends StatelessWidget {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    'Language Feedback',
+                    'Feedback',
                     style: TextStyles.h3(context, color: Colors.white),
                   ),
                 ),

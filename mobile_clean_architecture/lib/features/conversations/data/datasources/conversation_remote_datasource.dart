@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:dartz/dartz.dart';
 import 'package:http/http.dart' as http;
 
 import '../../../../core/constants/api_constants.dart';
@@ -54,11 +55,8 @@ class ConversationRemoteDataSourceImpl implements ConversationRemoteDataSource {
     required String aiRole,
     required String situation,
   }) async {
-    print('api call conversation starting');
     try {
       // Log request data for debugging
-      print(
-          'Request data: userRole=$userRole, aiRole=$aiRole, situation=$situation');
       final response = await client.post(
         Uri.parse(
             '${ApiConstants.baseUrl}${ApiConstants.conversationsEndpoint}'),
@@ -71,7 +69,7 @@ class ConversationRemoteDataSourceImpl implements ConversationRemoteDataSource {
       );
 
       if (response.statusCode == 200) {
-        final responseData = jsonDecode(response.body);
+        final responseData = jsonDecode(utf8.decode(response.bodyBytes));
 
         // Validate the expected structure exists before trying to access it
         if (responseData['conversation'] == null) {
@@ -88,7 +86,6 @@ class ConversationRemoteDataSourceImpl implements ConversationRemoteDataSource {
           );
         }
 
-        print('Successfully parsed conversation data');
         return {
           'conversation':
               ConversationModel.fromJson(responseData['conversation']),
@@ -103,7 +100,6 @@ class ConversationRemoteDataSourceImpl implements ConversationRemoteDataSource {
         );
       }
     } catch (e) {
-      print('Error in createConversation: $e');
       if (e is ServerException) {
         rethrow;
       }
@@ -171,7 +167,7 @@ class ConversationRemoteDataSourceImpl implements ConversationRemoteDataSource {
       );
 
       if (response.statusCode == 200) {
-        final responseData = jsonDecode(response.body);
+        final responseData = jsonDecode(utf8.decode(response.bodyBytes));
         return {
           'user_message': MessageModel.fromJson(responseData['user_message']),
           'ai_message': MessageModel.fromJson(responseData['ai_message']),
@@ -206,12 +202,11 @@ class ConversationRemoteDataSourceImpl implements ConversationRemoteDataSource {
       );
 
       if (response.statusCode == 200) {
-        final responseData = jsonDecode(response.body);
-
+        final responseData = jsonDecode(utf8.decode(response.bodyBytes));
+        // Check if the response contains the expected data
         if (responseData['is_ready'] == true) {
           final feedbackData = responseData['user_feedback'];
 
-          // Handle different feedback formats
           if (feedbackData is String) {
             // Simple string feedback
             return FeedbackModel(
@@ -261,7 +256,7 @@ class ConversationRemoteDataSourceImpl implements ConversationRemoteDataSource {
       );
 
       if (response.statusCode == 200) {
-        final responseData = jsonDecode(response.body);
+        final responseData = jsonDecode(utf8.decode(response.bodyBytes));
         return ConversationModel.fromJson(responseData);
       } else {
         throw ServerException(
