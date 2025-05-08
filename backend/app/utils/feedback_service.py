@@ -3,6 +3,9 @@ import logging
 from typing import Dict, Any, Optional, List, Tuple, Union
 from datetime import datetime
 from bson import ObjectId
+import logging
+from logging.handlers import RotatingFileHandler
+import os
 
 # Import Gemini client
 from app.utils.gemini import generate_response
@@ -10,7 +13,40 @@ from app.config.database import db
 from app.models.feedback import Feedback
 from app.models.results.feedback_result import FeedbackResult, DetailedFeedback
 
+# Create logger with module name
 logger = logging.getLogger(__name__)
+
+# Only configure if not already configured
+if not logger.handlers:
+    # Create formatter
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    
+    # Ensure logs directory exists
+    os.makedirs("app/logs", exist_ok=True)
+    
+    # Create rotating file handler (limits log file size)
+    file_handler = RotatingFileHandler(
+        "app/logs/feedback_service.log", 
+        maxBytes=10485760,  # 10MB
+        backupCount=5
+    )
+    file_handler.setLevel(logging.INFO)
+    file_handler.setFormatter(formatter)
+    
+    # Optional: Add console handler for development
+    console_handler = logging.StreamHandler()
+    console_handler.setLevel(logging.DEBUG)
+    console_handler.setFormatter(formatter)
+    
+    # Add handlers to logger
+    logger.addHandler(file_handler)
+    logger.addHandler(console_handler)
+    
+    # Set logger level
+    logger.setLevel(logging.DEBUG)
+
+
+# Add the handler to the logger
 
 class FeedbackService:
     """
@@ -194,7 +230,7 @@ class FeedbackService:
         # Add transcription
         prompt += f"""
         Student's speech: "{transcription}"
-        
+        Note: because user speech is transcribed from audio, it may not contain punctuation. you do not need comment on this. s
         Generate two types of feedback in JSON format:
         
         1. user_feedback: Hãy đưa ra nhận xét và hướng dẫn như một người bản xứ nói tiếng Anh có thể sử dụng tiếng Việt để giải thích:
@@ -218,6 +254,7 @@ class FeedbackService:
         
         Return ONLY the JSON object with these two fields, properly formatted. Limit to at most 3 grammar issues and 3 vocabulary issues, focusing on the most important ones.
         """
+        logger.info(   f"Generated prompt for Gemini: {prompt}")
         return prompt
     
     def _generate_fallback_feedback(self, transcription: str) -> FeedbackResult:

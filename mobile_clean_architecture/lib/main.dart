@@ -55,7 +55,7 @@ void main() async {
 
       // Initialize our custom SurfaceView optimizer - this is our key fix for the BLASTBufferQueue errors
       await SurfaceViewOptimizer.initialize();
-
+      SurfaceViewOptimizer.setupLogFiltering();
       // Additional optimizations to reduce buffer contention
       SystemChrome.setSystemUIChangeCallback((systemOverlaysAreVisible) async {
         // This callback helps smooth transitions when system UI changes visibility
