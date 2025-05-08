@@ -1,0 +1,165 @@
+<div class="container py-4">
+    <h1 class="slide-title">Luồng Hội Thoại & Hành Trình Người Dùng</h1>
+
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-body">
+                    <h3 class="text-primary mb-4 text-center">Bản Đồ Hành Trình Người Dùng</h3>
+
+                    <div class="timeline">
+                        <div class="timeline-container left">
+                            <div class="timeline-content shadow-sm">
+                                <h4 class="text-primary">1. Chọn Kịch Bản Hội Thoại</h4>
+                                <p>Người dùng duyệt và chọn từ các kịch bản hội thoại có sẵn (phỏng vấn việc làm,
+                                    nhà hàng, du lịch, v.v.)</p>
+                            </div>
+                        </div>
+                        <div class="timeline-container right">
+                            <div class="timeline-content shadow-sm">
+                                <h4 class="text-primary">2. Khởi Tạo Hội Thoại</h4>
+                                <p>Ứng dụng tạo một hội thoại mới với các vai trò và bối cảnh tình huống được xác định
+                                </p>
+                            </div>
+                        </div>
+                        <div class="timeline-container left">
+                            <div class="timeline-content shadow-sm">
+                                <h4 class="text-primary">3. Lời Chào AI</h4>
+                                <p>AI bắt đầu hội thoại với lời chào phù hợp và câu hỏi ban đầu</p>
+                            </div>
+                        </div>
+                        <div class="timeline-container right">
+                            <div class="timeline-content shadow-sm">
+                                <h4 class="text-primary">4. Người Dùng Ghi Âm Phản Hồi</h4>
+                                <p>Người dùng nhấn nút ghi âm và nói phản hồi bằng tiếng Anh</p>
+                            </div>
+                        </div>
+                        <div class="timeline-container left">
+                            <div class="timeline-content shadow-sm">
+                                <h4 class="text-primary">5. Xử Lý Giọng Nói</h4>
+                                <p>Ứng dụng chuyển giọng nói thành văn bản và hiển thị bản ghi cho người dùng</p>
+                            </div>
+                        </div>
+                        <div class="timeline-container right">
+                            <div class="timeline-content shadow-sm">
+                                <h4 class="text-primary">6. Gửi Tin Nhắn</h4>
+                                <p>Người dùng xem lại bản ghi và gửi nó đến đối tác hội thoại AI</p>
+                            </div>
+                        </div>
+                        <div class="timeline-container left">
+                            <div class="timeline-content shadow-sm">
+                                <h4 class="text-primary">7. Phản Hồi AI</h4>
+                                <p>AI tạo phản hồi theo ngữ cảnh để duy trì luồng hội thoại</p>
+                            </div>
+                        </div>
+                        <div class="timeline-container right">
+                            <div class="timeline-content shadow-sm">
+                                <h4 class="text-primary">8. Yêu Cầu Phản Hồi</h4>
+                                <p>Người dùng có thể nhấn vào tin nhắn của họ để yêu cầu phản hồi ngôn ngữ chi tiết</p>
+                            </div>
+                        </div>
+                        <div class="timeline-container left">
+                            <div class="timeline-content shadow-sm">
+                                <h4 class="text-primary">9. Xem Phản Hồi</h4>
+                                <p>Người dùng xem xét phản hồi về ngữ pháp, từ vựng và độ trôi chảy của giọng nói</p>
+                            </div>
+                        </div>
+                        <div class="timeline-container right">
+                            <div class="timeline-content shadow-sm">
+                                <h4 class="text-primary">10. Tiếp Tục Hội Thoại</h4>
+                                <p>Hội thoại tiếp tục với nhiều lượt thực hành nói</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header bg-info text-white">
+                    <h4 class="mb-0">Sơ Đồ Luồng Dữ Liệu</h4>
+                </div>
+                <div class="card-body">
+                    <div class="text-center">
+                        <!-- SVG Data Flow Diagram -->
+                        <svg width="100%" height="300" viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
+                            <!-- User -->
+                            <circle cx="50" cy="50" r="30" fill="#4a6bdf" />
+                            <text x="50" y="55" text-anchor="middle" fill="white" font-weight="bold">Người Dùng</text>
+
+                            <!-- Mobile App -->
+                            <rect x="150" y="20" width="100" height="60" rx="5" fill="#3f51b5" />
+                            <text x="200" y="55" text-anchor="middle" fill="white" font-weight="bold">Ứng Dụng Di
+                                Động</text>
+
+                            <!-- Backend API -->
+                            <rect x="280" y="120" width="100" height="60" rx="5" fill="#673ab7" />
+                            <text x="330" y="155" text-anchor="middle" fill="white" font-weight="bold">API
+                                Backend</text>
+
+                            <!-- AI Service -->
+                            <rect x="150" y="220" width="100" height="60" rx="5" fill="#009688" />
+                            <text x="200" y="255" text-anchor="middle" fill="white" font-weight="bold">Dịch Vụ AI</text>
+
+                            <!-- Arrows -->
+                            <line x1="80" y1="50" x2="150" y2="50" stroke="#333" stroke-width="2" />
+                            <polygon points="140,45 150,50 140,55" fill="#333" />
+                            <text x="115" y="40" text-anchor="middle" fill="#333" font-size="12">Giọng Nói</text>
+
+                            <line x1="200" y1="80" x2="200" y2="220" stroke="#333" stroke-width="2" />
+                            <polygon points="195,210 200,220 205,210" fill="#333" />
+                            <text x="220" y="150" text-anchor="middle" fill="#333" font-size="12">Xử Lý</text>
+
+                            <line x1="250" y1="50" x2="330" y2="120" stroke="#333" stroke-width="2" />
+                            <polygon points="320,110 330,120 325,105" fill="#333" />
+                            <text x="300" y="80" text-anchor="middle" fill="#333" font-size="12">Gọi API</text>
+
+                            <line x1="330" y1="180" x2="250" y2="220" stroke="#333" stroke-width="2" />
+                            <polygon points="260,210 250,220 265,215" fill="#333" />
+                            <text x="300" y="210" text-anchor="middle" fill="#333" font-size="12">Tạo</text>
+
+                            <line x1="150" y1="50" x2="80" y2="50" stroke="#333" stroke-width="2" />
+                            <polygon points="90,55 80,50 90,45" fill="#333" />
+                            <text x="115" y="70" text-anchor="middle" fill="#333" font-size="12">Phản Hồi</text>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0">Thành Phần Luồng Chính</h4>
+                </div>
+                <div class="card-body">
+                    <ul class="fs-5">
+                        <li class="mb-3">
+                            <span class="fw-bold">Ghi Âm Giọng Nói:</span>
+                            <p>Thu âm tối ưu hóa với quản lý bộ đệm</p>
+                        </li>
+                        <li class="mb-3">
+                            <span class="fw-bold">Đường Dẫn Chuyển Văn Bản:</span>
+                            <p>Chuyển đổi âm thanh thành văn bản với bước xác minh</p>
+                        </li>
+                        <li class="mb-3">
+                            <span class="fw-bold">Xử Lý Nền:</span>
+                            <p>Tạo phản hồi không chặn trong khi hội thoại tiếp tục</p>
+                        </li>
+                        <li class="mb-3">
+                            <span class="fw-bold">Quản Lý Trạng Thái Hội Thoại:</span>
+                            <p>Mô hình BLoC duy trì giao diện người dùng nhất quán qua các bước tương tác</p>
+                        </li>
+                        <li class="mb-3">
+                            <span class="fw-bold">Khôi Phục Lỗi:</span>
+                            <p>Xử lý nhẹ nhàng các vấn đề về mạng, âm thanh hoặc xử lý</p>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

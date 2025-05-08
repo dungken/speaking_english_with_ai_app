@@ -1,0 +1,112 @@
+<div class="container py-4">
+    <h1 class="slide-title">AI & Xử Lý Ngôn Ngữ Tự Nhiên</h1>
+    
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card shadow h-100">
+                <div class="card-header bg-primary text-white py-3">
+                    <h3 class="mb-0"><i class="bi bi-robot me-2"></i>Tích Hợp AI</h3>
+                </div>
+                <div class="card-body">
+                    <ul class="fs-5">
+                        <li class="mb-3">
+                            <span class="fw-bold">Tích hợp API Gemini:</span>
+                            <p>Sử dụng Gemini của Google để hiểu và tạo ngôn ngữ tự nhiên</p>
+                        </li>
+                        <li class="mb-3">
+                            <span class="fw-bold">Chuyển đổi giọng nói thành văn bản:</span>
+                            <p>Chuyển đổi bản ghi âm của người dùng thành văn bản để AI xử lý</p>
+                        </li>
+                        <li class="mb-3">
+                            <span class="fw-bold">Phản hồi theo ngữ cảnh:</span>
+                            <p>AI duy trì ngữ cảnh hội thoại để tạo đối thoại mạch lạc</p>
+                        </li>
+                        <li class="mb-3">
+                            <span class="fw-bold">Đóng vai:</span>
+                            <p>AI thích ứng với nhiều vai trò và tình huống khác nhau để tạo hội thoại thực tế</p>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card shadow h-100">
+                <div class="card-header bg-success text-white py-3">
+                    <h3 class="mb-0"><i class="bi bi-chat-square-text me-2"></i>Hệ Thống Phản Hồi Ngôn Ngữ</h3>
+                </div>
+                <div class="card-body">
+                    <ul class="fs-5">
+                        <li class="mb-3">
+                            <span class="fw-bold">Phân tích ngữ pháp:</span>
+                            <p>Xác định lỗi ngữ pháp trong lời nói của người dùng</p>
+                        </li>
+                        <li class="mb-3">
+                            <span class="fw-bold">Đánh giá từ vựng:</span>
+                            <p>Đánh giá lựa chọn từ và đề xuất các phương án thay thế</p>
+                        </li>
+                        <li class="mb-3">
+                            <span class="fw-bold">Các chỉ số về độ trôi chảy:</span>
+                            <p>Phân tích luồng nói và sử dụng ngôn ngữ tự nhiên</p>
+                        </li>
+                        <li class="mb-3">
+                            <span class="fw-bold">Củng cố tích cực:</span>
+                            <p>Nhấn mạnh điểm mạnh để xây dựng sự tự tin cho người học</p>
+                        </li>
+                        <li class="mb-3">
+                            <span class="fw-bold">Nhận dạng mẫu:</span>
+                            <p>Theo dõi các lỗi lặp lại để cải thiện có mục tiêu</p>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header bg-warning">
+                    <h4 class="mb-0 text-dark">Ví Dụ: Kỹ Thuật Prompt AI</h4>
+                </div>
+                <div class="card-body">
+                    <pre class="code-block p-3">
+<code>prompt = (
+    f"You are playing the role of {conversation['ai_role']} and the user is {conversation['user_role']}. "
+    f"The situation is: {conversation['situation']}. "
+    f"Stay fully in character as {conversation['ai_role']}. "
+    f"Use natural, simple English that new and intermediate learners can easily understand. "
+    f"Keep your response short and friendly (1 to 3 sentences). "
+    f"Avoid special characters like brackets or symbols. "
+    f"Do not refer to the user with any placeholder like a name in brackets. "
+    f"Ask an open-ended question that fits the situation and encourages the user to speak more."
+    f"\nHere is the conversation so far:\n" +
+    "\n".join([f"{msg['sender']}: {msg['content']}" for msg in messages]) +
+    f"\nNow respond as {conversation['ai_role']}."
+)
+
+ai_text = generate_response(prompt)</code>
+                    </pre>
+                    
+                    <div class="mt-4">
+                        <h5 class="text-primary">Tạo Phản Hồi</h5>
+                        <pre class="code-block p-3">
+<code>feedback_result = feedback_service.generate_dual_feedback(transcription, context)
+
+# Cấu trúc kết quả phản hồi
+{
+    "user_feedback": "Văn bản phản hồi dễ đọc cho người dùng",
+    "detailed_feedback": {
+        "grammar_issues": ["Lỗi 1: Gợi ý", "Lỗi 2: Gợi ý"],
+        "vocabulary_issues": ["Vấn đề lựa chọn từ: Phương án thay thế"],
+        "positives": ["Điểm mạnh 1", "Điểm mạnh 2"],
+        "fluency": ["Nhận xét về độ trôi chảy"]
+    }
+}</code>
+                        </pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

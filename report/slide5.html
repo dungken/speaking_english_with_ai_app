@@ -1,0 +1,131 @@
+<div class="container py-4">
+    <h1 class="slide-title">Kiến Trúc Frontend (Flutter)</h1>
+
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white py-3">
+                    <h3 class="mb-0">Triển Khai Kiến Trúc (Clean Architecture)</h3>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <!-- SVG Architecture Diagram -->
+                        <svg width="100%" height="300" viewBox="0 0 800 300" xmlns="http://www.w3.org/2000/svg">
+                            <!-- Layers -->
+                            <rect x="100" y="30" width="600" height="60" rx="5" fill="#e3f2fd" stroke="#2196f3"
+                                stroke-width="2" />
+                            <text x="400" y="65" text-anchor="middle" font-weight="bold" fill="#0d47a1">Tầng Trình Bày
+                                (UI, BLoC)</text>
+
+                            <rect x="100" y="120" width="600" height="60" rx="5" fill="#e8f5e9" stroke="#4caf50"
+                                stroke-width="2" />
+                            <text x="400" y="155" text-anchor="middle" font-weight="bold" fill="#1b5e20">Tầng Nghiệp Vụ
+                                (Entities, Use Cases)</text>
+
+                            <rect x="100" y="210" width="600" height="60" rx="5" fill="#fff3e0" stroke="#ff9800"
+                                stroke-width="2" />
+                            <text x="400" y="245" text-anchor="middle" font-weight="bold" fill="#e65100">Tầng Dữ Liệu
+                                (Repositories, Data Sources)</text>
+
+                            <!-- Arrows -->
+                            <line x1="400" y1="90" x2="400" y2="120" stroke="#333" stroke-width="2" />
+                            <polygon points="395,110 400,120 405,110" fill="#333" />
+
+                            <line x1="400" y1="180" x2="400" y2="210" stroke="#333" stroke-width="2" />
+                            <polygon points="395,200 400,210 405,200" fill="#333" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card shadow mb-4">
+                <div class="card-header bg-info text-white">
+                    <h4 class="mb-0">Thành Phần Chính</h4>
+                </div>
+                <div class="card-body">
+                    <ul class="fs-5">
+                        <li class="mb-2"><strong>Tổ chức theo tính năng:</strong> Mã nguồn mô-đun với các tính năng như
+                            xác thực, hội thoại, phản hồi</li>
+                        <li class="mb-2"><strong>BLoC:</strong> Quản lý trạng thái để tách biệt UI và logic nghiệp vụ
+                        </li>
+                        <li class="mb-2"><strong>Dependency Injection:</strong> GetIt cho service locator</li>
+                        <li class="mb-2"><strong>GoRouter:</strong> Định tuyến khai báo cho điều hướng</li>
+                        <li class="mb-2"><strong>Hive:</strong> Lưu trữ dữ liệu cục bộ</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card shadow mb-4">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0">Tối Ưu Hóa Kỹ Thuật</h4>
+                </div>
+                <div class="card-body">
+                    <ul class="fs-5">
+                        <li class="mb-2"><strong>BufferQueueManager:</strong> Tối ưu hóa hiển thị Android cho
+                            SurfaceView</li>
+                        <li class="mb-2"><strong>ErrorBoundary:</strong> Xử lý các lỗi buffer queue</li>
+                        <li class="mb-2"><strong>SurfaceViewWrapper:</strong> Quản lý vòng đời cho các component media
+                        </li>
+                        <li class="mb-2"><strong>AndroidRecordingOptimizer:</strong> Nâng cao ghi âm trên thiết bị
+                            Android</li>
+                        <li class="mb-2"><strong>Responsive Layout:</strong> UI thích ứng cho các kích thước màn hình
+                            khác nhau</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header bg-warning">
+                    <h4 class="mb-0 text-dark">Ví Dụ Mã Nguồn: BLoC Cho Hội Thoại</h4>
+                </div>
+                <div class="card-body">
+                    <pre class="code-block p-3">
+<code>// BLoC event
+class SendSpeechMessageEvent extends ConversationEvent {
+  final String conversationId;
+  final String audioId;
+
+  SendSpeechMessageEvent({
+    required this.conversationId,
+    required this.audioId,
+  });
+}
+
+// BLoC logic handling
+@override
+Stream&lt;ConversationState&gt; mapEventToState(ConversationEvent event) async* {
+  if (event is SendSpeechMessageEvent) {
+    yield state.copyWith(isLoading: true);
+    try {
+      final result = await _sendSpeechUseCase(
+        conversationId: event.conversationId,
+        audioId: event.audioId,
+      );
+      yield state.copyWith(
+        isLoading: false,
+        messages: [...state.messages ?? [], result.userMessage, result.aiMessage],
+      );
+    } catch (e) {
+      yield state.copyWith(
+        isLoading: false, 
+        errorMessage: e.toString(),
+      );
+    }
+  }
+}</code>
+                    </pre>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

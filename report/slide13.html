@@ -1,0 +1,171 @@
+<div class="container py-4">
+    <h1 class="slide-title">Testing & Quality Assurance</h1>
+    
+    <div class="row mb-4">
+        <div class="col-md-5">
+            <div class="card shadow h-100">
+                <div class="card-header bg-primary text-white py-3">
+                    <h3 class="mb-0">Comprehensive Testing Strategy</h3>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-4">
+                        <div class="bg-primary rounded-circle p-3 me-3">
+                            <i class="bi bi-layers-half text-white fs-3"></i>
+                        </div>
+                        <div>
+                            <h4>Multi-Level Testing</h4>
+                            <p>Testing at all levels ensures reliable functionality</p>
+                        </div>
+                    </div>
+                    
+                    <ul class="fs-5">
+                        <li class="mb-3">
+                            <span class="fw-bold">Unit Testing:</span>
+                            <p>Individual components are tested in isolation</p>
+                        </li>
+                        <li class="mb-3">
+                            <span class="fw-bold">Integration Testing:</span>
+                            <p>Component interactions are verified for correctness</p>
+                        </li>
+                        <li class="mb-3">
+                            <span class="fw-bold">UI Testing:</span>
+                            <p>Automated verification of user interface elements</p>
+                        </li>
+                        <li class="mb-3">
+                            <span class="fw-bold">API Testing:</span>
+                            <p>Validation of backend endpoints and responses</p>
+                        </li>
+                        <li class="mb-3">
+                            <span class="fw-bold">Performance Testing:</span>
+                            <p>Ensures the app meets performance requirements</p>
+                        </li>
+                        <li class="mb-3">
+                            <span class="fw-bold">User Acceptance Testing:</span>
+                            <p>Real users verify the app meets expectations</p>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-7">
+            <div class="card shadow mb-4">
+                <div class="card-header bg-info text-white">
+                    <h4 class="mb-0">Testing Tools & Frameworks</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="card h-100 shadow-sm">
+                                <div class="card-header bg-light">
+                                    <h5 class="mb-0 text-primary">Frontend Testing</h5>
+                                </div>
+                                <div class="card-body">
+                                    <ul>
+                                        <li><strong>Flutter Test:</strong> Widget testing</li>
+                                        <li><strong>Mockito:</strong> Mocking dependencies</li>
+                                        <li><strong>bloc_test:</strong> BLoC state management testing</li>
+                                        <li><strong>Integration_test:</strong> App integration testing</li>
+                                        <li><strong>Golden Tests:</strong> UI snapshot verification</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <div class="card h-100 shadow-sm">
+                                <div class="card-header bg-light">
+                                    <h5 class="mb-0 text-primary">Backend Testing</h5>
+                                </div>
+                                <div class="card-body">
+                                    <ul>
+                                        <li><strong>Pytest:</strong> Python testing framework</li>
+                                        <li><strong>TestClient:</strong> FastAPI endpoint testing</li>
+                                        <li><strong>MongoDB Mock:</strong> Database interaction testing</li>
+                                        <li><strong>AsyncIO Testing:</strong> Async functionality verification</li>
+                                        <li><strong>Pytest-Cov:</strong> Code coverage tracking</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card shadow-sm mt-3">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0 text-primary">Continuous Integration & Deployment</h5>
+                        </div>
+                        <div class="card-body">
+                            <p>All tests are integrated into our CI/CD pipeline to ensure code quality:</p>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <ul>
+                                        <li>Automated testing on each commit</li>
+                                        <li>Code quality analysis with SonarQube</li>
+                                        <li>Lint rule enforcement</li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-6">
+                                    <ul>
+                                        <li>Code coverage requirements</li>
+                                        <li>Automated deployment to staging</li>
+                                        <li>Manual verification before production</li>
+                                    </ul>
+                                </div>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card shadow">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0">Code Example: BLoC Testing</h4>
+                </div>
+                <div class="card-body">
+                    <pre class="code-block p-3">
+<code>void main() {
+  group('ConversationBloc Tests', () {
+    late ConversationBloc conversationBloc;
+    late MockConversationRepository mockRepository;
+    late MockSpeechService mockSpeechService;
+    
+    setUp(() {
+      mockRepository = MockConversationRepository();
+      mockSpeechService = MockSpeechService();
+      conversationBloc = ConversationBloc(
+        conversationRepository: mockRepository,
+        speechService: mockSpeechService,
+      );
+    });
+    
+    tearDown(() {
+      conversationBloc.close();
+    });
+    
+    test('initial state is correct', () {
+      expect(conversationBloc.state, equals(ConversationInitial()));
+    });
+    
+    blocTest<ConversationBloc, ConversationState>(
+      'emits [ConversationLoading, ConversationLoaded] when conversation is loaded successfully',
+      build: () {
+        when(mockRepository.getConversation(any))
+            .thenAnswer((_) async => mockConversation);
+        return conversationBloc;
+      },
+      act: (bloc) => bloc.add(LoadConversationEvent(conversationId: '123')),
+      expect: () => [
+        ConversationLoading(),
+        ConversationLoaded(conversation: mockConversation),
+      ],
+    );
+    
+    // More tests for recording, sending messages, etc.
+  });
+}</code>
+                    </pre>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

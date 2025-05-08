@@ -1,0 +1,157 @@
+<div class="container py-4">
+    <h1 class="slide-title">Kiến Trúc Backend (FastAPI)</h1>
+    
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header bg-secondary text-white py-3">
+                    <h3 class="mb-0">Thiết Kế API RESTful</h3>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <!-- SVG Architecture Diagram -->
+                        <svg width="100%" height="350" viewBox="0 0 900 350" xmlns="http://www.w3.org/2000/svg">
+                            <!-- API Routes -->
+                            <rect x="100" y="30" width="700" height="50" rx="5" fill="#263238" stroke="#607d8b" stroke-width="2" />
+                            <text x="450" y="60" text-anchor="middle" font-weight="bold" fill="white">Các Routes API (người dùng, hội thoại, phản hồi, lỗi)</text>
+                            
+                            <!-- Service Layer -->
+                            <rect x="100" y="120" width="700" height="50" rx="5" fill="#4a148c" stroke="#7b1fa2" stroke-width="2" />
+                            <text x="450" y="150" text-anchor="middle" font-weight="bold" fill="white">Các Dịch Vụ (âm thanh, phản hồi, giọng nói, AI)</text>
+                            
+                            <!-- Models Layer -->
+                            <rect x="100" y="210" width="700" height="50" rx="5" fill="#01579b" stroke="#0288d1" stroke-width="2" />
+                            <text x="450" y="240" text-anchor="middle" font-weight="bold" fill="white">Models & Schemas (Mô hình Pydantic)</text>
+                            
+                            <!-- Data Layer -->
+                            <rect x="100" y="300" width="700" height="50" rx="5" fill="#004d40" stroke="#00897b" stroke-width="2" />
+                            <text x="450" y="330" text-anchor="middle" font-weight="bold" fill="white">Cơ Sở Dữ Liệu (MongoDB)</text>
+                            
+                            <!-- Arrows -->
+                            <line x1="450" y1="80" x2="450" y2="120" stroke="#333" stroke-width="2" />
+                            <polygon points="445,110 450,120 455,110" fill="#333" />
+                            
+                            <line x1="450" y1="170" x2="450" y2="210" stroke="#333" stroke-width="2" />
+                            <polygon points="445,200 450,210 455,200" fill="#333" />
+                            
+                            <line x1="450" y1="260" x2="450" y2="300" stroke="#333" stroke-width="2" />
+                            <polygon points="445,290 450,300 455,290" fill="#333" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card shadow mb-4">
+                <div class="card-header bg-info text-white">
+                    <h4 class="mb-0">Các Endpoint API Chính</h4>
+                </div>
+                <div class="card-body">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Endpoint</th>
+                                <th>Mô tả</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>/api/conversations</code></td>
+                                <td>Tạo cuộc hội thoại đóng vai mới với AI</td>
+                            </tr>
+                            <tr>
+                                <td><code>/api/audio2text</code></td>
+                                <td>Chuyển đổi âm thanh của người dùng thành văn bản</td>
+                            </tr>
+                            <tr>
+                                <td><code>/api/conversations/{id}/message</code></td>
+                                <td>Xử lý lời nói và tạo phản hồi từ AI</td>
+                            </tr>
+                            <tr>
+                                <td><code>/api/messages/{id}/feedback</code></td>
+                                <td>Lấy phản hồi ngôn ngữ cho tin nhắn</td>
+                            </tr>
+                            <tr>
+                                <td><code>/api/mistakes</code></td>
+                                <td>Theo dõi và truy xuất lỗi ngôn ngữ của người dùng</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card shadow mb-4">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0">Tính Năng Kỹ Thuật</h4>
+                </div>
+                <div class="card-body">
+                    <ul class="fs-5">
+                        <li class="mb-2"><strong>Xử lý Bất đồng bộ:</strong> Tác vụ nền cho các hoạt động tốn nhiều tài nguyên</li>
+                        <li class="mb-2"><strong>Xác thực JWT:</strong> Xác thực người dùng bảo mật dựa trên token</li>
+                        <li class="mb-2"><strong>Xử lý File:</strong> Lưu trữ và xử lý âm thanh</li>
+                        <li class="mb-2"><strong>Trình xử lý Sự kiện:</strong> Kiến trúc hướng sự kiện cho việc xử lý dữ liệu</li>
+                        <li class="mb-2"><strong>Xác thực Dữ liệu:</strong> Mô hình Pydantic để xác thực request/response</li>
+                        <li class="mb-2"><strong>Xử lý Lỗi:</strong> Phản hồi lỗi nhất quán với ghi nhật ký</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header bg-warning">
+                    <h4 class="mb-0 text-dark">Ví Dụ Mã Nguồn: Xử Lý Hội Thoại</h4>
+                </div>
+                <div class="card-body">
+                    <pre class="code-block p-3">
+<code>@router.post("/conversations/{conversation_id}/message", response_model=dict)
+async def analyze_speech(
+    conversation_id: str,
+    audio_id: str,
+    current_user: dict = Depends(get_current_user),
+    background_tasks: BackgroundTasks = BackgroundTasks()
+):
+    # Lấy dữ liệu âm thanh và xử lý tin nhắn người dùng
+    audio_data = db.audio.find_one({"_id": ObjectId(audio_id)})
+    
+    # Lưu tin nhắn của người dùng với nội dung được chuyển đổi
+    user_message = Message(
+        conversation_id=ObjectId(conversation_id),
+        sender="user",
+        content=audio_data["transcription"],
+        audio_path=audio_data["file_path"]
+    )
+    db.messages.insert_one(user_message.to_dict())
+    
+    # Tạo phản hồi AI dựa trên ngữ cảnh hội thoại
+    ai_text = generate_response(prompt)
+    ai_message = Message(conversation_id=ObjectId(conversation_id), sender="ai", content=ai_text)
+    db.messages.insert_one(ai_message.to_dict())
+    
+    # Xử lý phản hồi trong nền mà không chặn
+    background_tasks.add_task(
+        process_speech_feedback,
+        transcription=audio_data["transcription"],
+        user_id=user_id,
+        conversation_id=conversation_id,
+        audio_id=audio_data["_id"],
+        user_message_id=str(user_message._id)
+    )
+    
+    return {
+        "user_message": MessageResponse(**user_message_dict),
+        "ai_message": MessageResponse(**ai_message_dict)
+    }</code>
+                    </pre>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

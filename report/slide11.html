@@ -1,0 +1,176 @@
+<div class="container py-4">
+    <h1 class="slide-title">Mistake Tracking & Learning System</h1>
+    
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card shadow h-100">
+                <div class="card-header bg-primary text-white py-3">
+                    <h3 class="mb-0">Pattern Recognition System</h3>
+                </div>
+                <div class="card-body">
+                    <p class="fs-5 mb-4">
+                        The mistake tracking system identifies recurring language errors, creating a personalized learning profile for each user.
+                    </p>
+                    
+                    <h5 class="text-primary mb-3">Key Components:</h5>
+                    <ul class="fs-5">
+                        <li class="mb-3">
+                            <span class="fw-bold">Error Classification:</span>
+                            <p>Categorizes mistakes by type (grammar, vocabulary, pronunciation)</p>
+                        </li>
+                        <li class="mb-3">
+                            <span class="fw-bold">Frequency Analysis:</span>
+                            <p>Tracks how often specific error patterns occur</p>
+                        </li>
+                        <li class="mb-3">
+                            <span class="fw-bold">Context Awareness:</span>
+                            <p>Notes in which situations errors tend to appear</p>
+                        </li>
+                        <li class="mb-3">
+                            <span class="fw-bold">Severity Rating:</span>
+                            <p>Assesses how much each error impacts communication</p>
+                        </li>
+                        <li class="mb-3">
+                            <span class="fw-bold">Rule Generation:</span>
+                            <p>Creates custom practice rules based on error patterns</p>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card shadow h-100">
+                <div class="card-header bg-success text-white py-3">
+                    <h3 class="mb-0">Personalized Learning</h3>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <!-- SVG Learning Cycle Diagram -->
+                        <svg width="100%" height="300" viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="200" cy="150" r="120" fill="none" stroke="#4a6bdf" stroke-width="2" stroke-dasharray="5,5" />
+                            
+                            <!-- Practice -->
+                            <circle cx="200" cy="30" r="30" fill="#4a6bdf" />
+                            <text x="200" y="35" text-anchor="middle" fill="white" font-weight="bold">Practice</text>
+                            
+                            <!-- Mistakes -->
+                            <circle cx="320" cy="150" r="30" fill="#f44336" />
+                            <text x="320" y="155" text-anchor="middle" fill="white" font-weight="bold">Mistakes</text>
+                            
+                            <!-- Analysis -->
+                            <circle cx="200" cy="270" r="30" fill="#4caf50" />
+                            <text x="200" y="275" text-anchor="middle" fill="white" font-weight="bold">Analysis</text>
+                            
+                            <!-- Targeted -->
+                            <circle cx="80" cy="150" r="30" fill="#ff9800" />
+                            <text x="80" y="145" text-anchor="middle" fill="white" font-weight="bold">Targeted</text>
+                            <text x="80" y="160" text-anchor="middle" fill="white" font-weight="bold">Exercises</text>
+                            
+                            <!-- Arrows -->
+                            <path d="M225 50 A 100 100 0 0 1 290 130" fill="none" stroke="#333" stroke-width="2" />
+                            <polygon points="285,125 290,130 290,120" fill="#333" />
+                            
+                            <path d="M290 170 A 100 100 0 0 1 225 250" fill="none" stroke="#333" stroke-width="2" />
+                            <polygon points="225,240 225,250 235,245" fill="#333" />
+                            
+                            <path d="M175 250 A 100 100 0 0 1 110 170" fill="none" stroke="#333" stroke-width="2" />
+                            <polygon points="115,175 110,170 105,180" fill="#333" />
+                            
+                            <path d="M110 130 A 100 100 0 0 1 175 50" fill="none" stroke="#333" stroke-width="2" />
+                            <polygon points="170,55 175,50 165,45" fill="#333" />
+                        </svg>
+                    </div>
+                    
+                    <h5 class="text-primary mb-3">Learning Features:</h5>
+                    <ul class="fs-5">
+                        <li class="mb-2"><strong>Personalized Error Dashboard:</strong> Visual representation of common mistakes</li>
+                        <li class="mb-2"><strong>Progress Tracking:</strong> Monitoring error reduction over time</li>
+                        <li class="mb-2"><strong>Targeted Practice Sessions:</strong> Exercises focused on specific error types</li>
+                        <li class="mb-2"><strong>Rule Reminders:</strong> Just-in-time grammar and vocabulary tips</li>
+                        <li class="mb-2"><strong>Achievement System:</strong> Gamified rewards for improvement</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header bg-warning">
+                    <h4 class="mb-0 text-dark">Implementation Example: Mistake Processing</h4>
+                </div>
+                <div class="card-body">
+                    <pre class="code-block p-3">
+<code>async def process_mistake_extraction(feedback_id, user_id, transcription):
+    """
+    Extract mistakes from feedback and store them for tracking.
+    
+    This background task:
+    1. Retrieves detailed feedback for a user message
+    2. Extracts specific grammar and vocabulary mistakes
+    3. Analyzes patterns to detect recurring issues
+    4. Creates mistake records for future learning
+    """
+    try:
+        # Retrieve the detailed feedback
+        feedback = db.feedback.find_one({"_id": ObjectId(feedback_id)})
+        if not feedback or "detailed_feedback" not in feedback:
+            logger.error(f"Missing detailed feedback for extraction: {feedback_id}")
+            return
+            
+        # Extract mistakes from the feedback
+        grammar_issues = feedback["detailed_feedback"].get("grammar_issues", [])
+        vocab_issues = feedback["detailed_feedback"].get("vocabulary_issues", [])
+        
+        # Process and store each grammar mistake
+        for issue in grammar_issues:
+            # Parse the issue to extract error and correction
+            parts = issue.split("→")
+            if len(parts) == 2:
+                error = parts[0].strip()
+                correction = parts[1].strip()
+                
+                # Create new mistake record
+                mistake = {
+                    "user_id": ObjectId(user_id),
+                    "type": "grammar",
+                    "error": error,
+                    "correction": correction,
+                    "context": transcription,
+                    "timestamp": datetime.now(),
+                    "times_encountered": 1
+                }
+                
+                # Check if this mistake pattern already exists
+                existing = db.mistakes.find_one({
+                    "user_id": ObjectId(user_id),
+                    "type": "grammar",
+                    "error": {'$regex': re.escape(error), '$options': 'i'}
+                })
+                
+                if existing:
+                    # Update existing record
+                    db.mistakes.update_one(
+                        {"_id": existing["_id"]},
+                        {
+                            "$inc": {"times_encountered": 1},
+                            "$set": {"last_seen": datetime.now()},
+                            "$push": {"examples": {"context": transcription, "date": datetime.now()}}
+                        }
+                    )
+                else:
+                    # Insert new mistake
+                    db.mistakes.insert_one(mistake)
+    
+        # Similar processing for vocabulary issues...
+        
+    except Exception as e:
+        logger.error(f"Error in mistake extraction: {str(e)}", exc_info=True)</code>
+                    </pre>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
