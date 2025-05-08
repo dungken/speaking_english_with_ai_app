@@ -1,0 +1,175 @@
+<div class="container py-4">
+    <h1 class="slide-title">Feedback Generation System</h1>
+
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white py-3">
+                    <h3 class="mb-0">Comprehensive Language Assessment</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h4 class="text-primary mb-3">Feedback Generation Process</h4>
+                            <ol class="fs-5">
+                                <li class="mb-2">User requests feedback on their speech response</li>
+                                <li class="mb-2">System retrieves transcription and conversation context</li>
+                                <li class="mb-2">AI analyzes language across multiple dimensions</li>
+                                <li class="mb-2">Feedback is processed in the background to maintain conversation flow
+                                </li>
+                                <li class="mb-2">User receives detailed yet actionable feedback</li>
+                                <li class="mb-2">Common mistakes are tracked for personalized learning</li>
+                            </ol>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="text-center">
+                                <!-- SVG Feedback Process Diagram -->
+                                <svg width="100%" height="300" viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
+                                    <!-- Input (Speech) -->
+                                    <rect x="50" y="30" width="100" height="50" rx="10" fill="#e3f2fd" stroke="#2196f3"
+                                        stroke-width="2" />
+                                    <text x="100" y="60" text-anchor="middle" font-weight="bold" fill="#0d47a1">User
+                                        Speech</text>
+
+                                    <!-- Process Block 1 -->
+                                    <rect x="50" y="120" width="100" height="50" rx="10" fill="#bbdefb" stroke="#2196f3"
+                                        stroke-width="2" />
+                                    <text x="100" y="150" text-anchor="middle" font-weight="bold"
+                                        fill="#0d47a1">Transcription</text>
+
+                                    <!-- Process Block 2 -->
+                                    <rect x="250" y="120" width="100" height="50" rx="10" fill="#bbdefb"
+                                        stroke="#2196f3" stroke-width="2" />
+                                    <text x="300" y="150" text-anchor="middle" font-weight="bold" fill="#0d47a1">AI
+                                        Analysis</text>
+
+                                    <!-- Output 1 -->
+                                    <rect x="50" y="210" width="100" height="50" rx="10" fill="#b3e5fc" stroke="#03a9f4"
+                                        stroke-width="2" />
+                                    <text x="100" y="230" text-anchor="middle" font-weight="bold"
+                                        fill="#01579b">User</text>
+                                    <text x="100" y="250" text-anchor="middle" font-weight="bold"
+                                        fill="#01579b">Feedback</text>
+
+                                    <!-- Output 2 -->
+                                    <rect x="250" y="210" width="100" height="50" rx="10" fill="#b3e5fc"
+                                        stroke="#03a9f4" stroke-width="2" />
+                                    <text x="300" y="230" text-anchor="middle" font-weight="bold"
+                                        fill="#01579b">Mistake</text>
+                                    <text x="300" y="250" text-anchor="middle" font-weight="bold"
+                                        fill="#01579b">Tracking</text>
+
+                                    <!-- Arrows -->
+                                    <line x1="100" y1="80" x2="100" y2="120" stroke="#333" stroke-width="2" />
+                                    <polygon points="95,110 100,120 105,110" fill="#333" />
+
+                                    <line x1="150" y1="145" x2="250" y2="145" stroke="#333" stroke-width="2" />
+                                    <polygon points="240,140 250,145 240,150" fill="#333" />
+
+                                    <line x1="100" y1="170" x2="100" y2="210" stroke="#333" stroke-width="2" />
+                                    <polygon points="95,200 100,210 105,200" fill="#333" />
+
+                                    <line x1="300" y1="170" x2="300" y2="210" stroke="#333" stroke-width="2" />
+                                    <polygon points="295,200 300,210 305,200" fill="#333" />
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card shadow h-100">
+                <div class="card-header bg-info text-white">
+                    <h4 class="mb-0">Feedback Categories</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-12 mb-3">
+                            <div class="p-3 border rounded bg-light">
+                                <h5 class="text-danger"><i class="bi bi-exclamation-triangle me-2"></i>Grammar Issues
+                                </h5>
+                                <p>Identification of grammatical errors with explanations and corrections</p>
+                                <div class="bg-white p-2 rounded border">
+                                    <span class="text-danger">"You going to the store"</span> →
+                                    <span class="text-success">"You are going to the store"</span><br>
+                                    <small class="text-muted">Missing auxiliary verb in present continuous tense</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12 mb-3">
+                            <div class="p-3 border rounded bg-light">
+                                <h5 class="text-warning"><i class="bi bi-book me-2"></i>Vocabulary Issues</h5>
+                                <p>Word choice suggestions and alternative expressions</p>
+                                <div class="bg-white p-2 rounded border">
+                                    <span class="text-warning">"I very like this movie"</span> →
+                                    <span class="text-success">"I really like this movie"</span><br>
+                                    <small class="text-muted">Use 'really' instead of 'very' with verbs</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="p-3 border rounded bg-light">
+                                <h5 class="text-success"><i class="bi bi-check-circle me-2"></i>Positive Reinforcement
+                                </h5>
+                                <p>Highlighting successful language use to build confidence</p>
+                                <div class="bg-white p-2 rounded border">
+                                    <span class="text-success">"Your use of past tense was consistent throughout your
+                                        response."</span><br>
+                                    <small class="text-muted">Recognizing correct grammatical patterns</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card shadow h-100">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0">Example Feedback Response</h4>
+                </div>
+                <div class="card-body">
+                    <pre class="code-block p-3" style="max-height: 350px; overflow-y: auto;">
+<code>{
+  "user_feedback": "You did well structuring your response about your work experience. 
+  I noticed a few areas where you could improve:
+  
+  1. Grammar: You said 'I working in this company for 3 years.' Instead, try 'I have been working in this company for 3 years.' - this is the present perfect continuous tense for ongoing actions.
+  
+  2. Vocabulary: The phrase 'make a project' could be replaced with 'complete a project' or 'develop a project' which sounds more professional.
+  
+  3. Fluency: Your response had good flow overall, but try to use connecting words like 'additionally' or 'moreover' between your key points.
+  
+  Keep practicing - you're making good progress!",
+  
+  "detailed_feedback": {
+    "grammar_issues": [
+      "Missing auxiliary verb: 'I working...' → 'I have been working...'",
+      "Incorrect article: 'I am developer' → 'I am a developer'"
+    ],
+    "vocabulary_issues": [
+      "Collocation: 'make a project' → 'complete/develop a project'",
+      "Word choice: 'very good skills' → 'strong skills'"
+    ],
+    "positives": [
+      "Good use of job interview vocabulary",
+      "Appropriate level of detail in examples",
+      "Clear pronunciation of technical terms"
+    ],
+    "fluency": [
+      "Add connecting words between points",
+      "Maintain consistent speaking pace"
+    ]
+  }
+}</code>
+                    </pre>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

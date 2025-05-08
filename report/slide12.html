@@ -1,0 +1,181 @@
+<div class="container py-4">
+    <h1 class="slide-title">Technical Challenges & Solutions</h1>
+    
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white py-3">
+                    <h3 class="mb-0">Key Implementation Challenges</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 mb-4">
+                            <div class="card h-100 shadow-sm">
+                                <div class="card-header bg-danger text-white">
+                                    <h5 class="mb-0">Android BLASTBufferQueue Errors</h5>
+                                </div>
+                                <div class="card-body">
+                                    <p><strong>Challenge:</strong> Surface rendering issues caused crashes during audio recording on Android devices.</p>
+                                    <p><strong>Solution:</strong> Implemented custom BufferQueueManager and SurfaceViewOptimizer to manage hardware resource conflicts.</p>
+                                    <div class="bg-light p-2 rounded mt-2">
+                                        <code>BufferQueueErrorHandler.filterBLASTBufferQueueErrors();</code><br>
+                                        <code>BufferQueueManager.startMonitoring();</code>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4 mb-4">
+                            <div class="card h-100 shadow-sm">
+                                <div class="card-header bg-danger text-white">
+                                    <h5 class="mb-0">Audio Processing Latency</h5>
+                                </div>
+                                <div class="card-body">
+                                    <p><strong>Challenge:</strong> Speech-to-text processing created noticeable delays in conversation flow.</p>
+                                    <p><strong>Solution:</strong> Implemented background tasks and non-blocking feedback generation to maintain conversation responsiveness.</p>
+                                    <div class="bg-light p-2 rounded mt-2">
+                                        <code>background_tasks.add_task(</code><br>
+                                        <code>process_speech_feedback, ...);</code>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4 mb-4">
+                            <div class="card h-100 shadow-sm">
+                                <div class="card-header bg-danger text-white">
+                                    <h5 class="mb-0">AI Response Quality</h5>
+                                </div>
+                                <div class="card-body">
+                                    <p><strong>Challenge:</strong> AI responses needed to be natural, contextual, and appropriate for English learners.</p>
+                                    <p><strong>Solution:</strong> Refined prompt engineering with specific instructions for simpler vocabulary and natural conversational flow.</p>
+                                    <div class="bg-light p-2 rounded mt-2">
+                                        <code>"Use natural, simple English that</code><br>
+                                        <code>new and intermediate learners</code><br>
+                                        <code>can easily understand."</code>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-4 mb-4">
+                            <div class="card h-100 shadow-sm">
+                                <div class="card-header bg-danger text-white">
+                                    <h5 class="mb-0">Error Recovery</h5>
+                                </div>
+                                <div class="card-body">
+                                    <p><strong>Challenge:</strong> Audio recording failures and transcription errors interrupted user experience.</p>
+                                    <p><strong>Solution:</strong> Implemented ErrorBoundary components and graceful degradation paths for all critical operations.</p>
+                                    <div class="bg-light p-2 rounded mt-2">
+                                        <code>return ErrorBoundary(</code><br>
+                                        <code>onError: (error, stackTrace) => {</code><br>
+                                        <code>handleBufferQueueError(...)},</code><br>
+                                        <code>child: _buildScreen(context),</code><br>
+                                        <code>);</code>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4 mb-4">
+                            <div class="card h-100 shadow-sm">
+                                <div class="card-header bg-danger text-white">
+                                    <h5 class="mb-0">Responsive UI Design</h5>
+                                </div>
+                                <div class="card-body">
+                                    <p><strong>Challenge:</strong> Maintaining a consistent user experience across different screen sizes and orientations.</p>
+                                    <p><strong>Solution:</strong> Created adaptive layouts with ResponsiveLayout utility to detect device characteristics.</p>
+                                    <div class="bg-light p-2 rounded mt-2">
+                                        <code>return LayoutBuilder(</code><br>
+                                        <code>builder: (context, constraints) {</code><br>
+                                        <code>if (ResponsiveLayout.isLargeScreen(context)) {</code><br>
+                                        <code>return _buildLandscapeLayout(...);}</code><br>
+                                        <code>});</code>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4 mb-4">
+                            <div class="card h-100 shadow-sm">
+                                <div class="card-header bg-danger text-white">
+                                    <h5 class="mb-0">Feedback Generation</h5>
+                                </div>
+                                <div class="card-body">
+                                    <p><strong>Challenge:</strong> Creating accurate, helpful language feedback that wasn't overwhelming.</p>
+                                    <p><strong>Solution:</strong> Dual feedback system with user-friendly summaries and detailed technical information.</p>
+                                    <div class="bg-light p-2 rounded mt-2">
+                                        <code>feedback_result = FeedbackResult(</code><br>
+                                        <code>user_feedback: "User-friendly text",</code><br>
+                                        <code>detailed_feedback: {...}</code><br>
+                                        <code>);</code>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header bg-info text-white">
+                    <h4 class="mb-0">Performance Optimizations</h4>
+                </div>
+                <div class="card-body">
+                    <ul class="fs-5">
+                        <li class="mb-3">
+                            <span class="fw-bold">Memory Management:</span>
+                            <p>Optimized audio buffer handling to prevent memory leaks</p>
+                        </li>
+                        <li class="mb-3">
+                            <span class="fw-bold">Lazy Loading:</span>
+                            <p>Implemented on-demand loading of conversations and feedback</p>
+                        </li>
+                        <li class="mb-3">
+                            <span class="fw-bold">State Management:</span>
+                            <p>Efficient BLoC pattern to minimize rebuilds</p>
+                        </li>
+                        <li class="mb-3">
+                            <span class="fw-bold">Backend Caching:</span>
+                            <p>Response caching for frequently accessed data</p>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0">Future Technical Improvements</h4>
+                </div>
+                <div class="card-body">
+                    <ul class="fs-5">
+                        <li class="mb-3">
+                            <span class="fw-bold">Real-time Pronunciation Analysis:</span>
+                            <p>Implement phoneme-level pronunciation feedback</p>
+                        </li>
+                        <li class="mb-3">
+                            <span class="fw-bold">Offline Mode:</span>
+                            <p>Enable basic functionality without internet connection</p>
+                        </li>
+                        <li class="mb-3">
+                            <span class="fw-bold">AI Model Optimization:</span>
+                            <p>Fine-tune language models for improved conversation flow</p>
+                        </li>
+                        <li class="mb-3">
+                            <span class="fw-bold">Multi-language Support:</span>
+                            <p>Expand functionality to support learning other languages</p>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

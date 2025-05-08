@@ -1,0 +1,144 @@
+<div class="container py-4">
+    <h1 class="slide-title">Giao Diện & Trải Nghiệm Người Dùng</h1>
+    
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header bg-info text-white">
+                    <h3 class="mb-0">Các Thành Phần UI Chính</h3>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <!-- SVG UI Component Diagram -->
+                        <svg width="100%" height="350" viewBox="0 0 500 350" xmlns="http://www.w3.org/2000/svg">
+                            <!-- Phone Outline -->
+                            <rect x="150" y="10" width="200" height="330" rx="20" fill="#f5f5f5" stroke="#333" stroke-width="3" />
+                            <rect x="155" y="30" width="190" height="290" rx="5" fill="white" stroke="#ddd" stroke-width="1" />
+                            
+                            <!-- UI Elements -->
+                            <!-- Conversation Header -->
+                            <rect x="160" y="35" width="180" height="50" rx="5" fill="#4a6bdf" stroke="none" />
+                            <text x="250" y="60" text-anchor="middle" fill="white" font-weight="bold" font-size="12">Tiêu Đề Hội Thoại</text>
+                            <text x="250" y="75" text-anchor="middle" fill="white" font-size="10">Luyện Tập Phỏng Vấn</text>
+                            
+                            <!-- Situation Card -->
+                            <rect x="165" y="90" width="170" height="40" rx="5" fill="#e3f2fd" stroke="#2196f3" stroke-width="1" />
+                            <text x="250" y="115" text-anchor="middle" fill="#0d47a1" font-size="11">Ngữ Cảnh Tình Huống</text>
+                            
+                            <!-- AI Message -->
+                            <rect x="170" y="135" width="120" height="40" rx="10" fill="#f1f1f1" stroke="#ddd" stroke-width="1" />
+                            <text x="230" y="160" text-anchor="middle" fill="#333" font-size="10">Tin Nhắn AI</text>
+                            
+                            <!-- User Message -->
+                            <rect x="215" y="180" width="120" height="40" rx="10" fill="#4a6bdf" stroke="none" />
+                            <text x="275" y="205" text-anchor="middle" fill="white" font-size="10">Tin Nhắn Người Dùng</text>
+                            
+                            <!-- AI Message -->
+                            <rect x="170" y="225" width="120" height="40" rx="10" fill="#f1f1f1" stroke="#ddd" stroke-width="1" />
+                            <text x="230" y="250" text-anchor="middle" fill="#333" font-size="10">Tin Nhắn AI</text>
+                            
+                            <!-- Recording Button -->
+                            <circle cx="250" cy="290" r="25" fill="#4a6bdf" stroke="none" />
+                            <rect x="240" y="280" width="20" height="20" fill="white" />
+                            <text x="250" y="315" text-anchor="middle" fill="#333" font-size="10">Nút Ghi Âm</text>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card shadow h-100">
+                <div class="card-header bg-success text-white">
+                    <h3 class="mb-0">Thiết Kế Trải Nghiệm Người Dùng</h3>
+                </div>
+                <div class="card-body">
+                    <ul class="fs-5">
+                        <li class="mb-3">
+                            <span class="fw-bold">Giao diện trò chuyện trực quan:</span>
+                            <p>Bố cục tin nhắn quen thuộc giúp luồng hội thoại dễ dàng</p>
+                        </li>
+                        <li class="mb-3">
+                            <span class="fw-bold">Ghi âm đơn giản:</span>
+                            <p>Ghi âm một chạm với phản hồi trực quan trong khi nói</p>
+                        </li>
+                        <li class="mb-3">
+                            <span class="fw-bold">Xem lại bản ghi:</span>
+                            <p>Người dùng có thể xác minh và chỉnh sửa lời nói đã được ghi lại trước khi gửi</p>
+                        </li>
+                        <li class="mb-3">
+                            <span class="fw-bold">Bảng phản hồi:</span>
+                            <p>Phản hồi ngôn ngữ theo yêu cầu với các gợi ý có thể thực hiện được</p>
+                        </li>
+                        <li class="mb-3">
+                            <span class="fw-bold">Thiết kế đáp ứng:</span>
+                            <p>Thích ứng với các kích thước màn hình và hướng khác nhau</p>
+                        </li>
+                        <li class="mb-3">
+                            <span class="fw-bold">Xử lý lỗi:</span>
+                            <p>Khôi phục nhẹ nhàng từ các vấn đề ghi âm và xử lý</p>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header bg-warning">
+                    <h4 class="mb-0 text-dark">Ví Dụ Mã Nguồn: Màn Hình Hội Thoại</h4>
+                </div>
+                <div class="card-body">
+                    <pre class="code-block p-3">
+<code>class ConversationScreen extends StatefulWidget {
+  final Conversation conversation;
+
+  const ConversationScreen({
+    Key? key,
+    required this.conversation,
+  }) : super(key: key);
+
+  @override
+  State&lt;ConversationScreen&gt; createState() => _ConversationScreenState();
+}
+
+class _ConversationScreenState extends State&lt;ConversationScreen&gt; {
+  final _scrollController = ScrollController();
+  bool _showSituation = true;
+  
+  @override
+  Widget build(BuildContext context) {
+    return ErrorBoundary(
+      onError: (error, stackTrace) {
+        BufferQueueErrorHandler.handleBufferQueueError(
+          context,
+          error.toString(),
+        );
+      },
+      child: BlocBuilder&lt;ConversationBloc, ConversationState&gt;(
+        builder: (context, state) {
+          return Scaffold(
+            appBar: AppBar(title: Text('Đóng Vai')),
+            body: SafeArea(
+              child: Column(
+                children: [
+                  _buildSituationHeader(context, state.conversation!),
+                  _buildMessageList(context, messages),
+                  _buildInputArea(context),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}</code>
+                    </pre>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

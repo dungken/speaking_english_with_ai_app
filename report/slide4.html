@@ -1,0 +1,108 @@
+<div class="container py-4">
+    <h1 class="slide-title">Tổng Quan Kiến Trúc Kỹ Thuật</h1>
+
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-body">
+                    <h3 class="text-primary mb-3"><i class="bi bi-layers me-2"></i>Kiến Trúc Tổng Thể</h3>
+
+                    <div class="text-center mb-4">
+                        <!-- SVG Architecture Diagram -->
+                        <svg width="100%" height="400" viewBox="0 0 1000 400" xmlns="http://www.w3.org/2000/svg">
+                            <!-- Mobile App -->
+                            <rect x="50" y="150" width="200" height="100" rx="10" fill="#4a6bdf" />
+                            <text x="150" y="200" text-anchor="middle" fill="white" font-weight="bold">Ứng Dụng
+                                Flutter</text>
+
+                            <!-- Backend -->
+                            <rect x="400" y="150" width="200" height="100" rx="10" fill="#3f51b5" />
+                            <text x="500" y="200" text-anchor="middle" fill="white" font-weight="bold">Backend
+                                FastAPI</text>
+
+                            <!-- Database -->
+                            <rect x="750" y="150" width="200" height="100" rx="10" fill="#673ab7" />
+                            <text x="850" y="200" text-anchor="middle" fill="white" font-weight="bold">Cơ Sở Dữ Liệu
+                                MongoDB</text>
+
+                            <!-- AI Service -->
+                            <rect x="400" y="300" width="200" height="80" rx="10" fill="#009688" />
+                            <text x="500" y="340" text-anchor="middle" fill="white" font-weight="bold">Dịch Vụ AI</text>
+
+                            <!-- Connections -->
+                            <line x1="250" y1="200" x2="400" y2="200" stroke="#333" stroke-width="3" />
+                            <polygon points="390,195 400,200 390,205" fill="#333" />
+
+                            <line x1="600" y1="200" x2="750" y2="200" stroke="#333" stroke-width="3" />
+                            <polygon points="740,195 750,200 740,205" fill="#333" />
+
+                            <line x1="500" y1="250" x2="500" y2="300" stroke="#333" stroke-width="3" />
+                            <polygon points="495,290 500,300 505,290" fill="#333" />
+
+                            <!-- Labels -->
+                            <text x="325" y="190" text-anchor="middle" fill="#333" font-size="14">HTTP/REST API</text>
+                            <text x="675" y="190" text-anchor="middle" fill="#333" font-size="14">Lưu Trữ Dữ Liệu</text>
+                            <text x="550" y="275" text-anchor="middle" fill="#333" font-size="14">Dịch Vụ NLP</text>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card shadow h-100">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Frontend (Flutter)</h4>
+                </div>
+                <div class="card-body">
+                    <ul>
+                        <li>Thiết kế kiến trúc (Clean Architecture)</li>
+                        <li>BLoC cho quản lý trạng thái</li>
+                        <li>Tổ chức theo mô-đun dựa trên tính năng</li>
+                        <li>Thiết kế UI đáp ứng</li>
+                        <li>Hỗ trợ đa nền tảng</li>
+                        <li>Tối ưu hóa ghi âm</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow h-100">
+                <div class="card-header bg-secondary text-white">
+                    <h4 class="mb-0">Backend (FastAPI)</h4>
+                </div>
+                <div class="card-body">
+                    <ul>
+                        <li>Kiến trúc API RESTful</li>
+                        <li>Framework Python FastAPI</li>
+                        <li>Xác thực JWT</li>
+                        <li>Xử lý tác vụ nền</li>
+                        <li>Xử lý file âm thanh</li>
+                        <li>Tài liệu OpenAPI</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow h-100">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0">Dịch Vụ AI</h4>
+                </div>
+                <div class="card-body">
+                    <ul>
+                        <li>Xử lý chuyển đổi giọng nói thành văn bản</li>
+                        <li>Hiểu ngôn ngữ tự nhiên</li>
+                        <li>Gemini cho tạo hội thoại</li>
+                        <li>Phân tích phản hồi ngôn ngữ</li>
+                        <li>Nhận diện mẫu lỗi</li>
+                        <li>Gợi ý cá nhân hóa</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
