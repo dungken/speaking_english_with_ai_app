@@ -184,247 +184,6 @@
         </div>
     </div>
 
-    <div class="row mt-4">
-        <div class="col-12">
-            <div class="card glassmorphism shadow-lg rounded-4 border-0 hover-card">
-                <div class="card-header gradient-warning text-white p-3 rounded-top-4 d-flex align-items-center">
-                    <div class="feature-icon-circle me-3">
-                        <i class="bi bi-code-square fs-4"></i>
-                    </div>
-                    <h4 class="mb-0">Ví Dụ Mã Nguồn: BLoC Cho Hội Thoại</h4>
-                </div>
-                <div class="card-body p-4">
-                    <div class="code-container">
-                        <div class="code-header">
-                            <div class="code-title">conversation_bloc.dart</div>
-                            <div class="tab-selector ms-auto d-flex">
-                                <div class="tab active" onclick="switchTab(0)">Bloc</div>
-                                <div class="tab" onclick="switchTab(1)">Event</div>
-                                <div class="tab" onclick="switchTab(2)">State</div>
-                            </div>
-                        </div>
-                        <div class="tab-content">
-                            <div class="code-content active">
-                                <pre class="code-block"><code><span class="code-keyword">class</span> <span class="code-class">ConversationBloc</span> <span class="code-keyword">extends</span> <span class="code-class">Bloc</span>&lt;<span class="code-class">ConversationEvent</span>, <span class="code-class">ConversationState</span>&gt; {
-  <span class="code-keyword">final</span> <span class="code-class">ConversationRepository</span> repository;
-  <span class="code-keyword">final</span> <span class="code-class">AudioService</span> audioService;
-  <span class="code-keyword">final</span> <span class="code-class">UploadAudioUseCase</span> uploadAudioUseCase;
-
-  <span class="code-function">ConversationBloc</span>({
-    <span class="code-keyword">required</span> <span class="code-this">this</span>.repository,
-    <span class="code-keyword">required</span> <span class="code-this">this</span>.audioService,
-    <span class="code-keyword">required</span> <span class="code-this">this</span>.uploadAudioUseCase,
-  }) : <span class="code-keyword">super</span>(<span class="code-keyword">const</span> <span class="code-class">ConversationInitial</span>()) {
-    on&lt;<span class="code-class">CreateConversationEvent</span>&gt;(_onCreateConversation);
-    on&lt;<span class="code-class">SendSpeechMessageEvent</span>&gt;(_onSendSpeechMessage);
-    on&lt;<span class="code-class">GetMessageFeedbackEvent</span>&gt;(_onGetMessageFeedback);
-    on&lt;<span class="code-class">StartRecordingEvent</span>&gt;(_onStartRecording);
-    on&lt;<span class="code-class">StopRecordingEvent</span>&gt;(_onStopRecording);
-    on&lt;<span class="code-class">UploadAudioEvent</span>&gt;(_onUploadAudio);
-    <span class="code-comment">// Và các event handler khác...</span>
-  }
-
-  <span class="code-comment">// Xử lý SendSpeechMessageEvent</span>
-  <span class="code-type">Future</span>&lt;<span class="code-type">void</span>&gt; <span class="code-function">_onSendSpeechMessage</span>(
-      <span class="code-class">SendSpeechMessageEvent</span> event, <span class="code-class">Emitter</span>&lt;<span class="code-class">ConversationState</span>&gt; emit) <span class="code-keyword">async</span> {
-    <span class="code-keyword">if</span> (state.conversation == <span class="code-value">null</span>) {
-      emit(<span class="code-keyword">const</span> <span class="code-class">ConversationError</span>(message: <span class="code-value">'No active conversation'</span>));
-      <span class="code-keyword">return</span>;
-    }
-
-    emit(<span class="code-class">MessageSending</span>(
-      conversation: state.conversation!,
-      audioId: event.audioId,
-      transcription: state.transcription ?? <span class="code-value">''</span>,
-    ));
-
-    <span class="code-keyword">final</span> result = <span class="code-keyword">await</span> repository.sendSpeechMessage(
-      conversationId: event.conversationId,
-      audioId: event.audioId,
-    );
-
-    emit(result.fold(
-      (failure) => state.copyWith(
-        isLoading: <span class="code-value">false</span>,
-        errorMessage: _mapFailureToMessage(failure),
-      ),
-      (messages) {
-        <span class="code-keyword">return</span> <span class="code-class">MessagesSent</span>(
-          conversation: state.conversation!.copyWith(
-            messages: [
-              ...state.conversation!.messages,
-              messages.userMessage,
-              messages.aiMessage,
-            ],
-          ),
-          messages: messages,
-        );
-      },
-    ));
-  }
-}</code></pre>
-                            </div>
-                            <div class="code-content">
-                                <pre class="code-block"><code><span class="code-keyword">abstract</span> <span class="code-keyword">class</span> <span class="code-class">ConversationEvent</span> <span class="code-keyword">extends</span> <span class="code-class">Equatable</span> {
-  <span class="code-keyword">const</span> <span class="code-function">ConversationEvent</span>();
-
-  <span class="code-annotation">@override</span>
-  <span class="code-type">List</span>&lt;<span class="code-type">Object</span>?&gt; <span class="code-keyword">get</span> props => [];
-}
-
-<span class="code-comment">// Tạo hội thoại mới</span>
-<span class="code-keyword">class</span> <span class="code-class">CreateConversationEvent</span> <span class="code-keyword">extends</span> <span class="code-class">ConversationEvent</span> {
-  <span class="code-keyword">final</span> <span class="code-type">String</span> userRole;
-  <span class="code-keyword">final</span> <span class="code-type">String</span> aiRole;
-  <span class="code-keyword">final</span> <span class="code-type">String</span> situation;
-
-  <span class="code-keyword">const</span> <span class="code-function">CreateConversationEvent</span>({
-    <span class="code-keyword">required</span> <span class="code-this">this</span>.userRole,
-    <span class="code-keyword">required</span> <span class="code-this">this</span>.aiRole,
-    <span class="code-keyword">required</span> <span class="code-this">this</span>.situation,
-  });
-}
-
-<span class="code-comment">// Gửi tin nhắn âm thanh</span>
-<span class="code-keyword">class</span> <span class="code-class">SendSpeechMessageEvent</span> <span class="code-keyword">extends</span> <span class="code-class">ConversationEvent</span> {
-  <span class="code-keyword">final</span> <span class="code-type">String</span> conversationId;
-  <span class="code-keyword">final</span> <span class="code-type">String</span> audioId;
-
-  <span class="code-keyword">const</span> <span class="code-function">SendSpeechMessageEvent</span>({
-    <span class="code-keyword">required</span> <span class="code-this">this</span>.conversationId,
-    <span class="code-keyword">required</span> <span class="code-this">this</span>.audioId,
-  });
-}
-
-<span class="code-comment">// Bắt đầu ghi âm</span>
-<span class="code-keyword">class</span> <span class="code-class">StartRecordingEvent</span> <span class="code-keyword">extends</span> <span class="code-class">ConversationEvent</span> {}
-
-<span class="code-comment">// Dừng ghi âm</span>
-<span class="code-keyword">class</span> <span class="code-class">StopRecordingEvent</span> <span class="code-keyword">extends</span> <span class="code-class">ConversationEvent</span> {
-  <span class="code-keyword">final</span> <span class="code-type">String</span> filePath;
-  <span class="code-keyword">final</span> <span class="code-type">String</span>? transcription;
-
-  <span class="code-keyword">const</span> <span class="code-function">StopRecordingEvent</span>({
-    <span class="code-keyword">required</span> <span class="code-this">this</span>.filePath,
-    <span class="code-this">this</span>.transcription,
-  });
-}</code></pre>
-                            </div>
-                            <div class="code-content">
-                                <pre class="code-block"><code><span class="code-comment">// Trạng thái ghi âm</span>
-<span class="code-keyword">enum</span> <span class="code-class">RecordingState</span> {
-  <span class="code-comment">// Không ghi âm</span>
-  idle,
-  <span class="code-comment">// Đang ghi âm</span>
-  recording,
-  <span class="code-comment">// Đang xử lý âm thanh</span>
-  processing,
-  <span class="code-comment">// Đã phiên âm xong</span>
-  transcribed
-}
-
-<span class="code-comment">// Base class cho state</span>
-<span class="code-keyword">class</span> <span class="code-class">ConversationState</span> <span class="code-keyword">extends</span> <span class="code-class">Equatable</span> {
-  <span class="code-keyword">final</span> <span class="code-class">Conversation</span>? conversation;
-  <span class="code-keyword">final</span> <span class="code-type">bool</span> isLoading;
-  <span class="code-keyword">final</span> <span class="code-type">String</span>? errorMessage;
-  <span class="code-keyword">final</span> <span class="code-class">RecordingState</span> recordingState;
-  <span class="code-keyword">final</span> <span class="code-class">Feedback</span>? activeFeedback;
-  <span class="code-keyword">final</span> <span class="code-type">String</span>? transcription;
-  <span class="code-keyword">final</span> <span class="code-type">String</span>? audioId;
-  <span class="code-comment">// ... nhiều thuộc tính khác</span>
-  
-  <span class="code-keyword">const</span> <span class="code-function">ConversationState</span>({ ... });
-  
-  <span class="code-function">copyWith</span>({ ... }) { ... }
-}
-
-<span class="code-comment">// State khi đang gửi tin nhắn</span>
-<span class="code-keyword">class</span> <span class="code-class">MessageSending</span> <span class="code-keyword">extends</span> <span class="code-class">ConversationState</span> {
-  <span class="code-keyword">const</span> <span class="code-function">MessageSending</span>({
-    <span class="code-keyword">required</span> <span class="code-class">Conversation</span> conversation,
-    <span class="code-keyword">required</span> <span class="code-type">String</span> audioId,
-    <span class="code-keyword">required</span> <span class="code-type">String</span> transcription,
-  }) : <span class="code-keyword">super</span>(
-    conversation: conversation,
-    audioId: audioId,
-    transcription: transcription,
-    isLoading: <span class="code-value">true</span>,
-  );
-}
-
-<span class="code-comment">// State khi đã gửi tin nhắn thành công</span>
-<span class="code-keyword">class</span> <span class="code-class">MessagesSent</span> <span class="code-keyword">extends</span> <span class="code-class">ConversationState</span> {
-  <span class="code-keyword">const</span> <span class="code-function">MessagesSent</span>({
-    <span class="code-keyword">required</span> <span class="code-class">Conversation</span> conversation,
-    <span class="code-keyword">required</span> <span class="code-class">ConversationMessages</span> messages,
-  }) : <span class="code-keyword">super</span>(
-    conversation: conversation,
-    lastMessages: messages,
-    recordingState: <span class="code-class">RecordingState</span>.idle,
-  );
-}</code></pre>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="mt-4">
-                        <h5 class="gradient-text-warning">Giải thích Pattern BLoC trong ứng dụng</h5>
-                        <div class="row">
-                            <div class="col-md-4">
-                                <div class="bloc-component mb-3">
-                                    <div class="bloc-header gradient-warning text-white p-2 rounded-top">
-                                        <i class="bi bi-diagram-2 me-2"></i>Event
-                                    </div>
-                                    <div class="bloc-body p-2 bg-light">
-                                        <p><strong>ConversationEvent</strong>: Các sự kiện được gửi đến BLoC</p>
-                                        <ul class="mb-0 small">
-                                            <li>CreateConversationEvent</li>
-                                            <li>SendSpeechMessageEvent</li>
-                                            <li>StartRecordingEvent</li>
-                                            <li>GetMessageFeedbackEvent</li>
-                                        </ul>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="bloc-component mb-3">
-                                    <div class="bloc-header gradient-warning text-white p-2 rounded-top">
-                                        <i class="bi bi-gear me-2"></i>BLoC
-                                    </div>
-                                    <div class="bloc-body p-2 bg-light">
-                                        <p><strong>ConversationBloc</strong>: Xử lý logic nghiệp vụ</p>
-                                        <ul class="mb-0 small">
-                                            <li>Nhận sự kiện (event)</li>
-                                            <li>Gọi repository/usecase</li>
-                                            <li>Tạo trạng thái mới (state)</li>
-                                            <li>Xử lý lỗi & logging</li>
-                                        </ul>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="bloc-component mb-3">
-                                    <div class="bloc-header gradient-warning text-white p-2 rounded-top">
-                                        <i class="bi bi-symmetry-vertical me-2"></i>State
-                                    </div>
-                                    <div class="bloc-body p-2 bg-light">
-                                        <p><strong>ConversationState</strong>: Trạng thái UI</p>
-                                        <ul class="mb-0 small">
-                                            <li>ConversationInitial</li>
-                                            <li>MessageSending</li>
-                                            <li>MessagesSent</li>
-                                            <li>AudioUploaded</li>
-                                        </ul>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
 </div>
 
 <style>
@@ -887,85 +646,86 @@
             font-size: 0.95rem;
         }
     }
-/* Bloc component boxes */
-.bloc-component {
-    border-radius: 10px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-    margin-bottom: 15px;
-    overflow: hidden;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
 
-.bloc-component:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08);
-}
+    /* Bloc component boxes */
+    .bloc-component {
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        margin-bottom: 15px;
+        overflow: hidden;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
 
-.bloc-header {
-    font-weight: 500;
-    font-size: 0.95rem;
-}
+    .bloc-component:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08);
+    }
 
-.bloc-body {
-    font-size: 0.9rem;
-}
+    .bloc-header {
+        font-weight: 500;
+        font-size: 0.95rem;
+    }
 
-/* Tabs for code examples */
-.tab-selector {
-    margin-left: auto;
-}
+    .bloc-body {
+        font-size: 0.9rem;
+    }
 
-.tab {
-    padding: 5px 12px;
-    background: rgba(255, 255, 255, 0.2);
-    color: #f8f9fa;
-    cursor: pointer;
-    transition: all 0.3s;
-    font-size: 0.8rem;
-    font-weight: 500;
-    border-left: 1px solid rgba(255, 255, 255, 0.1);
-}
+    /* Tabs for code examples */
+    .tab-selector {
+        margin-left: auto;
+    }
 
-.tab:first-child {
-    border-top-left-radius: 5px;
-    border-bottom-left-radius: 5px;
-}
+    .tab {
+        padding: 5px 12px;
+        background: rgba(255, 255, 255, 0.2);
+        color: #f8f9fa;
+        cursor: pointer;
+        transition: all 0.3s;
+        font-size: 0.8rem;
+        font-weight: 500;
+        border-left: 1px solid rgba(255, 255, 255, 0.1);
+    }
 
-.tab:last-child {
-    border-top-right-radius: 5px;
-    border-bottom-right-radius: 5px;
-}
+    .tab:first-child {
+        border-top-left-radius: 5px;
+        border-bottom-left-radius: 5px;
+    }
 
-.tab.active {
-    background: rgba(255, 255, 255, 0.3);
-    color: white;
-}
+    .tab:last-child {
+        border-top-right-radius: 5px;
+        border-bottom-right-radius: 5px;
+    }
 
-.tab-content {
-    position: relative;
-}
+    .tab.active {
+        background: rgba(255, 255, 255, 0.3);
+        color: white;
+    }
 
-.code-content {
-    display: none;
-}
+    .tab-content {
+        position: relative;
+    }
 
-.code-content.active {
-    display: block;
-}
+    .code-content {
+        display: none;
+    }
+
+    .code-content.active {
+        display: block;
+    }
 </style>
 
 <script>
-function switchTab(index) {
-    // Hide all code contents
-    const codeContents = document.querySelectorAll('.code-content');
-    codeContents.forEach(content => content.classList.remove('active'));
-    
-    // Show the selected code content
-    codeContents[index].classList.add('active');
-    
-    // Update tab styling
-    const tabs = document.querySelectorAll('.tab');
-    tabs.forEach(tab => tab.classList.remove('active'));
-    tabs[index].classList.add('active');
-}
+    function switchTab(index) {
+        // Hide all code contents
+        const codeContents = document.querySelectorAll('.code-content');
+        codeContents.forEach(content => content.classList.remove('active'));
+
+        // Show the selected code content
+        codeContents[index].classList.add('active');
+
+        // Update tab styling
+        const tabs = document.querySelectorAll('.tab');
+        tabs.forEach(tab => tab.classList.remove('active'));
+        tabs[index].classList.add('active');
+    }
 </script>
