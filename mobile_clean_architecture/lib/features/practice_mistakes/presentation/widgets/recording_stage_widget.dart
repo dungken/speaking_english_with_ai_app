@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/text_styles.dart';
+import '../../../../core/utils/responsive_layout.dart';
 import '../../domain/models/practice_item_model.dart';
 import 'common_widgets.dart';
 
@@ -23,60 +26,72 @@ class RecordingStageWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final elementSpacing = ResponsiveLayout.getElementSpacing(context);
+    final sectionSpacing = ResponsiveLayout.getSectionSpacing(context);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         buildCard(
+          context,
           isDarkMode,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              Text(
                 'Express This Idea',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
+                style: TextStyles.h3(
+                  context,
+                  isDarkMode: isDarkMode,
                 ),
               ),
-              const SizedBox(height: 12),
+              SizedBox(height: elementSpacing * 2),
               Container(
-                padding: const EdgeInsets.all(16),
+                padding: EdgeInsets.all(elementSpacing * 3),
                 decoration: BoxDecoration(
-                  color: isDarkMode ? Colors.blue[800] : Colors.blue[50],
+                  color: isDarkMode
+                      ? AppColors.primaryDark.withOpacity(0.2)
+                      : AppColors.primaryLight.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
                     color: isDarkMode
-                        ? Colors.blue[700]!.withAlpha(255)
-                        : Colors.blue[100]!.withAlpha(255),
+                        ? AppColors.primaryDark
+                        : AppColors.primaryLight,
                   ),
                 ),
                 child: Text(
                   practiceItem.situationPrompt,
-                  style: TextStyle(
-                    color: isDarkMode ? Colors.blue[100] : Colors.blue[700],
+                  style: TextStyles.body(
+                    context,
+                    isDarkMode: isDarkMode,
+                    color: isDarkMode
+                        ? AppColors.textPrimaryDark
+                        : AppColors.textPrimaryLight,
                   ),
                 ),
               ),
             ],
           ),
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: sectionSpacing * 0.75),
         buildCard(
+          context,
           isDarkMode,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              Text(
                 'Your Response',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
+                style: TextStyles.h3(
+                  context,
+                  isDarkMode: isDarkMode,
                 ),
               ),
-              const SizedBox(height: 12),
+              SizedBox(height: elementSpacing * 2),
               if (recordingState == 'recording')
-                _buildRecordingInProgress()
+                _buildRecordingInProgress(context)
               else
-                _buildRecordingCompleted(),
+                _buildRecordingCompleted(context),
             ],
           ),
         ),
@@ -84,56 +99,103 @@ class RecordingStageWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildRecordingInProgress() {
+  Widget _buildRecordingInProgress(BuildContext context) {
+    final elementSpacing = ResponsiveLayout.getElementSpacing(context);
+
     return Column(
       children: [
-        Container(
-          width: 64,
-          height: 64,
-          decoration: BoxDecoration(
-            color: isDarkMode ? Colors.red[900] : Colors.red[100],
-            shape: BoxShape.circle,
-          ),
-          child: Center(
-            child: Container(
-              width: 32,
-              height: 32,
+        // Animated recording indicator
+        TweenAnimationBuilder<double>(
+          tween: Tween(begin: 0.8, end: 1.0),
+          duration: const Duration(milliseconds: 800),
+          curve: Curves.easeInOut,
+          builder: (context, value, child) {
+            return Container(
+              width: 80,
+              height: 80,
               decoration: BoxDecoration(
-                color: Colors.red[500],
+                color: AppColors.error.withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
-            ),
-          ),
+              child: Center(
+                child: Container(
+                  width: 48 * value,
+                  height: 48 * value,
+                  decoration: BoxDecoration(
+                    color: AppColors.error.withOpacity(0.8),
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ),
+            );
+          },
+          onEnd: () {},
         ),
-        const SizedBox(height: 12),
-        Text(
-          'Recording...',
-          style: TextStyle(
-            color: Colors.red[500],
+        SizedBox(height: elementSpacing * 2),
+        // Animated recording text
+        DefaultTextStyle(
+          style: TextStyles.body(
+            context,
+            isDarkMode: isDarkMode,
+            color: AppColors.error,
             fontWeight: FontWeight.bold,
           ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          'Tap to stop',
-          style: TextStyle(
-            fontSize: 12,
-            color: isDarkMode ? Colors.grey[400] : Colors.grey[500],
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Text('Recording'),
+              SizedBox(width: 2),
+              _buildDot(),
+              SizedBox(width: 2),
+              _buildDot(delay: 150),
+              SizedBox(width: 2),
+              _buildDot(delay: 300),
+            ],
           ),
         ),
-        const SizedBox(height: 24),
-        GestureDetector(
-          onTap: onRecordTap,
-          child: Container(
-            width: 56,
-            height: 56,
-            decoration: BoxDecoration(
-              color: Colors.red[500],
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              Icons.stop,
-              color: Colors.white,
+        SizedBox(height: elementSpacing),
+        Text(
+          'Tap to stop',
+          style: TextStyles.caption(
+            context,
+            isDarkMode: isDarkMode,
+            color: AppColors.getTextSecondaryColor(isDarkMode),
+          ),
+        ),
+        SizedBox(height: elementSpacing * 4),
+        // Enhanced stop button
+        Material(
+          color: Colors.transparent,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(56),
+            onTap: onRecordTap,
+            child: Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    AppColors.error,
+                    AppColors.error
+                        .withRed((AppColors.error.red - 40).clamp(0, 255))
+                  ],
+                ),
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.error.withOpacity(0.3),
+                    blurRadius: 12,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
+              ),
+              child: const Icon(
+                Icons.stop_rounded,
+                color: Colors.white,
+                size: 28,
+              ),
             ),
           ),
         ),
@@ -141,34 +203,57 @@ class RecordingStageWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildRecordingCompleted() {
+  // Animated recording dot
+  Widget _buildDot({int delay = 0}) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.0, end: 1.0),
+      duration: const Duration(milliseconds: 600),
+      curve: Curves.easeInOut,
+      builder: (context, value, child) {
+        return Opacity(
+          opacity: value <= 0.5 ? value * 2 : (1 - value) * 2,
+          child: const Text('.'),
+        );
+      },
+      onEnd: () {},
+    );
+  }
+
+  Widget _buildRecordingCompleted(BuildContext context) {
+    final elementSpacing = ResponsiveLayout.getElementSpacing(context);
+
     return Column(
       children: [
         buildAudioProgressBar(
+          context: context,
           isDarkMode: isDarkMode,
           progress: 0.75,
           duration: '0:04',
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: elementSpacing * 3),
         Container(
-          padding: const EdgeInsets.all(12),
+          padding: EdgeInsets.all(elementSpacing * 2),
           decoration: BoxDecoration(
-            color: isDarkMode ? Colors.grey[800] : Colors.grey[100],
+            color: isDarkMode
+                ? AppColors.surfaceDark.withOpacity(0.6)
+                : AppColors.backgroundLight,
             borderRadius: BorderRadius.circular(8),
             border: Border.all(
               color: isDarkMode
-                  ? Colors.grey[700]!.withAlpha(255)
-                  : Colors.grey[200]!.withAlpha(255),
+                  ? AppColors.surfaceDark
+                  : AppColors.getBackgroundColor(false).withOpacity(0.8),
             ),
           ),
           child: Text(
             practiceItem.commonMistake,
-            style: TextStyle(
-              color: isDarkMode ? Colors.grey[300] : Colors.grey[700],
+            style: TextStyles.body(
+              context,
+              isDarkMode: isDarkMode,
+              color: AppColors.getTextColor(isDarkMode),
             ),
           ),
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: elementSpacing * 3),
         Row(
           children: [
             Expanded(
@@ -177,25 +262,23 @@ class RecordingStageWidget extends StatelessWidget {
                 icon: const Icon(Icons.refresh),
                 label: const Text('Record Again'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: isDarkMode ? Colors.grey[800] : Colors.white,
-                  foregroundColor:
-                      isDarkMode ? Colors.blue[300] : Colors.blue[600],
+                  backgroundColor: AppColors.getSurfaceColor(isDarkMode),
+                  foregroundColor: AppColors.primary,
                   elevation: 0,
                   side: BorderSide(
                     color: isDarkMode
-                        ? Colors.blue[700]!.withAlpha(255)
-                        : Colors.blue[200]!.withAlpha(255),
+                        ? AppColors.primaryDark
+                        : AppColors.primaryLight,
                   ),
                 ),
               ),
             ),
-            const SizedBox(width: 12),
+            SizedBox(width: elementSpacing * 2),
             Expanded(
               child: ElevatedButton(
                 onPressed: onShowFeedback,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor:
-                      isDarkMode ? Colors.blue[800] : Colors.blue[600],
+                  backgroundColor: AppColors.primary,
                   foregroundColor: Colors.white,
                   elevation: 0,
                 ),

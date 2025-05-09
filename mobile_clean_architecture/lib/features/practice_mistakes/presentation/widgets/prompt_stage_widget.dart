@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/text_styles.dart';
+import '../../../../core/utils/responsive_layout.dart';
 import '../../domain/models/practice_item_model.dart';
 import 'common_widgets.dart';
 
@@ -17,54 +20,65 @@ class PromptStageWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final elementSpacing = ResponsiveLayout.getElementSpacing(context);
+    final sectionSpacing = ResponsiveLayout.getSectionSpacing(context);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         buildCard(
+          context,
           isDarkMode,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              Text(
                 'Express This Idea',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
+                style: TextStyles.h3(
+                  context,
+                  isDarkMode: isDarkMode,
                 ),
               ),
-              const SizedBox(height: 12),
+              SizedBox(height: elementSpacing * 2),
               Container(
-                padding: const EdgeInsets.all(16),
+                padding: EdgeInsets.all(elementSpacing * 3),
                 decoration: BoxDecoration(
-                  color: isDarkMode ? Colors.blue[800] : Colors.blue[50],
+                  color: isDarkMode
+                      ? AppColors.primaryDark.withOpacity(0.2)
+                      : AppColors.primaryLight.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
                     color: isDarkMode
-                        ? Colors.blue[700]!.withAlpha(255)
-                        : Colors.blue[100]!.withAlpha(255),
+                        ? AppColors.primaryDark
+                        : AppColors.primaryLight,
                   ),
                 ),
                 child: Text(
                   practiceItem.situationPrompt,
-                  style: TextStyle(
-                    color: isDarkMode ? Colors.blue[100] : Colors.blue[700],
+                  style: TextStyles.body(
+                    context,
+                    isDarkMode: isDarkMode,
+                    color: isDarkMode
+                        ? AppColors.textPrimaryDark
+                        : AppColors.textPrimaryLight,
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: elementSpacing * 3),
               Row(
                 children: [
                   Icon(
                     Icons.flash_on,
                     size: 16,
-                    color: Colors.amber[500],
+                    color: AppColors.streakPrimary,
                   ),
-                  const SizedBox(width: 4),
+                  SizedBox(width: elementSpacing),
                   Text(
                     'Based on mistakes from your conversations',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                    style: TextStyles.caption(
+                      context,
+                      isDarkMode: isDarkMode,
+                      color: AppColors.getTextSecondaryColor(isDarkMode),
                     ),
                   ),
                 ],
@@ -72,27 +86,32 @@ class PromptStageWidget extends StatelessWidget {
             ],
           ),
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: sectionSpacing * 0.75),
         buildCard(
+          context,
           isDarkMode,
           child: Column(
             children: [
               Text(
                 'Tap to record your response',
-                style: TextStyle(
-                  color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                style: TextStyles.body(
+                  context,
+                  isDarkMode: isDarkMode,
+                  color: AppColors.getTextSecondaryColor(isDarkMode),
                 ),
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: elementSpacing * 3),
               buildRecordButton(
+                context: context,
                 isDarkMode: isDarkMode,
                 onTap: onRecordTap,
               ),
             ],
           ),
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: sectionSpacing * 0.75),
         buildCard(
+          context,
           isDarkMode,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -102,31 +121,33 @@ class PromptStageWidget extends StatelessWidget {
                   Icon(
                     Icons.warning_amber,
                     size: 16,
-                    color: Colors.amber[500],
+                    color: AppColors.warning,
                   ),
-                  const SizedBox(width: 8),
-                  const Text(
+                  SizedBox(width: elementSpacing * 1.5),
+                  Text(
                     'What to Watch For',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
+                    style: TextStyles.h3(
+                      context,
+                      isDarkMode: isDarkMode,
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
+              SizedBox(height: elementSpacing * 2),
               Text(
                 'Pay attention to using the correct verb tense when talking about past events.',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: isDarkMode ? Colors.grey[300] : Colors.grey[700],
+                style: TextStyles.body(
+                  context,
+                  isDarkMode: isDarkMode,
                 ),
               ),
-              const SizedBox(height: 8),
+              SizedBox(height: elementSpacing * 1.5),
               Text(
                 'This is an area you\'ve struggled with before',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: isDarkMode ? Colors.grey[400] : Colors.grey[500],
+                style: TextStyles.caption(
+                  context,
+                  isDarkMode: isDarkMode,
+                  color: AppColors.getTextSecondaryColor(isDarkMode),
                 ),
               ),
             ],
