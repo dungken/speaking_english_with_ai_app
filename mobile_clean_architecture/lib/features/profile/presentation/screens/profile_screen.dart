@@ -3,51 +3,120 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/text_styles.dart';
 import '../../../../core/theme/theme_provider.dart';
 import '../../../authentication/presentation/bloc/auth_bloc.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return Consumer<ThemeProvider>(
-      builder: (context, themeProvider, _) {
-        final isDarkMode = themeProvider.isDarkMode;
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
 
-        return Scaffold(
-          backgroundColor: isDarkMode ? Colors.grey[900] : Colors.grey[50],
-          appBar: AppBar(
-            backgroundColor: isDarkMode ? Colors.grey[900] : Colors.blue[500],
-            title: const Text(
-              'Profile',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-            elevation: 0,
-          ),
-          body: SingleChildScrollView(
-            child: Column(
-              children: [
-                _buildProfileHeader(context, isDarkMode),
-                const SizedBox(height: 24),
-                _buildStatsSection(isDarkMode),
-                const SizedBox(height: 24),
-                _buildAchievementsSection(isDarkMode),
-                const SizedBox(height: 24),
-                _buildRecentActivitySection(isDarkMode),
+class _ProfileScreenState extends State<ProfileScreen>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _animationController;
+  late final Animation<double> _fadeAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    // Initialize animation controller for page transitions
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 400),
+    );
+
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: Curves.easeOut,
+      ),
+    );
+
+    // Start animation after build is complete
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _animationController.forward();
+    });
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocListener<AuthBloc, AuthState>(
+      listener: (context, state) {
+        // Redirect to authentication screen if user is not authenticated
+        if (state is Unauthenticated) {
+          context.go('/auth');
+        }
+      },
+      child: Consumer<ThemeProvider>(
+        builder: (context, themeProvider, _) {
+          final isDarkMode = themeProvider.isDarkMode;
+
+          return Scaffold(
+            backgroundColor: AppColors.getBackgroundColor(isDarkMode),
+            appBar: AppBar(
+              backgroundColor:
+                  isDarkMode ? AppColors.primaryDark : AppColors.primary,
+              title: Text(
+                'Profile',
+                style: TextStyles.h1(
+                  context,
+                  color: Colors.white,
+                  isDarkMode: isDarkMode,
+                ),
+              ),
+              elevation: 0,
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.edit_outlined),
+                  tooltip: 'Edit Profile',
+                  onPressed: () => context.push('/profile/edit'),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.settings_outlined),
+                  tooltip: 'Settings',
+                  onPressed: () => context.push('/settings'),
+                ),
               ],
             ),
-          ),
-        );
-      },
+            body: FadeTransition(
+              opacity: _fadeAnimation,
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    _buildProfileHeader(context, isDarkMode),
+                    const SizedBox(height: 24),
+                    _buildStatsSection(context, isDarkMode),
+                    const SizedBox(height: 24),
+                    _buildAchievementsSection(context, isDarkMode),
+                    const SizedBox(height: 24),
+                    _buildRecentActivitySection(context, isDarkMode),
+                    const SizedBox(height: 32),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      ),
     );
   }
 
   Widget _buildProfileHeader(BuildContext context, bool isDarkMode) {
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: isDarkMode ? Colors.grey[800] : Colors.white,
+        color: AppColors.getSurfaceColor(isDarkMode),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
@@ -76,10 +145,10 @@ class ProfileScreen extends StatelessWidget {
                 child: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: Colors.blue,
+                    color: AppColors.primary,
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: isDarkMode ? Colors.grey[800]! : Colors.white,
+                      color: AppColors.getSurfaceColor(isDarkMode),
                       width: 2,
                     ),
                   ),
@@ -93,75 +162,31 @@ class ProfileScreen extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-          const Text(
+          Text(
             'John Doe',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyles.h1(context, isDarkMode: isDarkMode),
           ),
           const SizedBox(height: 4),
           Text(
             'john.doe@example.com',
-            style: TextStyle(
-              fontSize: 16,
-              color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-            ),
+            style: TextStyles.secondary(context, isDarkMode: isDarkMode),
           ),
           const SizedBox(height: 16),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: Colors.blue.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.star,
-                      size: 16,
-                      color: Colors.blue[600],
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      'Intermediate',
-                      style: TextStyle(
-                        color: Colors.blue[600],
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
+              _buildProfileBadge(
+                isDarkMode: isDarkMode,
+                icon: Icons.star,
+                label: 'Intermediate',
+                color: AppColors.primary,
               ),
               const SizedBox(width: 8),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: Colors.green.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.trending_up,
-                      size: 16,
-                      color: Colors.green[600],
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      'Active Learner',
-                      style: TextStyle(
-                        color: Colors.green[600],
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
+              _buildProfileBadge(
+                isDarkMode: isDarkMode,
+                icon: Icons.trending_up,
+                label: 'Active Learner',
+                color: AppColors.success,
               ),
             ],
           ),
@@ -170,7 +195,39 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildStatsSection(bool isDarkMode) {
+  Widget _buildProfileBadge({
+    required bool isDarkMode,
+    required IconData icon,
+    required String label,
+    required Color color,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            icon,
+            size: 16,
+            color: color,
+          ),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(
+              color: color,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatsSection(BuildContext context, bool isDarkMode) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
@@ -178,20 +235,17 @@ class ProfileScreen extends StatelessWidget {
         children: [
           Text(
             'Your Stats',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: isDarkMode ? Colors.white : Colors.grey[800],
-            ),
+            style: TextStyles.h2(context, isDarkMode: isDarkMode),
           ),
           const SizedBox(height: 16),
           Row(
             children: [
               Expanded(
                 child: _buildStatCard(
-                  isDarkMode,
+                  context,
+                  isDarkMode: isDarkMode,
                   icon: Icons.timer,
-                  iconColor: Colors.blue,
+                  iconColor: AppColors.info,
                   title: 'Practice Time',
                   value: '32h',
                   subtitle: 'Total',
@@ -200,23 +254,41 @@ class ProfileScreen extends StatelessWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: _buildStatCard(
-                  isDarkMode,
-                  icon: Icons.local_fire_department,
-                  iconColor: Colors.orange,
+                  context,
+                  isDarkMode: isDarkMode,
+                  icon: Icons.calendar_today,
+                  iconColor: AppColors.streakPrimary,
                   title: 'Current Streak',
-                  value: '7',
+                  value: '5',
                   subtitle: 'Days',
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _buildStatCard(
+                  context,
+                  isDarkMode: isDarkMode,
+                  icon: Icons.record_voice_over,
+                  iconColor: AppColors.accent,
+                  title: 'Recordings',
+                  value: '47',
+                  subtitle: 'Total',
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: _buildStatCard(
-                  isDarkMode,
-                  icon: Icons.star,
-                  iconColor: Colors.amber,
-                  title: 'XP Points',
-                  value: '2,450',
-                  subtitle: 'Points',
+                  context,
+                  isDarkMode: isDarkMode,
+                  icon: Icons.emoji_events,
+                  iconColor: AppColors.success,
+                  title: 'Achievements',
+                  value: '12/30',
+                  subtitle: 'Unlocked',
                 ),
               ),
             ],
@@ -227,7 +299,8 @@ class ProfileScreen extends StatelessWidget {
   }
 
   Widget _buildStatCard(
-    bool isDarkMode, {
+    BuildContext context, {
+    required bool isDarkMode,
     required IconData icon,
     required Color iconColor,
     required String title,
@@ -237,48 +310,56 @@ class ProfileScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isDarkMode ? Colors.grey[800] : Colors.white,
+        color: AppColors.getSurfaceColor(isDarkMode),
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
+            blurRadius: 5,
             offset: const Offset(0, 2),
           ),
         ],
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: iconColor.withOpacity(0.1),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(icon, color: iconColor, size: 20),
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: iconColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  icon,
+                  size: 16,
+                  color: iconColor,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                title,
+                style: TextStyles.secondary(context, isDarkMode: isDarkMode),
+              ),
+            ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
           Text(
             value,
-            style: const TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyles.h1(context, isDarkMode: isDarkMode),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 2),
           Text(
             subtitle,
-            style: TextStyle(
-              fontSize: 12,
-              color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-            ),
+            style: TextStyles.caption(context, isDarkMode: isDarkMode),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildAchievementsSection(bool isDarkMode) {
+  Widget _buildAchievementsSection(BuildContext context, bool isDarkMode) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
@@ -289,19 +370,13 @@ class ProfileScreen extends StatelessWidget {
             children: [
               Text(
                 'Achievements',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: isDarkMode ? Colors.white : Colors.grey[800],
-                ),
+                style: TextStyles.h2(context, isDarkMode: isDarkMode),
               ),
               TextButton(
-                onPressed: () {},
+                onPressed: () => context.push('/achievements'),
                 child: Text(
-                  'View All',
-                  style: TextStyle(
-                    color: isDarkMode ? Colors.blue[300] : Colors.blue[600],
-                  ),
+                  'See All',
+                  style: TextStyle(color: AppColors.primary),
                 ),
               ),
             ],
@@ -310,12 +385,12 @@ class ProfileScreen extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: isDarkMode ? Colors.grey[800] : Colors.white,
+              color: AppColors.getSurfaceColor(isDarkMode),
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withOpacity(0.05),
-                  blurRadius: 10,
+                  blurRadius: 5,
                   offset: const Offset(0, 2),
                 ),
               ],
@@ -323,31 +398,33 @@ class ProfileScreen extends StatelessWidget {
             child: Column(
               children: [
                 _buildAchievementItem(
-                  isDarkMode,
-                  icon: Icons.emoji_events,
-                  iconColor: Colors.amber,
-                  title: 'First Milestone',
-                  subtitle: 'Complete 10 lessons',
-                  progress: 0.8,
-                ),
-                const Divider(),
-                _buildAchievementItem(
-                  isDarkMode,
-                  icon: Icons.timeline,
-                  iconColor: Colors.green,
-                  title: 'Streak Master',
-                  subtitle: 'Maintain a 7-day streak',
-                  progress: 1.0,
+                  context,
+                  isDarkMode: isDarkMode,
+                  icon: Icons.local_fire_department,
+                  title: '5-Day Streak',
+                  subtitle: 'Practice for 5 days in a row',
+                  iconColor: AppColors.streakPrimary,
                   isCompleted: true,
                 ),
                 const Divider(),
                 _buildAchievementItem(
-                  isDarkMode,
-                  icon: Icons.psychology,
-                  iconColor: Colors.purple,
-                  title: 'Vocabulary Expert',
-                  subtitle: 'Learn 100 new words',
-                  progress: 0.6,
+                  context,
+                  isDarkMode: isDarkMode,
+                  icon: Icons.mic,
+                  title: 'First Recording',
+                  subtitle: 'Complete your first voice recording',
+                  iconColor: AppColors.accent,
+                  isCompleted: true,
+                ),
+                const Divider(),
+                _buildAchievementItem(
+                  context,
+                  isDarkMode: isDarkMode,
+                  icon: Icons.star,
+                  title: 'Perfect Score',
+                  subtitle: 'Get 100% on any practice session',
+                  iconColor: AppColors.success,
+                  isCompleted: false,
                 ),
               ],
             ),
@@ -358,25 +435,29 @@ class ProfileScreen extends StatelessWidget {
   }
 
   Widget _buildAchievementItem(
-    bool isDarkMode, {
+    BuildContext context, {
+    required bool isDarkMode,
     required IconData icon,
-    required Color iconColor,
     required String title,
     required String subtitle,
-    required double progress,
-    bool isCompleted = false,
+    required Color iconColor,
+    required bool isCompleted,
   }) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12),
+      padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: iconColor.withOpacity(0.1),
-              shape: BoxShape.circle,
+              color: iconColor.withOpacity(isCompleted ? 0.1 : 0.05),
+              borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(icon, color: iconColor, size: 20),
+            child: Icon(
+              icon,
+              color: isCompleted ? iconColor : Colors.grey,
+              size: 20,
+            ),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -385,56 +466,26 @@ class ProfileScreen extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: TextStyle(
-                    fontWeight: FontWeight.w500,
-                    color: isDarkMode ? Colors.white : Colors.black87,
-                  ),
+                  style: TextStyles.h3(context, isDarkMode: isDarkMode),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   subtitle,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Stack(
-                  children: [
-                    Container(
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: isDarkMode ? Colors.grey[700] : Colors.grey[200],
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    ),
-                    FractionallySizedBox(
-                      widthFactor: progress,
-                      child: Container(
-                        height: 4,
-                        decoration: BoxDecoration(
-                          color: isCompleted ? Colors.green : Colors.blue,
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                      ),
-                    ),
-                  ],
+                  style: TextStyles.secondary(context, isDarkMode: isDarkMode),
                 ),
               ],
             ),
           ),
-          if (isCompleted)
-            const Icon(
-              Icons.check_circle,
-              color: Colors.green,
-              size: 20,
-            ),
+          Icon(
+            isCompleted ? Icons.check_circle : Icons.radio_button_unchecked,
+            color: isCompleted ? AppColors.success : Colors.grey,
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildRecentActivitySection(bool isDarkMode) {
+  Widget _buildRecentActivitySection(BuildContext context, bool isDarkMode) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
@@ -445,33 +496,26 @@ class ProfileScreen extends StatelessWidget {
             children: [
               Text(
                 'Recent Activity',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: isDarkMode ? Colors.white : Colors.grey[800],
-                ),
+                style: TextStyles.h2(context, isDarkMode: isDarkMode),
               ),
               TextButton(
-                onPressed: () {},
+                onPressed: () => context.push('/activity'),
                 child: Text(
-                  'View All',
-                  style: TextStyle(
-                    color: isDarkMode ? Colors.blue[300] : Colors.blue[600],
-                  ),
+                  'See All',
+                  style: TextStyle(color: AppColors.primary),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 16),
           Container(
-            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: isDarkMode ? Colors.grey[800] : Colors.white,
+              color: AppColors.getSurfaceColor(isDarkMode),
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withOpacity(0.05),
-                  blurRadius: 10,
+                  blurRadius: 5,
                   offset: const Offset(0, 2),
                 ),
               ],
@@ -479,30 +523,31 @@ class ProfileScreen extends StatelessWidget {
             child: Column(
               children: [
                 _buildActivityItem(
-                  isDarkMode,
-                  icon: Icons.chat_bubble_outline,
-                  iconColor: Colors.blue,
-                  title: 'Completed Conversation Practice',
-                  subtitle: 'Restaurant Scenario',
+                  context,
+                  isDarkMode: isDarkMode,
+                  leadingIcon: Icons.mic,
+                  leadingColor: AppColors.accent,
+                  title: 'Pronunciation Practice',
                   time: '2 hours ago',
+                  subtitle: 'Completed a vowel sounds session',
                 ),
-                const Divider(),
                 _buildActivityItem(
-                  isDarkMode,
-                  icon: Icons.school_outlined,
-                  iconColor: Colors.green,
-                  title: 'Learned 5 New Words',
-                  subtitle: 'Travel Vocabulary',
-                  time: '5 hours ago',
+                  context,
+                  isDarkMode: isDarkMode,
+                  leadingIcon: Icons.emoji_events,
+                  leadingColor: AppColors.streakPrimary,
+                  title: 'Achievement Unlocked',
+                  time: 'Yesterday',
+                  subtitle: 'First Recording',
                 ),
-                const Divider(),
                 _buildActivityItem(
-                  isDarkMode,
-                  icon: Icons.emoji_events_outlined,
-                  iconColor: Colors.amber,
-                  title: 'Earned Achievement',
-                  subtitle: 'Streak Master',
-                  time: '1 day ago',
+                  context,
+                  isDarkMode: isDarkMode,
+                  leadingIcon: Icons.assessment,
+                  leadingColor: AppColors.info,
+                  title: 'Progress Assessment',
+                  time: '2 days ago',
+                  subtitle: 'Completed weekly evaluation',
                 ),
               ],
             ),
@@ -513,53 +558,56 @@ class ProfileScreen extends StatelessWidget {
   }
 
   Widget _buildActivityItem(
-    bool isDarkMode, {
-    required IconData icon,
-    required Color iconColor,
+    BuildContext context, {
+    required bool isDarkMode,
+    required IconData leadingIcon,
+    required Color leadingColor,
     required String title,
-    required String subtitle,
     required String time,
+    required String subtitle,
   }) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12),
+      padding: const EdgeInsets.all(16),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: iconColor.withOpacity(0.1),
-              shape: BoxShape.circle,
+              color: leadingColor.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(icon, color: iconColor, size: 20),
+            child: Icon(
+              leadingIcon,
+              size: 20,
+              color: leadingColor,
+            ),
           ),
           const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontWeight: FontWeight.w500,
-                    color: isDarkMode ? Colors.white : Colors.black87,
-                  ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyles.h3(context, isDarkMode: isDarkMode),
+                    ),
+                    Text(
+                      time,
+                      style:
+                          TextStyles.caption(context, isDarkMode: isDarkMode),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 4),
                 Text(
                   subtitle,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-                  ),
+                  style: TextStyles.secondary(context, isDarkMode: isDarkMode),
                 ),
               ],
-            ),
-          ),
-          Text(
-            time,
-            style: TextStyle(
-              fontSize: 12,
-              color: isDarkMode ? Colors.grey[500] : Colors.grey[600],
             ),
           ),
         ],
