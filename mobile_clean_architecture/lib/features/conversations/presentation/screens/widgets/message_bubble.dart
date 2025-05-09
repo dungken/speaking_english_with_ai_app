@@ -27,14 +27,17 @@ class MessageBubble extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: Row(
-        mainAxisAlignment: isUserMessage ? MainAxisAlignment.end : MainAxisAlignment.start,
+        mainAxisAlignment:
+            isUserMessage ? MainAxisAlignment.end : MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (!isUserMessage) _buildAvatar(isUserMessage),
           const SizedBox(width: 8),
           Flexible(
             child: Column(
-              crossAxisAlignment: isUserMessage ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+              crossAxisAlignment: isUserMessage
+                  ? CrossAxisAlignment.end
+                  : CrossAxisAlignment.start,
               children: [
                 Container(
                   padding: const EdgeInsets.all(12),
@@ -74,7 +77,9 @@ class MessageBubble extends StatelessWidget {
                                   : Colors.grey,
                             ),
                           ),
-                          if (isUserMessage && hasAudio && onFeedbackRequest != null) ...[
+                          if (isUserMessage &&
+                              hasAudio &&
+                              onFeedbackRequest != null) ...[
                             const SizedBox(width: 8),
                             InkWell(
                               onTap: onFeedbackRequest,
