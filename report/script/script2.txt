@@ -1,0 +1,26 @@
+Ứng dụng "Học Tiếng Anh Với AI" là gì?
+Đây là một ứng dụng di động được thiết kế đặc biệt cho những người học tiếng Anh ở mức mới bắt đầu và trung cấp. Thay vì những phương pháp học truyền thống, ứng dụng của chúng em tập trung vào việc phát triển kỹ năng nói - một trong những kỹ năng khó luyện tập nhất khi học ngoại ngữ.
+
+Điểm đặc biệt là người dùng có thể tham gia vào các tình huống đóng vai thực tế với một đối tác hội thoại là AI. Không chỉ dừng lại ở việc trò chuyện, ứng dụng còn cung cấp phản hồi chi tiết về kỹ năng ngôn ngữ của người dùng, từ ngữ pháp, từ vựng cho đến cách phát âm.
+
+Đối tượng mục tiêu
+Ứng dụng của chúng em hướng tới 4 nhóm đối tượng chính:
+
+Người học tiếng Anh ở mức mới bắt đầu và trung cấp - những người đã có kiến thức cơ bản nhưng cần thực hành nhiều hơn.
+Người tự học - những người không có điều kiện tham gia các khóa học chính quy nhưng muốn cải thiện kỹ năng giao tiếp.
+Học sinh, sinh viên chuẩn bị cho các tình huống thực tế - như phỏng vấn, thuyết trình hay giao tiếp khi đi nước ngoài.
+Người dùng muốn nhận phản hồi cá nhân hóa - không chỉ muốn nói tiếng Anh mà còn muốn biết mình đang mắc những lỗi gì để cải thiện.
+Tính năng chính
+Ứng dụng của chúng em có 5 tính năng nổi bật:
+
+Hội thoại đóng vai - Mô phỏng các tình huống thực tế như đặt phòng khách sạn, phỏng vấn xin việc, gọi món ở nhà hàng... giúp người dùng làm quen với các tình huống giao tiếp phổ biến.
+
+Nhận dạng giọng nói - Ứng dụng ghi âm và chuyển đổi giọng nói thành văn bản, từ đó phân tích các yếu tố như phát âm, ngữ điệu và độ trôi chảy.
+
+Phản hồi từ AI - Dựa trên nội dung người dùng nói, AI sẽ đưa ra đánh giá về ngữ pháp, từ vựng và cách diễn đạt. Điểm khác biệt là phản hồi này được cá nhân hóa và chi tiết đến từng câu nói.
+
+Theo dõi lỗi - Hệ thống ghi nhận và phân loại các lỗi thường gặp của người dùng, giúp họ tập trung vào những điểm yếu cụ thể.
+
+Giao diện trực quan - Thiết kế thân thiện, dễ sử dụng để người dùng tập trung vào trải nghiệm học tập, không bị phân tâm bởi các thao tác phức tạp.
+
+Những tính năng này kết hợp cùng nhau tạo nên một hệ sinh thái học tập toàn diện, giúp người dùng tiến bộ nhanh chóng trong việc sử dụng tiếng Anh giao tiếp.
