@@ -1,0 +1,12 @@
+SLIDE 1: GIỚI THIỆU
+Dạ em chào Thầy và các bạn!
+
+Hôm nay, nhóm chúng em sẽ báo cáo đồ án môn học với đề tài "Ứng Dụng Học Tiếng Anh Với AI" - một ứng dụng di động sử dụng AI nhằm giúp người dùng học và rèn luyện kỹ năng tiếng Anh thông qua các cuộc hội thoại tương tác.
+
+Nhóm chúng em gồm 4 thành viên:
+
+Em là Hà Văn Dũng, nhóm trưởng, phụ trách phần kiến trúc kỹ thuật và tính năng Luyện tập lỗi sai được tạo ra từ dữ liệu luyện tập của người dùng.
+Nguyễn Minh Nhật, phụ trách phần kiến trúc Backend, AI service và tính năng luyện tập thông qua hội thoại.
+Nguyễn Nguyên Huy, phụ trách phần xử lý ảnh và mô tả ảnh.
+Nguyễn Viết Ái Nhi, phụ trách phần UI Splash, Onboarding, Authentication,....
+Đồ án này được thực hiện trong khuôn khổ môn học Lập trình thiết bị di động tại trường Đại học Giao Thông Vận Tải - Phân hiệu TP.HCM. Chúng em xin phép được trình bày về dự án.

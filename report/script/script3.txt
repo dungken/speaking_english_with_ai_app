@@ -1,0 +1,27 @@
+Vấn đề trong việc học ngoại ngữ truyền thống
+Qua nghiên cứu thị trường và khảo sát người dùng, chúng em nhận thấy 5 vấn đề lớn mà người học tiếng Anh thường gặp phải:
+
+Hạn chế thực hành hội thoại - Nhiều người học không có môi trường để thực hành nói tiếng Anh thường xuyên. Kể cả khi học ở trung tâm, mỗi học viên chỉ có vài phút để giao tiếp trong mỗi buổi học.
+
+Thiếu phản hồi ngay lập tức - Các ứng dụng học ngôn ngữ hiện tại thường tập trung vào từ vựng, ngữ pháp nhưng thiếu phản hồi chi tiết về kỹ năng nói.
+
+Lo lắng trong giao tiếp thực tế - Tâm lý e ngại, sợ mắc lỗi khi nói chuyện với người nước ngoài là rào cản lớn đối với người học.
+
+Cơ hội thực hành không đều đặn - Thuê gia sư nước ngoài thì đắt đỏ và không phải lúc nào cũng có thể sắp xếp được lịch học phù hợp.
+
+Khó theo dõi tiến độ - Người học thường không biết mình còn yếu ở đâu, dẫn đến việc học không hiệu quả và thiếu định hướng rõ ràng.
+
+Giải pháp của chúng em
+Để giải quyết những vấn đề trên, ứng dụng của chúng em cung cấp 5 giải pháp tương ứng:
+
+Đối tác hội thoại AI - Luôn sẵn sàng 24/7, không giới hạn số lần thực hành, giúp người dùng rèn luyện kỹ năng nói bất cứ khi nào họ muốn.
+
+Phân tích lời nói chi tiết - Sử dụng công nghệ AI để đánh giá cách phát âm, ngữ pháp, từ vựng và cung cấp phản hồi theo thời gian thực.
+
+Môi trường thực hành an toàn - Người dùng có thể tự tin thử nghiệm, mắc lỗi và học hỏi mà không phải lo lắng về việc bị đánh giá tiêu cực.
+
+Lộ trình học tập cá nhân hóa - Dựa trên các lỗi và điểm yếu của người dùng, ứng dụng sẽ tạo ra các bài tập và tình huống hội thoại phù hợp.
+
+Theo dõi tiến trình - Trực quan hóa quá trình học tập bằng biểu đồ, thống kê và phân tích chi tiết, giúp người dùng thấy được sự tiến bộ theo thời gian.
+
+Những giải pháp này không chỉ khắc phục các hạn chế của phương pháp học truyền thống mà còn tận dụng sức mạnh của công nghệ AI để tạo ra trải nghiệm học tập cá nhân hóa và hiệu quả hơn.

@@ -238,7 +238,8 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         const totalSlides = 15;
-        let currentSlide = 1;
+        // Lấy slide hiện tại từ localStorage hoặc mặc định là 1
+        let currentSlide = parseInt(localStorage.getItem('currentSlide')) || 1;
         
         // Function to load all slides
         async function loadAllSlides() {
@@ -250,7 +251,7 @@
                     const slideContent = await response.text();
                     
                     const slideDiv = document.createElement('div');
-                    slideDiv.className = `slide ${i === 1 ? 'active' : ''}`;
+                    slideDiv.className = `slide`; // Không đặt 'active' ở đây, sẽ được xử lý sau
                     slideDiv.id = `slide-${i}`;
                     slideDiv.innerHTML = slideContent;
                     
@@ -281,6 +282,8 @@
             if (targetSlide) {
                 targetSlide.classList.add('active');
                 currentSlide = slideNumber;
+                // Lưu vị trí slide hiện tại vào localStorage
+                localStorage.setItem('currentSlide', currentSlide);
                 updateNavButtons();
             }
         }
@@ -317,7 +320,11 @@
         });
         
         // Load all slides when the document is ready
-        document.addEventListener('DOMContentLoaded', loadAllSlides);
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadAllSlides();
+            // Chuyển đến slide đã lưu sau khi tất cả slide đã được tải
+            goToSlide(currentSlide);
+        });
 
         // Add animation on scroll effects
         window.addEventListener('scroll', () => {

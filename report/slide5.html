@@ -1,131 +1,731 @@
 <div class="container py-4">
-    <h1 class="slide-title">Kiến Trúc Frontend (Flutter)</h1>
+    <h1 class="slide-title gradient-text-primary">Kiến Trúc Frontend (Flutter)</h1>
+    <div class="title-underline mx-auto mb-5"></div>
 
     <div class="row mb-4">
         <div class="col-12">
-            <div class="card shadow">
-                <div class="card-header bg-primary text-white py-3">
+            <div class="card glassmorphism shadow-lg rounded-4 border-0 hover-card architecture-card">
+                <div class="card-header gradient-primary text-white p-3 rounded-top-4 d-flex align-items-center">
+                    <div class="feature-icon-circle me-3">
+                        <i class="bi bi-layers-half fs-4"></i>
+                    </div>
                     <h3 class="mb-0">Triển Khai Kiến Trúc (Clean Architecture)</h3>
                 </div>
-                <div class="card-body">
-                    <div class="text-center mb-4">
-                        <!-- SVG Architecture Diagram -->
-                        <svg width="100%" height="300" viewBox="0 0 800 300" xmlns="http://www.w3.org/2000/svg">
-                            <!-- Layers -->
-                            <rect x="100" y="30" width="600" height="60" rx="5" fill="#e3f2fd" stroke="#2196f3"
-                                stroke-width="2" />
-                            <text x="400" y="65" text-anchor="middle" font-weight="bold" fill="#0d47a1">Tầng Trình Bày
-                                (UI, BLoC)</text>
+                <div class="card-body p-4">
+                    <div class="clean-architecture-diagram">
+                        <div class="layer presentation-layer">
+                            <div class="layer-icon">
+                                <i class="bi bi-window"></i>
+                            </div>
+                            <h4>Tầng Trình Bày (UI, BLoC)</h4>
+                            <div class="layer-tags">
+                                <span>Screens</span>
+                                <span>Widgets</span>
+                                <span>BLoC</span>
+                            </div>
+                        </div>
 
-                            <rect x="100" y="120" width="600" height="60" rx="5" fill="#e8f5e9" stroke="#4caf50"
-                                stroke-width="2" />
-                            <text x="400" y="155" text-anchor="middle" font-weight="bold" fill="#1b5e20">Tầng Nghiệp Vụ
-                                (Entities, Use Cases)</text>
+                        <div class="layer-arrow">
+                            <div class="arrow-line"></div>
+                        </div>
 
-                            <rect x="100" y="210" width="600" height="60" rx="5" fill="#fff3e0" stroke="#ff9800"
-                                stroke-width="2" />
-                            <text x="400" y="245" text-anchor="middle" font-weight="bold" fill="#e65100">Tầng Dữ Liệu
-                                (Repositories, Data Sources)</text>
+                        <div class="layer domain-layer">
+                            <div class="layer-icon">
+                                <i class="bi bi-gear"></i>
+                            </div>
+                            <h4>Tầng Nghiệp Vụ (Entities, Use Cases)</h4>
+                            <div class="layer-tags">
+                                <span>Entities</span>
+                                <span>Use Cases</span>
+                                <span>Interfaces</span>
+                            </div>
+                        </div>
 
-                            <!-- Arrows -->
-                            <line x1="400" y1="90" x2="400" y2="120" stroke="#333" stroke-width="2" />
-                            <polygon points="395,110 400,120 405,110" fill="#333" />
+                        <div class="layer-arrow">
+                            <div class="arrow-line"></div>
+                        </div>
 
-                            <line x1="400" y1="180" x2="400" y2="210" stroke="#333" stroke-width="2" />
-                            <polygon points="395,200 400,210 405,200" fill="#333" />
-                        </svg>
+                        <div class="layer data-layer">
+                            <div class="layer-icon">
+                                <i class="bi bi-database"></i>
+                            </div>
+                            <h4>Tầng Dữ Liệu (Repositories, Data Sources)</h4>
+                            <div class="layer-tags">
+                                <span>Repositories</span>
+                                <span>API Client</span>
+                                <span>Local Storage</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="row">
+    <div class="row g-4">
         <div class="col-md-6">
-            <div class="card shadow mb-4">
-                <div class="card-header bg-info text-white">
+            <div class="card glassmorphism shadow-lg rounded-4 border-0 hover-card">
+                <div class="card-header gradient-info text-white p-3 rounded-top-4 d-flex align-items-center">
+                    <div class="feature-icon-circle me-3">
+                        <i class="bi bi-puzzle-fill fs-4"></i>
+                    </div>
                     <h4 class="mb-0">Thành Phần Chính</h4>
                 </div>
-                <div class="card-body">
-                    <ul class="fs-5">
-                        <li class="mb-2"><strong>Tổ chức theo tính năng:</strong> Mã nguồn mô-đun với các tính năng như
-                            xác thực, hội thoại, phản hồi</li>
-                        <li class="mb-2"><strong>BLoC:</strong> Quản lý trạng thái để tách biệt UI và logic nghiệp vụ
+                <div class="card-body p-4">
+                    <ul class="feature-list-special">
+                        <li>
+                            <div class="feature-badge gradient-info">
+                                <i class="bi bi-grid-3x3-gap-fill"></i>
+                            </div>
+                            <div>
+                                <span class="gradient-text-info fw-bold">Tổ chức theo tính năng</span>
+                                <p>Mã nguồn mô-đun với các tính năng như xác thực, hội thoại, phản hồi</p>
+                            </div>
                         </li>
-                        <li class="mb-2"><strong>Dependency Injection:</strong> GetIt cho service locator</li>
-                        <li class="mb-2"><strong>GoRouter:</strong> Định tuyến khai báo cho điều hướng</li>
-                        <li class="mb-2"><strong>Hive:</strong> Lưu trữ dữ liệu cục bộ</li>
+                        <li>
+                            <div class="feature-badge gradient-info">
+                                <i class="bi bi-boxes"></i>
+                            </div>
+                            <div>
+                                <span class="gradient-text-info fw-bold">BLoC</span>
+                                <p>Quản lý trạng thái để tách biệt UI và logic nghiệp vụ</p>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="feature-badge gradient-info">
+                                <i class="bi bi-diagram-3-fill"></i>
+                            </div>
+                            <div>
+                                <span class="gradient-text-info fw-bold">Dependency Injection</span>
+                                <p>GetIt cho service locator</p>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="feature-badge gradient-info">
+                                <i class="bi bi-signpost-split-fill"></i>
+                            </div>
+                            <div>
+                                <span class="gradient-text-info fw-bold">GoRouter</span>
+                                <p>Định tuyến khai báo cho điều hướng</p>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="feature-badge gradient-info">
+                                <i class="bi bi-hdd-fill"></i>
+                            </div>
+                            <div>
+                                <span class="gradient-text-info fw-bold">Hive</span>
+                                <p>Lưu trữ dữ liệu cục bộ</p>
+                            </div>
+                        </li>
                     </ul>
                 </div>
             </div>
         </div>
 
         <div class="col-md-6">
-            <div class="card shadow mb-4">
-                <div class="card-header bg-success text-white">
+            <div class="card glassmorphism shadow-lg rounded-4 border-0 hover-card">
+                <div class="card-header gradient-success text-white p-3 rounded-top-4 d-flex align-items-center">
+                    <div class="feature-icon-circle me-3">
+                        <i class="bi bi-speedometer2 fs-4"></i>
+                    </div>
                     <h4 class="mb-0">Tối Ưu Hóa Kỹ Thuật</h4>
                 </div>
-                <div class="card-body">
-                    <ul class="fs-5">
-                        <li class="mb-2"><strong>BufferQueueManager:</strong> Tối ưu hóa hiển thị Android cho
-                            SurfaceView</li>
-                        <li class="mb-2"><strong>ErrorBoundary:</strong> Xử lý các lỗi buffer queue</li>
-                        <li class="mb-2"><strong>SurfaceViewWrapper:</strong> Quản lý vòng đời cho các component media
+                <div class="card-body p-4">
+                    <ul class="feature-list-special">
+                        <li>
+                            <div class="feature-badge gradient-success">
+                                <i class="bi bi-collection-play-fill"></i>
+                            </div>
+                            <div>
+                                <span class="gradient-text-success fw-bold">BufferQueueManager</span>
+                                <p>Tối ưu hóa hiển thị Android cho SurfaceView</p>
+                            </div>
                         </li>
-                        <li class="mb-2"><strong>AndroidRecordingOptimizer:</strong> Nâng cao ghi âm trên thiết bị
-                            Android</li>
-                        <li class="mb-2"><strong>Responsive Layout:</strong> UI thích ứng cho các kích thước màn hình
-                            khác nhau</li>
+                        <li>
+                            <div class="feature-badge gradient-success">
+                                <i class="bi bi-shield-fill-check"></i>
+                            </div>
+                            <div>
+                                <span class="gradient-text-success fw-bold">ErrorBoundary</span>
+                                <p>Xử lý các lỗi buffer queue</p>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="feature-badge gradient-success">
+                                <i class="bi bi-phone-fill"></i>
+                            </div>
+                            <div>
+                                <span class="gradient-text-success fw-bold">SurfaceViewWrapper</span>
+                                <p>Quản lý vòng đời cho các component media</p>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="feature-badge gradient-success">
+                                <i class="bi bi-mic-fill"></i>
+                            </div>
+                            <div>
+                                <span class="gradient-text-success fw-bold">AndroidRecordingOptimizer</span>
+                                <p>Nâng cao ghi âm trên thiết bị Android</p>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="feature-badge gradient-success">
+                                <i class="bi bi-layout-wtf"></i>
+                            </div>
+                            <div>
+                                <span class="gradient-text-success fw-bold">Responsive Layout</span>
+                                <p>UI thích ứng cho các kích thước màn hình khác nhau</p>
+                            </div>
+                        </li>
                     </ul>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="row">
-        <div class="col-12">
-            <div class="card shadow">
-                <div class="card-header bg-warning">
-                    <h4 class="mb-0 text-dark">Ví Dụ Mã Nguồn: BLoC Cho Hội Thoại</h4>
-                </div>
-                <div class="card-body">
-                    <pre class="code-block p-3">
-<code>// BLoC event
-class SendSpeechMessageEvent extends ConversationEvent {
-  final String conversationId;
-  final String audioId;
-
-  SendSpeechMessageEvent({
-    required this.conversationId,
-    required this.audioId,
-  });
-}
-
-// BLoC logic handling
-@override
-Stream&lt;ConversationState&gt; mapEventToState(ConversationEvent event) async* {
-  if (event is SendSpeechMessageEvent) {
-    yield state.copyWith(isLoading: true);
-    try {
-      final result = await _sendSpeechUseCase(
-        conversationId: event.conversationId,
-        audioId: event.audioId,
-      );
-      yield state.copyWith(
-        isLoading: false,
-        messages: [...state.messages ?? [], result.userMessage, result.aiMessage],
-      );
-    } catch (e) {
-      yield state.copyWith(
-        isLoading: false, 
-        errorMessage: e.toString(),
-      );
-    }
-  }
-}</code>
-                    </pre>
-                </div>
-            </div>
-        </div>
-    </div>
 </div>
+
+<style>
+    body {
+        background: #f8f9fa;
+        background-image: radial-gradient(#e3e8ff 1px, transparent 1px),
+            radial-gradient(#e3e8ff 1px, transparent 1px);
+        background-size: 20px 20px;
+        background-position: 0 0, 10px 10px;
+        font-size: 18px;
+        /* Tăng kích thước font chữ mặc định */
+    }
+
+    /* Gradient definitions */
+    .gradient-primary {
+        background: linear-gradient(135deg, #4158D0, #C850C0);
+    }
+
+    .gradient-secondary {
+        background: linear-gradient(135deg, #0093E9, #80D0C7);
+    }
+
+    .gradient-success {
+        background: linear-gradient(135deg, #0BA360, #3CBA92);
+    }
+
+    .gradient-info {
+        background: linear-gradient(135deg, #00C6FB, #005BEA);
+    }
+
+    .gradient-warning {
+        background: linear-gradient(135deg, #F6D365, #FDA085);
+    }
+
+    .gradient-danger {
+        background: linear-gradient(135deg, #FF416C, #FF4B2B);
+    }
+
+    .gradient-light {
+        background: linear-gradient(135deg, #F8F9FA, #E9ECEF);
+    }
+
+    /* Gradient text */
+    .gradient-text-primary {
+        background: linear-gradient(135deg, #4158D0, #C850C0);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+    }
+
+    .gradient-text-secondary {
+        background: linear-gradient(135deg, #0093E9, #80D0C7);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+    }
+
+    .gradient-text-success {
+        background: linear-gradient(135deg, #0BA360, #3CBA92);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+    }
+
+    .gradient-text-info {
+        background: linear-gradient(135deg, #00C6FB, #005BEA);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+    }
+
+    .gradient-text-warning {
+        background: linear-gradient(135deg, #F6D365, #FDA085);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+    }
+
+    /* Glassmorphism effect */
+    .glassmorphism {
+        background-color: rgba(255, 255, 255, 0.8);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.7) !important;
+    }
+
+    /* Title underline */
+    .slide-title {
+        text-align: center;
+        font-weight: bold;
+        font-size: 3rem;
+        /* Tăng kích thước font tiêu đề */
+        margin-bottom: 15px;
+    }
+
+    .title-underline {
+        height: 5px;
+        width: 120px;
+        /* Tăng độ rộng */
+        background: linear-gradient(135deg, #4158D0, #C850C0);
+        border-radius: 5px;
+        margin: 0 auto;
+    }
+
+    /* Feature icons */
+    .feature-icon-circle {
+        width: 45px;
+        /* Tăng kích thước */
+        height: 45px;
+        /* Tăng kích thước */
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* Architecture Card special styling */
+    .architecture-card {
+        /* border-top: 5px solid transparent !important;
+        border-image: linear-gradient(to right, #4158D0, #C850C0, #0BA360) 1 !important; */
+        overflow: hidden;
+        margin-bottom: 20px;
+    }
+
+    /* Card headers */
+    .card-header h3,
+    .card-header h4 {
+        font-size: 1.5rem;
+        /* Tăng kích thước font cho header */
+    }
+
+    /* Clean Architecture Diagram */
+    .clean-architecture-diagram {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 20px;
+        /* Tăng khoảng cách */
+        padding: 25px 0;
+        /* Tăng padding */
+    }
+
+    .layer {
+        width: 100%;
+        max-width: 750px;
+        /* Tăng kích thước */
+        padding: 25px;
+        /* Tăng padding */
+        border-radius: 15px;
+        /* Bo tròn hơn */
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        color: white;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        transition: all 0.3s ease;
+    }
+
+    .layer:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+    }
+
+    .presentation-layer {
+        background: linear-gradient(135deg, #4158D0, #C850C0);
+        animation: fadeInDown 0.6s ease forwards;
+    }
+
+    .domain-layer {
+        background: linear-gradient(135deg, #0BA360, #3CBA92);
+        animation: fadeInDown 0.9s ease forwards;
+    }
+
+    .data-layer {
+        background: linear-gradient(135deg, #F6D365, #FDA085);
+        animation: fadeInDown 1.2s ease forwards;
+    }
+
+    .layer-icon {
+        font-size: 2.5rem;
+        /* Tăng kích thước icon */
+        margin-bottom: 15px;
+    }
+
+    .layer h4 {
+        font-size: 1.5rem;
+        /* Tăng kích thước font */
+        margin-bottom: 15px;
+        text-align: center;
+    }
+
+    .layer-tags {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 12px;
+        /* Tăng khoảng cách */
+    }
+
+    .layer-tags span {
+        background: rgba(255, 255, 255, 0.2);
+        padding: 6px 15px;
+        /* Tăng padding */
+        border-radius: 20px;
+        font-size: 1rem;
+        /* Tăng kích thước font */
+    }
+
+    .layer-arrow {
+        height: 40px;
+        /* Tăng độ dài mũi tên */
+        display: flex;
+        justify-content: center;
+        position: relative;
+    }
+
+    .arrow-line {
+        width: 5px;
+        /* Tăng độ rộng */
+        height: 100%;
+        background: #ddd;
+        position: relative;
+    }
+
+    .arrow-line::after {
+        content: '';
+        position: absolute;
+        bottom: -10px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 0;
+        height: 0;
+        border-left: 10px solid transparent;
+        /* Tăng kích thước */
+        border-right: 10px solid transparent;
+        /* Tăng kích thước */
+        border-top: 12px solid #ddd;
+        /* Tăng kích thước */
+    }
+
+    /* Feature List */
+    .feature-list-special {
+        list-style-type: none;
+        padding-left: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        /* Tăng khoảng cách */
+    }
+
+    .feature-list-special li {
+        display: flex;
+        align-items: flex-start;
+        transition: transform 0.3s ease;
+        padding-bottom: 20px;
+        /* Tăng padding */
+        position: relative;
+    }
+
+    .feature-list-special li:not(:last-child)::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 1px;
+        background: rgba(0, 0, 0, 0.05);
+    }
+
+    .feature-list-special li:hover {
+        transform: translateX(5px);
+    }
+
+    .feature-badge {
+        width: 38px;
+        /* Tăng kích thước */
+        height: 38px;
+        /* Tăng kích thước */
+        border-radius: 50%;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 18px;
+        /* Tăng khoảng cách */
+        box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+        flex-shrink: 0;
+        margin-top: 3px;
+        font-size: 1.1rem;
+        /* Tăng kích thước icon */
+    }
+
+    .feature-list-special span.fw-bold {
+        font-size: 1.2rem;
+        /* Tăng kích thước font */
+    }
+
+    .feature-list-special p {
+        color: #6c757d;
+        margin-bottom: 0;
+        font-size: 1.05rem;
+        /* Tăng kích thước font */
+        margin-top: 5px;
+    }
+
+    /* Code Container with Syntax Highlighting */
+    .code-container {
+        position: relative;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .code-header {
+        background: #343a40;
+        color: #f8f9fa;
+        padding: 10px 15px;
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        border-bottom: 1px solid #495057;
+    }
+
+    .code-title {
+        font-family: 'Fira Code', monospace;
+        font-weight: 500;
+    }
+
+    .code-block {
+        background: #282c34;
+        color: #abb2bf;
+        padding: 25px;
+        /* Tăng padding */
+        border-radius: 0 0 10px 10px;
+        font-family: 'Fira Code', monospace;
+        font-size: 1.05rem;
+        /* Tăng kích thước font */
+        line-height: 1.6;
+        overflow-x: auto;
+        margin: 0;
+    }
+
+    .code-block code {
+        display: block;
+    }
+
+    /* Syntax Highlighting */
+    .code-keyword {
+        color: #c678dd;
+        /* Purple for keywords like class, extends, etc. */
+    }
+
+    .code-class {
+        color: #e5c07b;
+        /* Yellow-ish for class names */
+    }
+
+    .code-type {
+        color: #56b6c2;
+        /* Cyan for types */
+    }
+
+    .code-function {
+        color: #61afef;
+        /* Blue for function names */
+    }
+
+    .code-annotation {
+        color: #98c379;
+        /* Green for annotations */
+    }
+
+    .code-comment {
+        color: #7f848e;
+        /* Grey for comments */
+        font-style: italic;
+    }
+
+    .code-value {
+        color: #d19a66;
+        /* Orange for boolean values */
+    }
+
+    .code-this {
+        color: #e06c75;
+        /* Red for this keyword */
+    }
+
+    /* Card hover effect */
+    .hover-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .hover-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1) !important;
+    }
+
+    /* Animations */
+    @keyframes fadeInDown {
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .card {
+        animation: fadeInUp 0.6s ease-out forwards;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        body {
+            font-size: 16px;
+            /* Giảm một chút trên mobile */
+        }
+
+        .slide-title {
+            font-size: 2.3rem;
+        }
+
+        .layer {
+            padding: 20px;
+        }
+
+        .layer h4 {
+            font-size: 1.3rem;
+        }
+
+        .clean-architecture-diagram {
+            gap: 15px;
+        }
+
+        .layer-tags span {
+            font-size: 0.9rem;
+        }
+
+        .feature-list-special span.fw-bold {
+            font-size: 1.1rem;
+        }
+
+        .feature-list-special p {
+            font-size: 0.95rem;
+        }
+    }
+
+    /* Bloc component boxes */
+    .bloc-component {
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        margin-bottom: 15px;
+        overflow: hidden;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .bloc-component:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08);
+    }
+
+    .bloc-header {
+        font-weight: 500;
+        font-size: 0.95rem;
+    }
+
+    .bloc-body {
+        font-size: 0.9rem;
+    }
+
+    /* Tabs for code examples */
+    .tab-selector {
+        margin-left: auto;
+    }
+
+    .tab {
+        padding: 5px 12px;
+        background: rgba(255, 255, 255, 0.2);
+        color: #f8f9fa;
+        cursor: pointer;
+        transition: all 0.3s;
+        font-size: 0.8rem;
+        font-weight: 500;
+        border-left: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .tab:first-child {
+        border-top-left-radius: 5px;
+        border-bottom-left-radius: 5px;
+    }
+
+    .tab:last-child {
+        border-top-right-radius: 5px;
+        border-bottom-right-radius: 5px;
+    }
+
+    .tab.active {
+        background: rgba(255, 255, 255, 0.3);
+        color: white;
+    }
+
+    .tab-content {
+        position: relative;
+    }
+
+    .code-content {
+        display: none;
+    }
+
+    .code-content.active {
+        display: block;
+    }
+</style>
+
+<script>
+    function switchTab(index) {
+        // Hide all code contents
+        const codeContents = document.querySelectorAll('.code-content');
+        codeContents.forEach(content => content.classList.remove('active'));
+
+        // Show the selected code content
+        codeContents[index].classList.add('active');
+
+        // Update tab styling
+        const tabs = document.querySelectorAll('.tab');
+        tabs.forEach(tab => tab.classList.remove('active'));
+        tabs[index].classList.add('active');
+    }
+</script>
