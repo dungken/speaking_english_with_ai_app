@@ -1,108 +1,649 @@
 <div class="container py-4">
-    <h1 class="slide-title">Tổng Quan Kiến Trúc Kỹ Thuật</h1>
+    <h1 class="slide-title gradient-text-primary">Tổng Quan Kiến Trúc Kỹ Thuật</h1>
+    <div class="title-underline mx-auto mb-5"></div>
 
-    <div class="row mb-4">
+    <div class="row mb-5">
         <div class="col-12">
-            <div class="card shadow">
-                <div class="card-body">
-                    <h3 class="text-primary mb-3"><i class="bi bi-layers me-2"></i>Kiến Trúc Tổng Thể</h3>
+            <div class="card glassmorphism shadow-lg rounded-4 border-0 hover-card architecture-card">
+                <div class="card-body p-4">
+                    <h3 class="gradient-text-primary mb-4"><i class="bi bi-layers me-2"></i>Kiến Trúc Tổng Thể</h3>
 
-                    <div class="text-center mb-4">
-                        <!-- SVG Architecture Diagram -->
-                        <svg width="100%" height="400" viewBox="0 0 1000 400" xmlns="http://www.w3.org/2000/svg">
-                            <!-- Mobile App -->
-                            <rect x="50" y="150" width="200" height="100" rx="10" fill="#4a6bdf" />
-                            <text x="150" y="200" text-anchor="middle" fill="white" font-weight="bold">Ứng Dụng
-                                Flutter</text>
+                    <div class="arch-diagram">
+                        <div class="arch-top-row">
+                            <div class="arch-box frontend-box">
+                                <div class="arch-icon">
+                                    <i class="bi bi-phone-fill"></i>
+                                </div>
+                                <h4>Ứng Dụng Flutter</h4>
+                                <div class="arch-desc">Giao diện người dùng</div>
+                                <div class="tag-container">
+                                    <span class="arch-tag">BLoC</span>
+                                    <span class="arch-tag">Dio</span>
+                                    <span class="arch-tag">Provider</span>
+                                </div>
+                            </div>
 
-                            <!-- Backend -->
-                            <rect x="400" y="150" width="200" height="100" rx="10" fill="#3f51b5" />
-                            <text x="500" y="200" text-anchor="middle" fill="white" font-weight="bold">Backend
-                                FastAPI</text>
+                            <div class="arch-horizontal-arrow">
+                                <span class="arrow-label">HTTP/REST API</span>
+                            </div>
 
-                            <!-- Database -->
-                            <rect x="750" y="150" width="200" height="100" rx="10" fill="#673ab7" />
-                            <text x="850" y="200" text-anchor="middle" fill="white" font-weight="bold">Cơ Sở Dữ Liệu
-                                MongoDB</text>
+                            <div class="arch-box backend-box">
+                                <div class="arch-icon">
+                                    <i class="bi bi-server"></i>
+                                </div>
+                                <h4>Backend FastAPI</h4>
+                                <div class="arch-desc">Xử lý yêu cầu API</div>
+                                <div class="tag-container">
+                                    <span class="arch-tag">JWT</span>
+                                    <span class="arch-tag">RESTful</span>
+                                    <span class="arch-tag">Python</span>
+                                </div>
+                            </div>
 
-                            <!-- AI Service -->
-                            <rect x="400" y="300" width="200" height="80" rx="10" fill="#009688" />
-                            <text x="500" y="340" text-anchor="middle" fill="white" font-weight="bold">Dịch Vụ AI</text>
+                            <div class="arch-horizontal-arrow">
+                                <span class="arrow-label">Lưu Trữ Dữ Liệu</span>
+                            </div>
 
-                            <!-- Connections -->
-                            <line x1="250" y1="200" x2="400" y2="200" stroke="#333" stroke-width="3" />
-                            <polygon points="390,195 400,200 390,205" fill="#333" />
+                            <div class="arch-box database-box">
+                                <div class="arch-icon">
+                                    <i class="bi bi-database-fill"></i>
+                                </div>
+                                <h4>Cơ Sở Dữ Liệu</h4>
+                                <div class="arch-desc">MongoDB</div>
+                                <div class="tag-container">
+                                    <span class="arch-tag">NoSQL</span>
+                                    <span class="arch-tag">Document</span>
+                                    <span class="arch-tag">Scalable</span>
+                                </div>
+                            </div>
+                        </div>
 
-                            <line x1="600" y1="200" x2="750" y2="200" stroke="#333" stroke-width="3" />
-                            <polygon points="740,195 750,200 740,205" fill="#333" />
+                        <div class="vertical-connector">
+                            <div class="vertical-arrow">
+                                <div class="circle-label">Dịch Vụ NLP</div>
+                            </div>
+                        </div>
 
-                            <line x1="500" y1="250" x2="500" y2="300" stroke="#333" stroke-width="3" />
-                            <polygon points="495,290 500,300 505,290" fill="#333" />
-
-                            <!-- Labels -->
-                            <text x="325" y="190" text-anchor="middle" fill="#333" font-size="14">HTTP/REST API</text>
-                            <text x="675" y="190" text-anchor="middle" fill="#333" font-size="14">Lưu Trữ Dữ Liệu</text>
-                            <text x="550" y="275" text-anchor="middle" fill="#333" font-size="14">Dịch Vụ NLP</text>
-                        </svg>
+                        <div class="arch-bottom-row">
+                            <div class="arch-box ai-box">
+                                <div class="arch-icon">
+                                    <i class="bi bi-robot"></i>
+                                </div>
+                                <h4>Dịch Vụ AI</h4>
+                                <div class="arch-desc">Gemini & Speech-to-Text</div>
+                                <div class="tag-container">
+                                    <span class="arch-tag">NLP</span>
+                                    <span class="arch-tag">STT</span>
+                                    <span class="arch-tag">API</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="row">
+    <div class="row g-4">
         <div class="col-md-4">
-            <div class="card shadow h-100">
-                <div class="card-header bg-primary text-white">
+            <div class="card glassmorphism shadow-lg h-100 rounded-4 border-0 hover-card">
+                <div class="card-header gradient-primary text-white p-3 rounded-top-4 d-flex align-items-center">
+                    <div class="feature-icon-circle me-3">
+                        <i class="bi bi-phone-fill fs-4"></i>
+                    </div>
                     <h4 class="mb-0">Frontend (Flutter)</h4>
                 </div>
-                <div class="card-body">
-                    <ul>
-                        <li>Thiết kế kiến trúc (Clean Architecture)</li>
-                        <li>BLoC cho quản lý trạng thái</li>
-                        <li>Tổ chức theo mô-đun dựa trên tính năng</li>
-                        <li>Thiết kế UI đáp ứng</li>
-                        <li>Hỗ trợ đa nền tảng</li>
-                        <li>Tối ưu hóa ghi âm</li>
+                <div class="card-body p-4">
+                    <ul class="tech-feature-list">
+                        <li>
+                            <div class="tech-badge gradient-primary">
+                                <i class="bi bi-layers-half"></i>
+                            </div>
+                            <span>Thiết kế kiến trúc (Clean Architecture)</span>
+                        </li>
+                        <li>
+                            <div class="tech-badge gradient-primary">
+                                <i class="bi bi-intersect"></i>
+                            </div>
+                            <span>BLoC cho quản lý trạng thái</span>
+                        </li>
+                        <li>
+                            <div class="tech-badge gradient-primary">
+                                <i class="bi bi-boxes"></i>
+                            </div>
+                            <span>Tổ chức theo mô-đun dựa trên tính năng</span>
+                        </li>
+                        <li>
+                            <div class="tech-badge gradient-primary">
+                                <i class="bi bi-layout-wtf"></i>
+                            </div>
+                            <span>Thiết kế UI đáp ứng</span>
+                        </li>
+                        <li>
+                            <div class="tech-badge gradient-primary">
+                                <i class="bi bi-display"></i>
+                            </div>
+                            <span>Hỗ trợ đa nền tảng</span>
+                        </li>
+                        <li>
+                            <div class="tech-badge gradient-primary">
+                                <i class="bi bi-mic-fill"></i>
+                            </div>
+                            <span>Tối ưu hóa ghi âm</span>
+                        </li>
                     </ul>
                 </div>
             </div>
         </div>
 
         <div class="col-md-4">
-            <div class="card shadow h-100">
-                <div class="card-header bg-secondary text-white">
+            <div class="card glassmorphism shadow-lg h-100 rounded-4 border-0 hover-card">
+                <div class="card-header gradient-secondary text-white p-3 rounded-top-4 d-flex align-items-center">
+                    <div class="feature-icon-circle me-3">
+                        <i class="bi bi-server fs-4"></i>
+                    </div>
                     <h4 class="mb-0">Backend (FastAPI)</h4>
                 </div>
-                <div class="card-body">
-                    <ul>
-                        <li>Kiến trúc API RESTful</li>
-                        <li>Framework Python FastAPI</li>
-                        <li>Xác thực JWT</li>
-                        <li>Xử lý tác vụ nền</li>
-                        <li>Xử lý file âm thanh</li>
-                        <li>Tài liệu OpenAPI</li>
+                <div class="card-body p-4">
+                    <ul class="tech-feature-list">
+                        <li>
+                            <div class="tech-badge gradient-secondary">
+                                <i class="bi bi-hdd-rack-fill"></i>
+                            </div>
+                            <span>Kiến trúc API RESTful</span>
+                        </li>
+                        <li>
+                            <div class="tech-badge gradient-secondary">
+                                <i class="bi bi-code-slash"></i>
+                            </div>
+                            <span>Framework Python FastAPI</span>
+                        </li>
+                        <li>
+                            <div class="tech-badge gradient-secondary">
+                                <i class="bi bi-shield-lock-fill"></i>
+                            </div>
+                            <span>Xác thực JWT</span>
+                        </li>
+                        <li>
+                            <div class="tech-badge gradient-secondary">
+                                <i class="bi bi-cpu-fill"></i>
+                            </div>
+                            <span>Xử lý tác vụ nền</span>
+                        </li>
+                        <li>
+                            <div class="tech-badge gradient-secondary">
+                                <i class="bi bi-file-earmark-music-fill"></i>
+                            </div>
+                            <span>Xử lý file âm thanh</span>
+                        </li>
+                        <li>
+                            <div class="tech-badge gradient-secondary">
+                                <i class="bi bi-file-earmark-text-fill"></i>
+                            </div>
+                            <span>Tài liệu OpenAPI</span>
+                        </li>
                     </ul>
                 </div>
             </div>
         </div>
 
         <div class="col-md-4">
-            <div class="card shadow h-100">
-                <div class="card-header bg-success text-white">
+            <div class="card glassmorphism shadow-lg h-100 rounded-4 border-0 hover-card">
+                <div class="card-header gradient-success text-white p-3 rounded-top-4 d-flex align-items-center">
+                    <div class="feature-icon-circle me-3">
+                        <i class="bi bi-robot fs-4"></i>
+                    </div>
                     <h4 class="mb-0">Dịch Vụ AI</h4>
                 </div>
-                <div class="card-body">
-                    <ul>
-                        <li>Xử lý chuyển đổi giọng nói thành văn bản</li>
-                        <li>Hiểu ngôn ngữ tự nhiên</li>
-                        <li>Gemini cho tạo hội thoại</li>
-                        <li>Phân tích phản hồi ngôn ngữ</li>
-                        <li>Nhận diện mẫu lỗi</li>
-                        <li>Gợi ý cá nhân hóa</li>
+                <div class="card-body p-4">
+                    <ul class="tech-feature-list">
+                        <li>
+                            <div class="tech-badge gradient-success">
+                                <i class="bi bi-soundwave"></i>
+                            </div>
+                            <span>Xử lý chuyển đổi giọng nói thành văn bản</span>
+                        </li>
+                        <li>
+                            <div class="tech-badge gradient-success">
+                                <i class="bi bi-translate"></i>
+                            </div>
+                            <span>Hiểu ngôn ngữ tự nhiên</span>
+                        </li>
+                        <li>
+                            <div class="tech-badge gradient-success">
+                                <i class="bi bi-chat-square-text-fill"></i>
+                            </div>
+                            <span>Gemini cho tạo hội thoại</span>
+                        </li>
+                        <li>
+                            <div class="tech-badge gradient-success">
+                                <i class="bi bi-file-bar-graph-fill"></i>
+                            </div>
+                            <span>Phân tích phản hồi ngôn ngữ</span>
+                        </li>
+                        <li>
+                            <div class="tech-badge gradient-success">
+                                <i class="bi bi-bug-fill"></i>
+                            </div>
+                            <span>Nhận diện mẫu lỗi</span>
+                        </li>
+                        <li>
+                            <div class="tech-badge gradient-success">
+                                <i class="bi bi-person-fill-gear"></i>
+                            </div>
+                            <span>Gợi ý cá nhân hóa</span>
+                        </li>
                     </ul>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<style>
+    body {
+        background: #f8f9fa;
+        background-image: radial-gradient(#e3e8ff 1px, transparent 1px),
+            radial-gradient(#e3e8ff 1px, transparent 1px);
+        background-size: 20px 20px;
+        background-position: 0 0, 10px 10px;
+    }
+
+    /* Gradient definitions */
+    .gradient-primary {
+        background: linear-gradient(135deg, #4158D0, #C850C0);
+    }
+
+    .gradient-secondary {
+        background: linear-gradient(135deg, #0093E9, #80D0C7);
+    }
+
+    .gradient-success {
+        background: linear-gradient(135deg, #0BA360, #3CBA92);
+    }
+
+    .gradient-info {
+        background: linear-gradient(135deg, #00C6FB, #005BEA);
+    }
+
+    .gradient-warning {
+        background: linear-gradient(135deg, #F6D365, #FDA085);
+    }
+
+    .gradient-danger {
+        background: linear-gradient(135deg, #FF416C, #FF4B2B);
+    }
+
+    .gradient-light {
+        background: linear-gradient(135deg, #F8F9FA, #E9ECEF);
+    }
+
+    /* Gradient text */
+    .gradient-text-primary {
+        background: linear-gradient(135deg, #4158D0, #C850C0);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+    }
+
+    .gradient-text-secondary {
+        background: linear-gradient(135deg, #0093E9, #80D0C7);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+    }
+
+    .gradient-text-success {
+        background: linear-gradient(135deg, #0BA360, #3CBA92);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+    }
+
+    /* Glassmorphism effect */
+    .glassmorphism {
+        background-color: rgba(255, 255, 255, 0.8);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.7) !important;
+    }
+
+    /* Title underline */
+    .slide-title {
+        text-align: center;
+        font-weight: bold;
+        font-size: 2.5rem;
+        margin-bottom: 15px;
+    }
+
+    .title-underline {
+        height: 5px;
+        width: 100px;
+        background: linear-gradient(135deg, #4158D0, #C850C0);
+        border-radius: 5px;
+    }
+
+    /* Feature icons */
+    .feature-icon-circle {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* Tech Feature List */
+    .tech-feature-list {
+        list-style-type: none;
+        padding-left: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .tech-feature-list li {
+        display: flex;
+        align-items: center;
+        transition: transform 0.3s ease;
+    }
+
+    .tech-feature-list li:hover {
+        transform: translateX(5px);
+    }
+
+    .tech-badge {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 12px;
+        box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+        flex-shrink: 0;
+    }
+
+    /* Card hover effect */
+    .hover-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .hover-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1) !important;
+    }
+
+    /* Architecture Card special styling */
+    .architecture-card {
+        border-top: 5px solid transparent !important;
+        border-image: linear-gradient(to right, #4158D0, #C850C0, #0BA360) 1 !important;
+        overflow: hidden;
+        margin-bottom: 20px;
+    }
+
+    /* NEW ARCHITECTURE DIAGRAM STYLING */
+    .arch-diagram {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 30px 0;
+    }
+
+    .arch-top-row {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        margin-bottom: 40px;
+    }
+
+    .arch-bottom-row {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+    }
+
+    /* Architecture boxes styling */
+    .arch-box {
+        /* width: 180px; */
+        /* height: 180px; */
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        border-radius: 12px;
+        color: white;
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+        transition: all 0.3s ease;
+        z-index: 2;
+    }
+
+    .arch-box:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+    }
+
+    .frontend-box {
+        background: linear-gradient(135deg, #4158D0, #C850C0);
+    }
+
+    .backend-box {
+        background: linear-gradient(135deg, #0093E9, #80D0C7);
+    }
+
+    .database-box {
+        background: linear-gradient(135deg, #00C6FB, #005BEA);
+    }
+
+    .ai-box {
+        background: linear-gradient(135deg, #0BA360, #3CBA92);
+    }
+
+    .arch-icon {
+        font-size: 2.2rem;
+        margin-bottom: 15px;
+    }
+
+    .arch-box h4 {
+        margin: 0 0 5px;
+        font-size: 1.2rem;
+        text-align: center;
+        font-weight: bold;
+    }
+
+    .arch-desc {
+        font-size: 0.85rem;
+        text-align: center;
+        opacity: 0.9;
+        margin-bottom: 10px;
+    }
+
+    .tag-container {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 5px;
+    }
+
+    .arch-tag {
+        background: rgba(255, 255, 255, 0.2);
+        padding: 3px 8px;
+        border-radius: 12px;
+        font-size: 0.7rem;
+    }
+
+    /* Horizontal arrow styling */
+    .arch-horizontal-arrow {
+        position: relative;
+        width: 150px;
+        height: 5px;
+        margin: 0 -5px;
+        z-index: 1;
+    }
+
+    .arch-horizontal-arrow::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(to right, #4158D0, #0093E9);
+        animation: flowRight 2s infinite linear;
+        background-size: 200% 100%;
+    }
+
+    .arch-horizontal-arrow::after {
+        content: '';
+        position: absolute;
+        right: -10px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 0;
+        height: 0;
+        border-left: 10px solid #0093E9;
+        border-top: 8px solid transparent;
+        border-bottom: 8px solid transparent;
+    }
+
+    .arrow-label {
+        position: absolute;
+        top: -25px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: white;
+        color: #333;
+        padding: 3px 10px;
+        border-radius: 12px;
+        font-size: 0.8rem;
+        white-space: nowrap;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Vertical connector styling */
+    .vertical-connector {
+        position: relative;
+        width: 100%;
+        height: 70px;
+        display: flex;
+        justify-content: center;
+        margin-bottom: 20px;
+    }
+
+    .vertical-arrow {
+        width: 5px;
+        height: 100%;
+        background: linear-gradient(to bottom, #0093E9, #0BA360);
+        position: relative;
+        animation: flowDown 2s infinite linear;
+        background-size: 100% 200%;
+    }
+
+    .vertical-arrow::after {
+        content: '';
+        position: absolute;
+        bottom: -10px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 0;
+        height: 0;
+        border-left: 8px solid transparent;
+        border-right: 8px solid transparent;
+        border-top: 10px solid #0BA360;
+    }
+
+    .circle-label {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(20px, -50%);
+        background: white;
+        color: #333;
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        white-space: nowrap;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Flow animations */
+    @keyframes flowRight {
+        0% {
+            background-position: 0% 0;
+        }
+
+        100% {
+            background-position: 200% 0;
+        }
+    }
+
+    @keyframes flowDown {
+        0% {
+            background-position: 0 0%;
+        }
+
+        100% {
+            background-position: 0 200%;
+        }
+    }
+
+    /* Animation for components */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .arch-box {
+        animation: fadeInUp 0.5s ease-out forwards;
+    }
+
+    .frontend-box {
+        animation-delay: 0.1s;
+    }
+
+    .backend-box {
+        animation-delay: 0.3s;
+    }
+
+    .database-box {
+        animation-delay: 0.5s;
+    }
+
+    .ai-box {
+        animation-delay: 0.7s;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 992px) {
+        .arch-top-row {
+            flex-direction: column;
+            gap: 60px;
+        }
+
+        .arch-horizontal-arrow {
+            width: 5px;
+            height: 50px;
+            transform: rotate(90deg);
+            margin: 5px 0;
+        }
+
+        .arrow-label {
+            transform: translateX(-50%) rotate(-90deg);
+        }
+
+        .arch-box {
+            width: 220px;
+        }
+    }
+</style>

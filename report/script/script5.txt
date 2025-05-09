@@ -1,0 +1,36 @@
+Triển khai Clean Architecture
+Trong phần Frontend, chúng em đã áp dụng mô hình Clean Architecture với 3 tầng chính:
+
+Tầng Trình Bày (Presentation Layer) - Đây là tầng giao diện người dùng, bao gồm các màn hình, widget và các BLoC để quản lý trạng thái. Tầng này chỉ chịu trách nhiệm hiển thị và tương tác với người dùng, không chứa logic nghiệp vụ.
+
+Tầng Nghiệp Vụ (Domain Layer) - Tầng này chứa các thành phần cốt lõi của ứng dụng: các entities (đối tượng miền), use cases (các trường hợp sử dụng) và các interface (giao diện) cho repositories. Đây là nơi tập trung logic nghiệp vụ, độc lập với framework và các chi tiết triển khai.
+
+Tầng Dữ Liệu (Data Layer) - Tầng này chịu trách nhiệm truy xuất và lưu trữ dữ liệu, bao gồm các repositories và data sources. Tầng dữ liệu giao tiếp với API servers, cơ sở dữ liệu cục bộ và các nguồn dữ liệu khác.
+
+Việc áp dụng Clean Architecture mang lại nhiều lợi ích: code dễ kiểm thử, dễ bảo trì, và tăng tính mô-đun hóa. Các tầng chỉ giao tiếp theo một chiều từ ngoài vào trong (Presentation → Domain ← Data), giúp giảm thiểu sự phụ thuộc giữa các thành phần.
+
+Thành phần chính
+Tổ chức theo tính năng - Chúng em chia nhỏ ứng dụng thành các module theo tính năng như xác thực (authentication), hội thoại (conversation), phản hồi (feedback). Mỗi module có đầy đủ 3 tầng của Clean Architecture, giúp việc phát triển và bảo trì trở nên dễ dàng hơn.
+
+BLoC Pattern - Chúng em sử dụng BLoC (Business Logic Component) để quản lý trạng thái ứng dụng. BLoC tách biệt UI và logic nghiệp vụ, xử lý các sự kiện (events) từ UI và phát ra các trạng thái (states) mới để UI cập nhật. Điều này giúp code dễ kiểm thử và tránh việc xử lý logic trực tiếp trong các widget.
+
+Dependency Injection - Chúng em sử dụng GetIt làm service locator để tiêm các dependency vào các thành phần. Điều này giúp giảm sự phụ thuộc trực tiếp giữa các lớp, tăng tính mô-đun hóa và dễ dàng thay thế các implementation khi cần.
+
+GoRouter - Chúng em sử dụng GoRouter cho việc điều hướng (navigation) trong ứng dụng. GoRouter cung cấp API khai báo, hỗ trợ deep linking và định tuyến có điều kiện, giúp quản lý luồng điều hướng một cách hiệu quả.
+
+Hive - Để lưu trữ dữ liệu cục bộ, chúng em sử dụng Hive - một cơ sở dữ liệu key-value nhẹ, nhanh và dễ sử dụng. Hive giúp lưu trữ thông tin người dùng, cài đặt ứng dụng và cache dữ liệu offline.
+
+Tối ưu hóa kỹ thuật
+Một trong những thách thức lớn nhất của ứng dụng là việc xử lý âm thanh trên nền tảng Android. Chúng em đã triển khai các giải pháp tối ưu sau:
+
+BufferQueueManager - Quản lý hàng đợi buffer để tối ưu hóa hiển thị Android cho SurfaceView, giảm thiểu độ trễ khi xử lý âm thanh.
+
+ErrorBoundary - Triển khai cơ chế xử lý lỗi buffer queue, giúp ứng dụng vẫn hoạt động ổn định ngay cả khi gặp vấn đề với phần cứng đa phương tiện.
+
+SurfaceViewWrapper - Lớp bọc quản lý vòng đời cho các component media, đảm bảo giải phóng tài nguyên đúng cách và tránh rò rỉ bộ nhớ.
+
+AndroidRecordingOptimizer - Tối ưu hóa quá trình ghi âm trên thiết bị Android, cải thiện chất lượng âm thanh đầu vào cho dịch vụ AI.
+
+Responsive Layout - Thiết kế giao diện thích ứng với nhiều kích thước màn hình khác nhau, từ điện thoại nhỏ đến máy tính bảng.
+
+Ví dụ mã nguồn: ConversationBloc

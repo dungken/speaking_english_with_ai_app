@@ -1,0 +1,43 @@
+Kiến trúc tổng thể
+Ứng dụng của chúng em được xây dựng dựa trên kiến trúc 4 thành phần chính, liên kết với nhau như sau:
+
+Ứng dụng Flutter - Đây là tầng giao diện người dùng, nơi người dùng tương tác với ứng dụng. Chúng em sử dụng Flutter để phát triển giao diện đa nền tảng, hỗ trợ cả iOS và Android với một codebase duy nhất. Trong tầng này, chúng em đã triển khai mô hình BLoC để quản lý trạng thái, sử dụng thư viện Dio cho HTTP requests và Provider để tiêm phụ thuộc.
+
+Backend FastAPI - Phần backend được xây dựng bằng FastAPI - một framework Python hiện đại, hiệu năng cao. Backend chịu trách nhiệm xử lý các yêu cầu API từ ứng dụng client, xác thực người dùng thông qua JWT, và điều phối luồng dữ liệu giữa cơ sở dữ liệu và dịch vụ AI.
+
+Cơ sở dữ liệu MongoDB - Chúng em chọn MongoDB làm cơ sở dữ liệu NoSQL vì tính linh hoạt trong việc lưu trữ dữ liệu dạng document. Điều này rất phù hợp với việc lưu trữ các dữ liệu không đồng nhất như thông tin người dùng, lịch sử hội thoại, và phản hồi AI.
+
+Dịch vụ AI - Đây là thành phần cốt lõi của ứng dụng, tích hợp Gemini cho xử lý ngôn ngữ tự nhiên và dịch vụ Speech-to-Text cho việc nhận dạng giọng nói. Dịch vụ này phân tích đầu vào của người dùng, tạo ra phản hồi tự nhiên, và đánh giá kỹ năng ngôn ngữ.
+
+Các thành phần này liên kết với nhau thông qua các API chuẩn RESTful, đảm bảo tính module hóa và khả năng mở rộng của hệ thống. Cụ thể:
+
+Ứng dụng Flutter giao tiếp với Backend thông qua các HTTP/REST API
+Backend lưu trữ và truy xuất dữ liệu từ MongoDB
+Backend tích hợp với Dịch vụ AI thông qua các API NLP chuyên biệt
+Chi tiết từng thành phần
+Frontend (Flutter):
+
+Áp dụng Clean Architecture để tách biệt các tầng logic và UI
+Sử dụng BLoC pattern để quản lý trạng thái, giúp code dễ kiểm thử và bảo trì
+Tổ chức theo mô-đun dựa trên tính năng, tăng tính tái sử dụng code
+Thiết kế UI đáp ứng cho nhiều kích thước màn hình khác nhau
+Hỗ trợ đa nền tảng iOS và Android
+Tối ưu hóa ghi âm để đảm bảo chất lượng đầu vào cho AI
+Backend (FastAPI):
+
+Kiến trúc API RESTful rõ ràng, dễ mở rộng
+Sử dụng FastAPI - framework Python hiện đại với hiệu suất cao
+Xác thực bằng JWT để đảm bảo an toàn
+Xử lý tác vụ nền như phân tích dữ liệu và tổng hợp báo cáo
+Xử lý file âm thanh để chuyển đến dịch vụ AI
+Cung cấp tài liệu API tự động thông qua OpenAPI
+Dịch vụ AI:
+
+Xử lý chuyển đổi giọng nói thành văn bản với độ chính xác cao
+Phân tích và hiểu ngôn ngữ tự nhiên để tạo phản hồi phù hợp
+Sử dụng Gemini để tạo hội thoại tự nhiên và đa dạng
+Phân tích chi tiết phản hồi ngôn ngữ về ngữ pháp, từ vựng và phát âm
+Nhận diện mẫu lỗi để gợi ý cải thiện hợp lý
+Tạo gợi ý cá nhân hóa dựa trên lịch sử học tập
+Kiến trúc này được thiết kế để dễ dàng mở rộng và nâng cấp trong tương lai, đồng thời đảm bảo hiệu suất tốt ngay cả khi số lượng người dùng tăng lên.
+
