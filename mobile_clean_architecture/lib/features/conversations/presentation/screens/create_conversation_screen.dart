@@ -109,11 +109,6 @@ class _CreateConversationScreenState extends State<CreateConversationScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Create a Conversation',
-              style: TextStyles.h1(context),
-            ),
-            const SizedBox(height: 8),
-            Text(
               'Set up a role-play scenario to practice your English',
               style: TextStyles.body(context),
             ),

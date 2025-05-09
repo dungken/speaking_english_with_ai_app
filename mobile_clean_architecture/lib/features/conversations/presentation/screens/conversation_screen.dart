@@ -171,58 +171,60 @@ class _ConversationScreenState extends State<ConversationScreen> {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
       height: _showSituation ? null : 60,
-      constraints: const BoxConstraints(maxHeight: 200),
       decoration: BoxDecoration(
         color: AppColors.primary.withOpacity(0.1),
         borderRadius: BorderRadius.circular(12),
       ),
       padding: const EdgeInsets.all(16),
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  'Situation',
-                  style: TextStyles.h3(context),
+      child: SingleChildScrollView(
+        physics: _showSituation
+            ? const AlwaysScrollableScrollPhysics()
+            : const NeverScrollableScrollPhysics(),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'Situation',
+                    style: TextStyles.h3(context),
+                  ),
                 ),
-              ),
-              IconButton(
-                icon: Icon(_showSituation
-                    ? Icons.keyboard_arrow_up
-                    : Icons.keyboard_arrow_down),
-                onPressed: () {
-                  setState(() {
-                    _showSituation = !_showSituation;
-                  });
-                },
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
-              ),
-            ],
-          ),
-          if (_showSituation) ...[
-            const SizedBox(height: 8),
-            Flexible(
-              child: Text(
+                IconButton(
+                  icon: Icon(_showSituation
+                      ? Icons.keyboard_arrow_up
+                      : Icons.keyboard_arrow_down),
+                  onPressed: () {
+                    setState(() {
+                      _showSituation = !_showSituation;
+                    });
+                  },
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                ),
+              ],
+            ),
+            if (_showSituation) ...[
+              const SizedBox(height: 8),
+              Text(
                 conversation.situation,
                 style: TextStyles.body(context),
               ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'Your role: ${conversation.userRole}',
-              style: TextStyles.secondary(context),
-            ),
-            Text(
-              'AI role: ${conversation.aiRole}',
-              style: TextStyles.secondary(context),
-            ),
+              const SizedBox(height: 4),
+              Text(
+                'Your role: ${conversation.userRole}',
+                style: TextStyles.secondary(context),
+              ),
+              Text(
+                'AI role: ${conversation.aiRole}',
+                style: TextStyles.secondary(context),
+              ),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }
