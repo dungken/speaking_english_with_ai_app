@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/text_styles.dart';
+import '../../../../core/utils/responsive_layout.dart';
 import '../../domain/models/practice_item_model.dart';
 import 'common_widgets.dart';
 
@@ -23,24 +26,28 @@ class PracticeStageWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final elementSpacing = ResponsiveLayout.getElementSpacing(context);
+    final sectionSpacing = ResponsiveLayout.getSectionSpacing(context);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         buildCard(
+          context,
           isDarkMode,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              Text(
                 'Practice the Correct Version',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
+                style: TextStyles.h3(
+                  context,
+                  isDarkMode: isDarkMode,
                 ),
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: elementSpacing * 3),
               Container(
-                padding: const EdgeInsets.all(12),
+                padding: EdgeInsets.all(elementSpacing * 2),
                 decoration: BoxDecoration(
                   color: isDarkMode ? Colors.green[900] : Colors.green[50],
                   borderRadius: BorderRadius.circular(8),
@@ -56,10 +63,11 @@ class PracticeStageWidget extends StatelessWidget {
                     Text(
                       practiceItem.betterExpression,
                       style: TextStyle(
-                        color: isDarkMode ? Colors.green[100] : Colors.green[800],
+                        color:
+                            isDarkMode ? Colors.green[100] : Colors.green[800],
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    SizedBox(height: elementSpacing * 1.5),
                     TextButton.icon(
                       onPressed: () {},
                       icon: const Icon(Icons.volume_up, size: 12),
@@ -75,30 +83,36 @@ class PracticeStageWidget extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(height: 20),
-              const Text(
+              SizedBox(height: elementSpacing * 3),
+              Text(
                 'Alternative Expressions:',
-                style: TextStyle(
-                  fontSize: 14,
+                style: TextStyles.body(
+                  context,
+                  isDarkMode: isDarkMode,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              const SizedBox(height: 8),
-              ..._buildAlternatives(),
-              const Divider(height: 32),
-              const Text(
-                'Your Practice',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
+              SizedBox(height: elementSpacing * 1.5),
+              ..._buildAlternatives(context),
+              Divider(height: elementSpacing * 5),
+              Center(
+                child: Text(
+                  'Your Practice',
+                  style: TextStyles.h3(
+                    context,
+                    isDarkMode: isDarkMode,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
-              const SizedBox(height: 16),
-              _buildRecordingSection(),
+              SizedBox(height: elementSpacing * 3),
+              _buildRecordingSection(context),
             ],
           ),
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: sectionSpacing * 0.75),
         buildCard(
+          context,
           isDarkMode,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -108,23 +122,24 @@ class PracticeStageWidget extends StatelessWidget {
                   Icon(
                     Icons.chat_bubble_outline,
                     size: 16,
-                    color: isDarkMode ? Colors.blue[300] : Colors.blue[500],
+                    color: AppColors.primary,
                   ),
-                  const SizedBox(width: 8),
-                  const Text(
+                  SizedBox(width: elementSpacing * 1.5),
+                  Text(
                     'Why This Matters',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
+                    style: TextStyles.h3(
+                      context,
+                      isDarkMode: isDarkMode,
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
+              SizedBox(height: elementSpacing * 2),
               Text(
                 'Using the correct tense helps your listener understand exactly when events happened. For past events, using past tense forms like "couldn\'t" and "was" is essential for clarity.',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: isDarkMode ? Colors.grey[300] : Colors.grey[600],
+                style: TextStyles.body(
+                  context,
+                  isDarkMode: isDarkMode,
                 ),
               ),
             ],
@@ -134,11 +149,13 @@ class PracticeStageWidget extends StatelessWidget {
     );
   }
 
-  List<Widget> _buildAlternatives() {
+  List<Widget> _buildAlternatives(BuildContext context) {
+    final elementSpacing = ResponsiveLayout.getElementSpacing(context);
+
     return List.generate(
       practiceItem.alternatives.length,
       (index) => Padding(
-        padding: const EdgeInsets.only(bottom: 8),
+        padding: EdgeInsets.only(bottom: elementSpacing * 1.5),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -146,7 +163,9 @@ class PracticeStageWidget extends StatelessWidget {
               width: 16,
               height: 16,
               decoration: BoxDecoration(
-                color: isDarkMode ? Colors.blue[800] : Colors.blue[100],
+                color: isDarkMode
+                    ? AppColors.primaryDark.withOpacity(0.3)
+                    : AppColors.primaryLight.withOpacity(0.3),
                 shape: BoxShape.circle,
               ),
               child: Center(
@@ -154,18 +173,18 @@ class PracticeStageWidget extends StatelessWidget {
                   '${index + 1}',
                   style: TextStyle(
                     fontSize: 10,
-                    color: isDarkMode ? Colors.blue[300] : Colors.blue[600],
+                    color: AppColors.primary,
                   ),
                 ),
               ),
             ),
-            const SizedBox(width: 8),
+            SizedBox(width: elementSpacing * 1.5),
             Expanded(
               child: Text(
                 practiceItem.alternatives[index],
-                style: TextStyle(
-                  fontSize: 14,
-                  color: isDarkMode ? Colors.grey[300] : Colors.grey[700],
+                style: TextStyles.body(
+                  context,
+                  isDarkMode: isDarkMode,
                 ),
               ),
             ),
@@ -175,30 +194,109 @@ class PracticeStageWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildRecordingSection() {
+  Widget _buildRecordingSection(BuildContext context) {
+    final elementSpacing = ResponsiveLayout.getElementSpacing(context);
+
     if (recordingState == 'recording') {
       return Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(
-            'Recording...',
-            style: TextStyle(
-              color: Colors.red[500],
-              fontWeight: FontWeight.bold,
+          // Animated recording indicator
+          Center(
+            child: TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0.8, end: 1.0),
+              duration: const Duration(milliseconds: 800),
+              curve: Curves.easeInOut,
+              builder: (context, value, child) {
+                return Container(
+                  width: 80,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    color: AppColors.error.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Center(
+                    child: Container(
+                      width: 48 * value,
+                      height: 48 * value,
+                      decoration: BoxDecoration(
+                        color: AppColors.error.withOpacity(0.8),
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  ),
+                );
+              },
+              onEnd: () {},
             ),
           ),
-          const SizedBox(height: 8),
-          GestureDetector(
-            onTap: onRecordTap,
-            child: Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: Colors.red[500],
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.stop,
-                color: Colors.white,
+          SizedBox(height: elementSpacing * 2),
+          // Animated recording text
+          DefaultTextStyle(
+            style: TextStyles.body(
+              context,
+              isDarkMode: isDarkMode,
+              color: AppColors.error,
+              fontWeight: FontWeight.bold,
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text('Recording'),
+                SizedBox(width: 2),
+                _buildDot(),
+                SizedBox(width: 2),
+                _buildDot(delay: 150),
+                SizedBox(width: 2),
+                _buildDot(delay: 300),
+              ],
+            ),
+          ),
+          SizedBox(height: elementSpacing),
+          Text(
+            'Tap to stop',
+            style: TextStyles.caption(
+              context,
+              isDarkMode: isDarkMode,
+              color: AppColors.getTextSecondaryColor(isDarkMode),
+            ),
+          ),
+          SizedBox(height: elementSpacing * 4),
+          // Enhanced stop button
+          Center(
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(56),
+                onTap: onRecordTap,
+                child: Container(
+                  width: 56,
+                  height: 56,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        AppColors.error,
+                        AppColors.error
+                            .withRed((AppColors.error.red - 40).clamp(0, 255))
+                      ],
+                    ),
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.error.withOpacity(0.3),
+                        blurRadius: 12,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  child: const Icon(
+                    Icons.stop_rounded,
+                    color: Colors.white,
+                    size: 28,
+                  ),
+                ),
               ),
             ),
           ),
@@ -206,72 +304,151 @@ class PracticeStageWidget extends StatelessWidget {
       );
     } else if (recordingState == 'recorded') {
       return Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          buildAudioProgressBar(
-            isDarkMode: isDarkMode,
-            progress: 1.0,
-            duration: '0:03',
+          Center(
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: elementSpacing * 2),
+              child: buildAudioProgressBar(
+                context: context,
+                isDarkMode: isDarkMode,
+                progress: 0.75,
+                duration: '0:05',
+              ),
+            ),
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: elementSpacing * 3),
           Row(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Expanded(
-                child: ElevatedButton.icon(
-                  onPressed: onRecordAgain,
-                  icon: const Icon(Icons.refresh, size: 14),
-                  label: const Text('Try Again'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: isDarkMode ? Colors.grey[800] : Colors.white,
-                    foregroundColor: isDarkMode ? Colors.blue[300] : Colors.blue[600],
-                    elevation: 0,
-                    side: BorderSide(
-                      color: isDarkMode
-                          ? Colors.blue[700]!.withAlpha(255)
-                          : Colors.blue[200]!.withAlpha(255),
+                child: Material(
+                  borderRadius: BorderRadius.circular(8),
+                  color: Colors.transparent,
+                  child: ElevatedButton.icon(
+                    onPressed: onRecordAgain,
+                    icon: const Icon(Icons.refresh, size: 18),
+                    label: Text(
+                      'Try Again',
+                      style: TextStyles.button(
+                        context,
+                        isDarkMode: isDarkMode,
+                        color: AppColors.primary,
+                      ),
                     ),
-                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.getSurfaceColor(isDarkMode),
+                      foregroundColor: AppColors.primary,
+                      elevation: 0,
+                      padding: EdgeInsets.symmetric(vertical: 12),
+                      side: BorderSide(
+                        color: isDarkMode
+                            ? AppColors.primaryDark
+                            : AppColors.primaryLight,
+                        width: 1.5,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
                   ),
                 ),
               ),
-              const SizedBox(width: 12),
+              SizedBox(width: elementSpacing * 2),
               Expanded(
-                child: ElevatedButton.icon(
-                  onPressed: onComplete,
-                  icon: const Icon(Icons.check_circle, size: 14),
-                  label: const Text('Perfect!'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: isDarkMode
-                        ? Colors.green[800]!.withAlpha(255)
-                        : Colors.green[600]!.withAlpha(255),
-                    foregroundColor: Colors.white,
-                    elevation: 0,
-                    padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(8),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.primary.withOpacity(0.3),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: ElevatedButton(
+                    onPressed: onComplete,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      padding: EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: Text(
+                      'Complete',
+                      style: TextStyles.button(
+                        context,
+                        isDarkMode: isDarkMode,
+                        color: Colors.white,
+                      ),
+                    ),
                   ),
                 ),
               ),
             ],
           ),
+          SizedBox(height: elementSpacing * 2),
+          Center(
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: elementSpacing * 2),
+              child: Text(
+                'Your practice sounds good! The pronunciation and grammar are correct.',
+                textAlign: TextAlign.center,
+                style: TextStyles.body(
+                  context,
+                  isDarkMode: isDarkMode,
+                  color: AppColors.success,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          ),
         ],
       );
     } else {
-      return Center(
-        child: GestureDetector(
-          onTap: onRecordTap,
-          child: Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: isDarkMode ? Colors.blue[800] : Colors.blue[600],
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              Icons.mic,
-              color: Colors.white,
-              size: 20,
+      // Ready state
+      return Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            'Tap to record your practice',
+            textAlign: TextAlign.center,
+            style: TextStyles.body(
+              context,
+              isDarkMode: isDarkMode,
+              color: AppColors.getTextSecondaryColor(isDarkMode),
             ),
           ),
-        ),
+          SizedBox(height: elementSpacing * 3),
+          Center(
+            child: buildRecordButton(
+              context: context,
+              isDarkMode: isDarkMode,
+              onTap: onRecordTap,
+            ),
+          ),
+        ],
       );
     }
+  }
+
+  // Animated recording dot
+  Widget _buildDot({int delay = 0}) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.0, end: 1.0),
+      duration: const Duration(milliseconds: 600),
+      curve: Curves.easeInOut,
+      builder: (context, value, child) {
+        return Opacity(
+          opacity: value <= 0.5 ? value * 2 : (1 - value) * 2,
+          child: const Text('.'),
+        );
+      },
+      onEnd: () {},
+    );
   }
 }
