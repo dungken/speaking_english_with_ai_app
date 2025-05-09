@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/text_styles.dart';
+import '../../../../core/utils/responsive_layout.dart';
 
 /// A reusable card widget with consistent styling
-Widget buildCard(bool isDarkMode, {required Widget child}) {
+Widget buildCard(BuildContext context, bool isDarkMode,
+    {required Widget child}) {
   return Container(
     width: double.infinity,
-    padding: const EdgeInsets.all(20),
+    padding: EdgeInsets.all(ResponsiveLayout.getCardPadding(context)),
     decoration: BoxDecoration(
-      color: isDarkMode ? Colors.grey[800] : Colors.white,
+      color: AppColors.getSurfaceColor(isDarkMode),
       borderRadius: BorderRadius.circular(12),
       boxShadow: [
         BoxShadow(
@@ -20,41 +24,72 @@ Widget buildCard(bool isDarkMode, {required Widget child}) {
   );
 }
 
-/// A reusable recording button widget
+/// A reusable recording button widget with pulsing animation
 Widget buildRecordButton({
-  required bool isDarkMode, 
+  required BuildContext context,
+  required bool isDarkMode,
   required VoidCallback onTap,
   double size = 64,
   Color? color,
   IconData icon = Icons.mic,
 }) {
-  return GestureDetector(
-    onTap: onTap,
-    child: Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        color: color ?? (isDarkMode ? Colors.blue[800] : Colors.blue[600]),
-        shape: BoxShape.circle,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.2),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+  return StatefulBuilder(builder: (context, setState) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(size),
+        onTap: onTap,
+        child: Container(
+          width: size,
+          height: size,
+          decoration: BoxDecoration(
+            gradient: AppColors.getPrimaryGradient(isDarkMode),
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.primary.withOpacity(0.3),
+                blurRadius: 12,
+                spreadRadius: 2,
+                offset: const Offset(0, 3),
+              ),
+            ],
           ),
-        ],
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              // Pulse animation container
+              TweenAnimationBuilder<double>(
+                tween: Tween(begin: 0.8, end: 1.0),
+                curve: Curves.easeInOut,
+                duration: const Duration(milliseconds: 1500),
+                builder: (context, value, child) {
+                  return Container(
+                    width: size * 1.15 * value,
+                    height: size * 1.15 * value,
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withOpacity(0.2 * (1.2 - value)),
+                      shape: BoxShape.circle,
+                    ),
+                  );
+                },
+                onEnd: () => setState(() {}), // Restart animation
+              ),
+              Icon(
+                icon,
+                color: Colors.white,
+                size: size * 0.45,
+              ),
+            ],
+          ),
+        ),
       ),
-      child: Icon(
-        icon,
-        color: Colors.white,
-        size: size * 0.45,
-      ),
-    ),
-  );
+    );
+  });
 }
 
 /// A reusable audio progress indicator
 Widget buildAudioProgressBar({
+  required BuildContext context,
   required bool isDarkMode,
   required double progress,
   required String duration,
@@ -64,7 +99,7 @@ Widget buildAudioProgressBar({
       Icon(
         Icons.play_arrow,
         size: 16,
-        color: isDarkMode ? Colors.blue[300] : Colors.blue[600],
+        color: AppColors.primary,
       ),
       const SizedBox(width: 8),
       Expanded(
@@ -81,7 +116,7 @@ Widget buildAudioProgressBar({
             widthFactor: progress,
             child: Container(
               decoration: BoxDecoration(
-                color: isDarkMode ? Colors.blue[600] : Colors.blue[500],
+                color: AppColors.primary,
                 borderRadius: BorderRadius.circular(4),
               ),
             ),
@@ -91,9 +126,10 @@ Widget buildAudioProgressBar({
       const SizedBox(width: 8),
       Text(
         duration,
-        style: TextStyle(
-          fontSize: 12,
-          color: isDarkMode ? Colors.grey[400] : Colors.grey[500],
+        style: TextStyles.caption(
+          context,
+          isDarkMode: isDarkMode,
+          color: AppColors.getTextSecondaryColor(isDarkMode),
         ),
       ),
     ],
@@ -102,6 +138,7 @@ Widget buildAudioProgressBar({
 
 /// A container for displaying text with colored background
 Widget buildTextContainer({
+  required BuildContext context,
   required bool isDarkMode,
   required String text,
   required Color backgroundColor,
@@ -110,7 +147,8 @@ Widget buildTextContainer({
   EdgeInsets? padding,
 }) {
   return Container(
-    padding: padding ?? const EdgeInsets.all(12),
+    padding: padding ??
+        EdgeInsets.all(ResponsiveLayout.getElementSpacing(context) * 2),
     decoration: BoxDecoration(
       color: backgroundColor,
       borderRadius: BorderRadius.circular(8),
@@ -120,7 +158,9 @@ Widget buildTextContainer({
     ),
     child: Text(
       text,
-      style: TextStyle(
+      style: TextStyles.body(
+        context,
+        isDarkMode: isDarkMode,
         color: textColor,
       ),
     ),
