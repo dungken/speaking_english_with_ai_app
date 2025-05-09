@@ -3,6 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/text_styles.dart';
+import '../../../../core/utils/responsive_layout.dart';
 import '../bloc/auth_bloc.dart';
 
 /*
@@ -44,86 +46,110 @@ class _AuthScreenState extends State<AuthScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
     return BlocConsumer<AuthBloc, AuthState>(
       listener: (context, state) {
         if (state is Authenticated) {
           Future.microtask(() => context.go('/home'));
         } else if (state is AuthError) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.message)),
+            SnackBar(
+              content: Text(state.message),
+              backgroundColor: AppColors.error,
+            ),
           );
         }
       },
       builder: (context, state) {
         return Scaffold(
-          backgroundColor: Colors.white,
+          backgroundColor:
+              isDarkMode ? AppColors.backgroundDark : AppColors.backgroundLight,
           body: SafeArea(
             child: Stack(
               children: [
                 SingleChildScrollView(
-                  padding: const EdgeInsets.all(24.0),
+                  padding: EdgeInsets.all(
+                      ResponsiveLayout.getSectionSpacing(context)),
                   child: Form(
                     key: _formKey,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         IconButton(
-                          icon: const Icon(Icons.arrow_back),
-                          onPressed: () => context.go('/'),
+                          icon: Icon(
+                            Icons.arrow_back,
+                            color: isDarkMode
+                                ? AppColors.textPrimaryDark
+                                : AppColors.textPrimaryLight,
+                          ),
+                          onPressed: () {
+                            if (context.canPop()) {
+                              context.pop();
+                            } else {
+                              // Optionally, navigate to a default route if needed
+                              // context.go('/default');
+                            }
+                          },
                         ),
-                        const SizedBox(height: 24),
+                        SizedBox(
+                            height:
+                                ResponsiveLayout.getElementSpacing(context) *
+                                    3),
                         Center(
                           child: Container(
                             width: 80,
                             height: 80,
                             decoration: BoxDecoration(
-                              color: Colors.white,
+                              gradient:
+                                  AppColors.getPrimaryGradient(isDarkMode),
                               shape: BoxShape.circle,
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.grey.withOpacity(0.1),
-                                  spreadRadius: 2,
-                                  blurRadius: 10,
-                                  offset: const Offset(0, 2),
+                                  color: AppColors.primary.withOpacity(0.3),
+                                  spreadRadius: 1,
+                                  blurRadius: 15,
+                                  offset: const Offset(0, 5),
                                 ),
                               ],
                             ),
                             child: const Icon(
                               Icons.smart_toy_outlined,
                               size: 40,
-                              color: AppColors.primary,
+                              color: Colors.white,
                             ),
                           ),
                         ),
-                        const SizedBox(height: 24),
+                        SizedBox(
+                            height:
+                                ResponsiveLayout.getSectionSpacing(context)),
                         Text(
                           _isLogin ? 'Welcome Back' : 'Create Account',
-                          style: const TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style: TextStyles.h1(context, isDarkMode: isDarkMode),
                         ),
-                        const SizedBox(height: 8),
+                        SizedBox(
+                            height:
+                                ResponsiveLayout.getElementSpacing(context)),
                         Text(
                           _isLogin
                               ? 'Sign in to continue your journey'
                               : 'Start your language learning journey today',
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: Colors.grey[600],
+                          style: TextStyles.body(
+                            context,
+                            isDarkMode: isDarkMode,
+                            color: isDarkMode
+                                ? AppColors.textSecondaryDark
+                                : AppColors.textSecondaryLight,
                           ),
                         ),
-                        const SizedBox(height: 32),
+                        SizedBox(
+                            height:
+                                ResponsiveLayout.getSectionSpacing(context)),
                         if (!_isLogin)
-                          TextFormField(
+                          _buildTextField(
                             controller: _usernameController,
-                            decoration: InputDecoration(
-                              prefixIcon: const Icon(Icons.person_outline),
-                              hintText: 'Username',
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
+                            labelText: 'Username',
+                            prefixIcon: Icons.person_outline,
                             validator: (value) {
                               if (value == null || value.isEmpty) {
                                 return 'Please enter your username';
@@ -131,17 +157,16 @@ class _AuthScreenState extends State<AuthScreen> {
                               return null;
                             },
                           ),
-                        if (!_isLogin) const SizedBox(height: 16),
-                        TextFormField(
+                        if (!_isLogin)
+                          SizedBox(
+                              height:
+                                  ResponsiveLayout.getElementSpacing(context) *
+                                      2),
+                        _buildTextField(
                           controller: _emailController,
+                          labelText: 'Email',
+                          prefixIcon: Icons.email_outlined,
                           keyboardType: TextInputType.emailAddress,
-                          decoration: InputDecoration(
-                            prefixIcon: const Icon(Icons.email_outlined),
-                            hintText: 'Email',
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
                               return 'Please enter your email';
@@ -152,28 +177,27 @@ class _AuthScreenState extends State<AuthScreen> {
                             return null;
                           },
                         ),
-                        const SizedBox(height: 16),
-                        TextFormField(
+                        SizedBox(
+                            height:
+                                ResponsiveLayout.getElementSpacing(context) *
+                                    2),
+                        _buildTextField(
                           controller: _passwordController,
+                          labelText: 'Password',
+                          prefixIcon: Icons.lock_outline,
                           obscureText: _obscurePassword,
-                          decoration: InputDecoration(
-                            prefixIcon: const Icon(Icons.lock_outline),
-                            hintText: 'Password',
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _obscurePassword
+                                  ? Icons.visibility_off_outlined
+                                  : Icons.visibility_outlined,
+                              color: AppColors.primary,
                             ),
-                            suffixIcon: IconButton(
-                              icon: Icon(
-                                _obscurePassword
-                                    ? Icons.visibility_off_outlined
-                                    : Icons.visibility_outlined,
-                              ),
-                              onPressed: () {
-                                setState(() {
-                                  _obscurePassword = !_obscurePassword;
-                                });
-                              },
-                            ),
+                            onPressed: () {
+                              setState(() {
+                                _obscurePassword = !_obscurePassword;
+                              });
+                            },
                           ),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
@@ -186,29 +210,28 @@ class _AuthScreenState extends State<AuthScreen> {
                           },
                         ),
                         if (!_isLogin) ...[
-                          const SizedBox(height: 16),
-                          TextFormField(
+                          SizedBox(
+                              height:
+                                  ResponsiveLayout.getElementSpacing(context) *
+                                      2),
+                          _buildTextField(
                             controller: _confirmPasswordController,
+                            labelText: 'Confirm Password',
+                            prefixIcon: Icons.lock_outline,
                             obscureText: _obscureConfirmPassword,
-                            decoration: InputDecoration(
-                              prefixIcon: const Icon(Icons.lock_outline),
-                              hintText: 'Confirm Password',
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _obscureConfirmPassword
+                                    ? Icons.visibility_off_outlined
+                                    : Icons.visibility_outlined,
+                                color: AppColors.primary,
                               ),
-                              suffixIcon: IconButton(
-                                icon: Icon(
-                                  _obscureConfirmPassword
-                                      ? Icons.visibility_off_outlined
-                                      : Icons.visibility_outlined,
-                                ),
-                                onPressed: () {
-                                  setState(() {
-                                    _obscureConfirmPassword =
-                                        !_obscureConfirmPassword;
-                                  });
-                                },
-                              ),
+                              onPressed: () {
+                                setState(() {
+                                  _obscureConfirmPassword =
+                                      !_obscureConfirmPassword;
+                                });
+                              },
                             ),
                             validator: (value) {
                               if (value == null || value.isEmpty) {
@@ -221,29 +244,33 @@ class _AuthScreenState extends State<AuthScreen> {
                             },
                           ),
                         ],
-                        const SizedBox(height: 32),
+                        SizedBox(
+                            height:
+                                ResponsiveLayout.getSectionSpacing(context)),
                         SizedBox(
                           width: double.infinity,
                           child: ElevatedButton(
                             onPressed:
                                 state is AuthLoading ? null : _handleAuthSubmit,
                             style: ElevatedButton.styleFrom(
+                              foregroundColor: Colors.white,
                               backgroundColor: AppColors.primary,
                               padding: const EdgeInsets.symmetric(vertical: 16),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),
+                              elevation: 2,
                             ),
                             child: Text(
                               _isLogin ? 'Sign In' : 'Create Account',
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                              ),
+                              style: TextStyles.button(context),
                             ),
                           ),
                         ),
-                        const SizedBox(height: 16),
+                        SizedBox(
+                            height:
+                                ResponsiveLayout.getElementSpacing(context) *
+                                    2),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
@@ -251,8 +278,12 @@ class _AuthScreenState extends State<AuthScreen> {
                               _isLogin
                                   ? "Don't have an account? "
                                   : 'Already have an account? ',
-                              style: TextStyle(
-                                color: Colors.grey[600],
+                              style: TextStyles.body(
+                                context,
+                                isDarkMode: isDarkMode,
+                                color: isDarkMode
+                                    ? AppColors.textSecondaryDark
+                                    : AppColors.textSecondaryLight,
                               ),
                             ),
                             TextButton(
@@ -263,23 +294,37 @@ class _AuthScreenState extends State<AuthScreen> {
                               },
                               child: Text(
                                 _isLogin ? 'Sign Up' : 'Sign In',
-                                style: const TextStyle(
-                                  color: AppColors.primary,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                                style: TextStyles.link(context,
+                                    isDarkMode: isDarkMode),
                               ),
                             ),
                           ],
                         ),
+                        if (_isLogin)
+                          Center(
+                            child: TextButton(
+                              onPressed: () {},
+                              child: Text(
+                                'Forgot password?',
+                                style: TextStyles.link(context,
+                                    isDarkMode: isDarkMode),
+                              ),
+                            ),
+                          ),
                       ],
                     ),
                   ),
                 ),
                 if (state is AuthLoading)
                   Container(
-                    color: Colors.black.withOpacity(0.5),
-                    child: const Center(
-                      child: CircularProgressIndicator(),
+                    color: isDarkMode
+                        ? Colors.black.withOpacity(0.6)
+                        : Colors.black.withOpacity(0.4),
+                    child: Center(
+                      child: CircularProgressIndicator(
+                        valueColor:
+                            AlwaysStoppedAnimation<Color>(AppColors.primary),
+                      ),
                     ),
                   ),
               ],
@@ -287,6 +332,69 @@ class _AuthScreenState extends State<AuthScreen> {
           ),
         );
       },
+    );
+  }
+
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String labelText,
+    required IconData prefixIcon,
+    TextInputType keyboardType = TextInputType.text,
+    bool obscureText = false,
+    Widget? suffixIcon,
+    required String? Function(String?) validator,
+  }) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
+    return TextFormField(
+      controller: controller,
+      obscureText: obscureText,
+      keyboardType: keyboardType,
+      style: TextStyles.body(context, isDarkMode: isDarkMode),
+      decoration: InputDecoration(
+        labelText: labelText,
+        labelStyle: TextStyles.body(
+          context,
+          isDarkMode: isDarkMode,
+          color: isDarkMode
+              ? AppColors.textSecondaryDark
+              : AppColors.textSecondaryLight,
+        ),
+        prefixIcon: Icon(
+          prefixIcon,
+          color: AppColors.primary,
+        ),
+        suffixIcon: suffixIcon,
+        filled: true,
+        fillColor:
+            isDarkMode ? AppColors.surfaceDark.withOpacity(0.5) : Colors.white,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(
+            color: isDarkMode ? Colors.grey.shade700 : Colors.grey.shade300,
+          ),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(
+            color: isDarkMode ? Colors.grey.shade700 : Colors.grey.shade300,
+          ),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(
+            color: AppColors.primary,
+            width: 2,
+          ),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(
+            color: AppColors.error,
+          ),
+        ),
+      ),
+      validator: validator,
     );
   }
 
