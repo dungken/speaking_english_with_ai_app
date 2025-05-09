@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/text_styles.dart';
+import '../../../../core/utils/responsive_layout.dart';
 import '../../domain/models/practice_item_model.dart';
 import 'common_widgets.dart';
 
@@ -17,53 +20,68 @@ class CompleteStageWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final elementSpacing = ResponsiveLayout.getElementSpacing(context);
+    final sectionSpacing = ResponsiveLayout.getSectionSpacing(context);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        const SizedBox(height: 32),
-        Container(
-          width: 64,
-          height: 64,
-          decoration: BoxDecoration(
-            color: isDarkMode ? Colors.green[900] : Colors.green[100],
-            shape: BoxShape.circle,
-          ),
-          child: Icon(
-            Icons.check_circle,
-            size: 28,
-            color: Colors.green[500],
-          ),
-        ),
-        const SizedBox(height: 16),
-        const Text(
+        SizedBox(height: sectionSpacing),
+        // Success animation
+        _buildSuccessAnimation(context),
+        SizedBox(height: elementSpacing * 3),
+        Text(
           'Great job!',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
+          style: TextStyles.h2(
+            context,
+            isDarkMode: isDarkMode,
           ),
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: elementSpacing),
         Text(
           'You\'ve practiced the correct way to express this idea. This will help you avoid similar mistakes in the future.',
           textAlign: TextAlign.center,
-          style: TextStyle(
-            color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+          style: TextStyles.body(
+            context,
+            isDarkMode: isDarkMode,
+            color: AppColors.getTextSecondaryColor(isDarkMode),
           ),
         ),
-        const SizedBox(height: 32),
-        _buildImprovementCard(),
-        const SizedBox(height: 32),
-        SizedBox(
+        SizedBox(height: sectionSpacing),
+        _buildImprovementCard(context),
+        SizedBox(height: sectionSpacing),
+        // Enhanced button
+        Container(
           width: double.infinity,
+          height: 54,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.primary.withOpacity(0.3),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
           child: ElevatedButton.icon(
             onPressed: onNext,
-            icon: const Icon(Icons.arrow_forward),
-            label: const Text('Continue to Next Practice'),
+            icon: const Icon(Icons.arrow_forward, size: 22),
+            label: Text(
+              'Continue to Next Practice',
+              style: TextStyles.button(
+                context,
+                isDarkMode: isDarkMode,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
             style: ElevatedButton.styleFrom(
-              backgroundColor: isDarkMode ? Colors.blue[800] : Colors.blue[600],
+              backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
               elevation: 0,
-              padding: const EdgeInsets.symmetric(vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
             ),
           ),
         ),
@@ -71,28 +89,76 @@ class CompleteStageWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildImprovementCard() {
+  Widget _buildSuccessAnimation(BuildContext context) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.8, end: 1.0),
+      duration: const Duration(milliseconds: 800),
+      curve: Curves.elasticOut,
+      builder: (context, value, child) {
+        return Transform.scale(
+          scale: value,
+          child: Container(
+            width: 80,
+            height: 80,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  AppColors.success,
+                  AppColors.success
+                      .withGreen((AppColors.success.green - 40).clamp(0, 255)),
+                ],
+              ),
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.success.withOpacity(0.3),
+                  blurRadius: 12,
+                  spreadRadius: 2,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: const Icon(
+              Icons.check,
+              color: Colors.white,
+              size: 40,
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildImprovementCard(BuildContext context) {
+    final elementSpacing = ResponsiveLayout.getElementSpacing(context);
+
     return buildCard(
+      context,
       isDarkMode,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Your Improvement',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
+            style: TextStyles.h3(
+              context,
+              isDarkMode: isDarkMode,
             ),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: elementSpacing * 3),
           Container(
-            padding: const EdgeInsets.all(12),
+            padding: EdgeInsets.all(elementSpacing * 2),
             decoration: BoxDecoration(
-              color: isDarkMode ? Colors.red[900] : Colors.red[50],
-              borderRadius: BorderRadius.circular(8),
+              color: isDarkMode
+                  ? AppColors.error.withOpacity(0.2)
+                  : AppColors.error.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
               border: Border.all(
                 color: isDarkMode
-                    ? Colors.red[800]!.withAlpha(255)
-                    : Colors.red[100]!.withAlpha(255),
+                    ? AppColors.error.withOpacity(0.5)
+                    : AppColors.error.withOpacity(0.3),
               ),
             ),
             child: Column(
@@ -100,31 +166,38 @@ class CompleteStageWidget extends StatelessWidget {
               children: [
                 Text(
                   'Before:',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.red[500],
+                  style: TextStyles.caption(
+                    context,
+                    isDarkMode: isDarkMode,
+                    color: AppColors.error,
                   ),
                 ),
-                const SizedBox(height: 4),
+                SizedBox(height: elementSpacing),
                 Text(
                   practiceItem.commonMistake,
-                  style: TextStyle(
-                    color: isDarkMode ? Colors.red[100] : Colors.red[800],
+                  style: TextStyles.body(
+                    context,
+                    isDarkMode: isDarkMode,
+                    color: isDarkMode
+                        ? AppColors.textPrimaryDark
+                        : AppColors.textPrimaryLight,
                   ),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: elementSpacing * 3),
           Container(
-            padding: const EdgeInsets.all(12),
+            padding: EdgeInsets.all(elementSpacing * 2),
             decoration: BoxDecoration(
-              color: isDarkMode ? Colors.green[900] : Colors.green[50],
-              borderRadius: BorderRadius.circular(8),
+              color: isDarkMode
+                  ? AppColors.success.withOpacity(0.2)
+                  : AppColors.success.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
               border: Border.all(
                 color: isDarkMode
-                    ? Colors.green[800]!.withAlpha(255)
-                    : Colors.green[100]!.withAlpha(255),
+                    ? AppColors.success.withOpacity(0.5)
+                    : AppColors.success.withOpacity(0.3),
               ),
             ),
             child: Column(
@@ -132,60 +205,84 @@ class CompleteStageWidget extends StatelessWidget {
               children: [
                 Text(
                   'After:',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.green[500],
+                  style: TextStyles.caption(
+                    context,
+                    isDarkMode: isDarkMode,
+                    color: AppColors.success,
                   ),
                 ),
-                const SizedBox(height: 4),
+                SizedBox(height: elementSpacing),
                 Text(
                   practiceItem.betterExpression,
-                  style: TextStyle(
-                    color: isDarkMode ? Colors.green[100] : Colors.green[800],
+                  style: TextStyles.body(
+                    context,
+                    isDarkMode: isDarkMode,
+                    color: isDarkMode
+                        ? AppColors.textPrimaryDark
+                        : AppColors.textPrimaryLight,
                   ),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: elementSpacing * 3),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
                 'Accuracy:',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                style: TextStyles.body(
+                  context,
+                  isDarkMode: isDarkMode,
+                  color: AppColors.getTextSecondaryColor(isDarkMode),
                 ),
               ),
               Row(
                 children: [
                   Text(
                     '95%',
-                    style: TextStyle(
-                      color: Colors.green[500],
+                    style: TextStyles.body(
+                      context,
+                      isDarkMode: isDarkMode,
+                      color: AppColors.success,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  Container(
+                  SizedBox(width: elementSpacing * 1.5),
+                  SizedBox(
                     width: 128,
-                    height: 8,
-                    decoration: BoxDecoration(
-                      color: isDarkMode
-                          ? Colors.grey[700]!.withAlpha(255)
-                          : Colors.grey[200]!.withAlpha(255),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: FractionallySizedBox(
-                      alignment: Alignment.centerLeft,
-                      widthFactor: 0.95,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: Colors.green[500],
-                          borderRadius: BorderRadius.circular(4),
+                    child: Stack(
+                      children: [
+                        Container(
+                          height: 8,
+                          decoration: BoxDecoration(
+                            color: isDarkMode
+                                ? Colors.grey[800]
+                                : Colors.grey[200],
+                            borderRadius: BorderRadius.circular(4),
+                          ),
                         ),
-                      ),
+                        FractionallySizedBox(
+                          widthFactor: 0.95,
+                          child: Container(
+                            height: 8,
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.centerLeft,
+                                end: Alignment.centerRight,
+                                colors: [
+                                  AppColors.success,
+                                  AppColors.success.withGreen(
+                                    (AppColors.success.green + 20)
+                                        .clamp(0, 255),
+                                  ),
+                                ],
+                              ),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
