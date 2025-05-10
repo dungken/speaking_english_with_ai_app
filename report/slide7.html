@@ -91,18 +91,35 @@ ai_text = generate_response(prompt)</code>
                     <div class="mt-4">
                         <h5 class="text-primary">Tạo Phản Hồi</h5>
                         <pre class="code-block p-3">
-<code>feedback_result = feedback_service.generate_dual_feedback(transcription, context)
-
-# Cấu trúc kết quả phản hồi
-{
-    "user_feedback": "Văn bản phản hồi dễ đọc cho người dùng",
-    "detailed_feedback": {
-        "grammar_issues": ["Lỗi 1: Gợi ý", "Lỗi 2: Gợi ý"],
-        "vocabulary_issues": ["Vấn đề lựa chọn từ: Phương án thay thế"],
-        "positives": ["Điểm mạnh 1", "Điểm mạnh 2"],
-        "fluency": ["Nhận xét về độ trôi chảy"]
-    }
-}</code>
+<code> prompt += f"""
+    Student's speech: "{transcription}"
+    Note: because user speech is transcribed from audio, it may not contain punctuation. you do not need comment on this. s
+    Generate two types of feedback in JSON format:
+    
+    1. user_feedback: Hãy đưa ra nhận xét và hướng dẫn như một người bản xứ nói tiếng Anh có thể sử dụng tiếng Việt để giải thích:
+          -Phân tích câu trả lời của người học và chỉ ra các lỗi về ngữ pháp và từ vựng.
+          -Cung cấp gợi ý hoặc ví dụ về cách dùng từ/cụm từ tốt hơn để diễn đạt tự nhiên hơn
+          -Đưa ra phiên bản câu hoàn chỉnh hơn, sát với câu gốc nhưng đúng hơn, phù hợp với trình độ người học.
+          -Phân tích cấu trúc ngữ pháp (mental model) của câu ví dụ bạn đưa ra: chỉ ra chủ ngữ, động từ, bổ ngữ, cách dùng mệnh 
+          đề phụ (nếu có), và chức năng giao tiếp của từng phần trong câu. ( nhớ so sánh  với câu gốc của người học)
+          -Nếu câu trả lời của người học ngắn, chưa rõ ý, hoặc sai lệch hoàn toàn, hãy đưa ra một câu trả lời mẫu đơn giản hơn 
+          để họ có thể hình dung cách diễn đạt đúng, nhưng không nâng cấp quá xa so với trình độ hiện tại của họ.
+    2. detailed_feedback: Structured, detailed analysis with these exact fields:
+      - grammar_issues: Array of objects with fields:
+        - issue: The exact problematic text
+        - correction: How it should be corrected
+        - explanation: Why this is an issue
+        - severity: Number 1-5 (1=minor, 5=major)
+      
+      - vocabulary_issues: Array of objects with fields:
+        - original: The word or phrase used
+        - better_alternative: A better word or phrase
+        - reason: Why the alternative is better
+        - example_usage: Example sentence using the better alternative
+    
+    Return ONLY the JSON object with these two fields, properly formatted. Limit to at most 3 
+    grammar issues and 3 vocabulary issues, focusing on the most important ones.
+    """</code>
                         </pre>
                     </div>
                 </div>

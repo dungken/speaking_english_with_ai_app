@@ -5,9 +5,13 @@ class ApiConstants {
   // static const String baseUrl = 'http://10.0.2.2:8000';
 
   // Production URL - using the deployed API
+<<<<<<< Updated upstream
   static const String baseUrl = 'http://192.168.1.9:8000';
+=======
+  static const String baseUrl = 'http://192.168.1.143:8000';
+>>>>>>> Stashed changes
 
-  /// Authentication endpoints
+  /// Authentication endpoints~
   static const String loginEndpoint = '/api/users/login';
   static const String registerEndpoint = '/api/users/register';
 
