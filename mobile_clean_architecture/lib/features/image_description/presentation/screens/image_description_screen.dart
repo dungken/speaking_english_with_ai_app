@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile_clean_architecture/features/image_description/presentation/widgets/demo_feedback_widget.dart';
+import '../widgets/demo_feedback_widget.dart' show SimpleFeedbackWidget;
 import '../../../../core/theme/app_colors.dart';
-import '../widgets/demo_feedback_widget.dart';
 
 class ImageDescriptionScreen extends StatefulWidget {
   const ImageDescriptionScreen({super.key});
@@ -16,6 +16,7 @@ class _ImageDescriptionScreenState extends State<ImageDescriptionScreen> with Si
   int _currentImageIndex = 0;
   late AnimationController _animationController;
   late Animation<double> _pulseAnimation;
+  bool _showFeedback = false;
   
   final List<String> _images = [
     'assets/images/description5.png',
@@ -50,11 +51,14 @@ class _ImageDescriptionScreenState extends State<ImageDescriptionScreen> with Si
 
   void _toggleRecording() {
     setState(() {
-      _isRecording = !_isRecording;
       if (_isRecording) {
-        _animationController.repeat(reverse: true);
-      } else {
+        _isRecording = false;
+        _showFeedback = true;
         _animationController.stop();
+      } else {
+        _isRecording = true;
+        _showFeedback = false;
+        _animationController.repeat(reverse: true);
       }
     });
     // TODO: Implement actual recording logic
@@ -64,6 +68,7 @@ class _ImageDescriptionScreenState extends State<ImageDescriptionScreen> with Si
     if (_currentImageIndex < _images.length - 1) {
       setState(() {
         _currentImageIndex++;
+        _showFeedback = false;
       });
     } else {
       // Show completion dialog or navigate back
@@ -141,23 +146,23 @@ class _ImageDescriptionScreenState extends State<ImageDescriptionScreen> with Si
         backgroundColor: Colors.transparent,
       ),
       body: SafeArea(
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: LinearProgressIndicator(
-                value: (_currentImageIndex + 1) / _images.length,
-                backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(2),
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: LinearProgressIndicator(
+                  value: (_currentImageIndex + 1) / _images.length,
+                  backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(2),
+                ),
               ),
-            ),
-            Text(
-              '${_currentImageIndex + 1}/${_images.length}',
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-            const SizedBox(height: 16),
-            Expanded(
-              child: Padding(
+              Text(
+                '${_currentImageIndex + 1}/${_images.length}',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+              const SizedBox(height: 16),
+              Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(16),
@@ -165,110 +170,113 @@ class _ImageDescriptionScreenState extends State<ImageDescriptionScreen> with Si
                     _images[_currentImageIndex],
                     fit: BoxFit.contain,
                     width: double.infinity,
-                    height: double.infinity,
+                    height: 260,
                   ),
                 ),
               ),
-            ),
-            const SizedBox(height: 16),
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text(
-                    'Describe what you see in this image',
-                    style: Theme.of(context).textTheme.titleMedium,
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 24),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      FloatingActionButton(
-                        heroTag: 'skip',
-                        onPressed: _skipImage,
-                        backgroundColor: Colors.grey[200],
-                        child: Icon(
-                          Icons.skip_next,
-                          color: Theme.of(context).primaryColor,
-                        ),
-                      ),
-                      Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(64),
-                          onTap: _toggleRecording,
-                          child: Stack(
-                            alignment: Alignment.center,
-                            children: [
-                              if (_isRecording)
-                                AnimatedBuilder(
-                                  animation: _pulseAnimation,
-                                  builder: (context, child) {
-                                    return Container(
-                                      width: 64 * 1.15 * _pulseAnimation.value,
-                                      height: 64 * 1.15 * _pulseAnimation.value,
-                                      decoration: BoxDecoration(
-                                        color: Colors.red.withOpacity(0.2 * (1.2 - _pulseAnimation.value)),
-                                        shape: BoxShape.circle,
-                                      ),
-                                    );
-                                  },
-                                ),
-                              Container(
-                                width: 64,
-                                height: 64,
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                    colors: _isRecording
-                                        ? [
-                                            Colors.red[500]!,
-                                            Colors.red[700]!,
-                                          ]
-                                        : [
-                                            AppColors.primary,
-                                            AppColors.primaryDark,
-                                          ],
-                                  ),
-                                  shape: BoxShape.circle,
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: (_isRecording ? Colors.red : AppColors.primary).withOpacity(0.3),
-                                      blurRadius: 12,
-                                      spreadRadius: 2,
-                                      offset: const Offset(0, 3),
-                                    ),
-                                  ],
-                                ),
-                                child: Icon(
-                                  _isRecording ? Icons.stop : Icons.mic,
-                                  color: Colors.white,
-                                  size: 32,
-                                ),
-                              ),
-                            ],
+              const SizedBox(height: 16),
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      'Describe what you see in this image',
+                      style: Theme.of(context).textTheme.titleMedium,
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 24),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        FloatingActionButton(
+                          heroTag: 'skip',
+                          onPressed: _skipImage,
+                          backgroundColor: Colors.grey[200],
+                          child: Icon(
+                            Icons.skip_next,
+                            color: Theme.of(context).primaryColor,
                           ),
                         ),
-                      ),
-                      FloatingActionButton(
-                        heroTag: 'answer',
-                        onPressed: _viewSuggestedAnswer,
-                        backgroundColor: Colors.grey[200],
-                        child: Icon(
-                          Icons.lightbulb_outline,
-                          color: Theme.of(context).primaryColor,
+                        Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(64),
+                            onTap: _toggleRecording,
+                            child: Stack(
+                              alignment: Alignment.center,
+                              children: [
+                                if (_isRecording)
+                                  AnimatedBuilder(
+                                    animation: _pulseAnimation,
+                                    builder: (context, child) {
+                                      return Container(
+                                        width: 64 * 1.15 * _pulseAnimation.value,
+                                        height: 64 * 1.15 * _pulseAnimation.value,
+                                        decoration: BoxDecoration(
+                                          color: Colors.red.withOpacity(0.2 * (1.2 - _pulseAnimation.value)),
+                                          shape: BoxShape.circle,
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                Container(
+                                  width: 64,
+                                  height: 64,
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                      colors: _isRecording
+                                          ? [
+                                              Colors.red[500]!,
+                                              Colors.red[700]!,
+                                            ]
+                                          : [
+                                              AppColors.primary,
+                                              AppColors.primaryDark,
+                                            ],
+                                    ),
+                                    shape: BoxShape.circle,
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: (_isRecording ? Colors.red : AppColors.primary).withOpacity(0.3),
+                                        blurRadius: 12,
+                                        spreadRadius: 2,
+                                        offset: const Offset(0, 3),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Icon(
+                                    _isRecording ? Icons.stop : Icons.mic,
+                                    color: Colors.white,
+                                    size: 32,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
-                ],
+                        FloatingActionButton(
+                          heroTag: 'answer',
+                          onPressed: _viewSuggestedAnswer,
+                          backgroundColor: Colors.grey[200],
+                          child: Icon(
+                            Icons.lightbulb_outline,
+                            color: Theme.of(context).primaryColor,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
-            ),
-            // DemoFeedbackWidget(),
-          ],
+              if (_showFeedback) ...[
+                const SizedBox(height: 16),
+                const SimpleFeedbackWidget(),
+              ],
+            ],
+          ),
         ),
       ),
     );

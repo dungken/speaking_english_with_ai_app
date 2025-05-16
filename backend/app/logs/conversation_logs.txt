@@ -143,3 +143,54 @@ Message found: 681eb84ea19d59714a9eddf8, checking for feedback_id
 Found feedback_id: 681eb853a19d59714a9eddfa, retrieving feedback document
 Feedback document structure: dict, keys: ['_id', 'target_id', 'target_type', 'user_feedback', 'detailed_feedback', 'user_id', 'transcription', 'timestamp']
 Processing feedback document with keys: ['_id', 'target_id', 'target_type', 'user_feedback', 'detailed_feedback', 'user_id', 'transcription', 'timestamp']
+Refined response: {
+  "refined_user_role": "Child",
+  "refined_ai_role": "Father",
+  "refined_situation": "The child wants to earn some money and is asking their father for ideas or an allowance.",
+  "response": "Hi! I'm happy you want to make some money. That's a great idea. What are you hoping to buy, and how much money do you need? Maybe we can think of some ways you can earn it."
+}
+Refined response: {
+  "refined_user_role": "Child",
+  "refined_ai_role": "Dad",
+  "refined_situation": "Your child wants to earn some money and is asking you for ideas.",
+  "response": "Hey sweetie! So, you want to make some money? That's great! What were you thinking of doing? Maybe we can brainstorm some ideas together."
+}
+Refined response: {
+  "refined_user_role": "Patient",
+  "refined_ai_role": "Doctor",
+  "refined_situation": "A patient is visiting the doctor for a checkup and has said 'hi' upon entering the examination room.",
+  "response": "Hello! Please, come in and have a seat. What brings you in today?"
+}
+Refined response: {
+  "refined_user_role": "Student",
+  "refined_ai_role": "Teacher",
+  "refined_situation": "The student is talking to their English teacher about their summer vacation plans, which involve traveling to a new country. The teacher is asking about the student's preparations and offering advice.",
+  "response": "Hi! I heard you're planning a trip this summer. That's great! Where are you going, and have you started making plans?"
+}
+Fetching feedback for message_id: 681eca060afee3ea54d90804
+Message found: 681eca060afee3ea54d90804, checking for feedback_id
+Found feedback_id: 681eca0c0afee3ea54d90806, retrieving feedback document
+Feedback document structure: dict, keys: ['_id', 'target_id', 'target_type', 'user_feedback', 'detailed_feedback', 'user_id', 'transcription', 'timestamp']
+Processing feedback document with keys: ['_id', 'target_id', 'target_type', 'user_feedback', 'detailed_feedback', 'user_id', 'transcription', 'timestamp']
+Fetching feedback for message_id: 681eca060afee3ea54d90804
+Message found: 681eca060afee3ea54d90804, checking for feedback_id
+Found feedback_id: 681eca0c0afee3ea54d90806, retrieving feedback document
+Feedback document structure: dict, keys: ['_id', 'target_id', 'target_type', 'user_feedback', 'detailed_feedback', 'user_id', 'transcription', 'timestamp']
+Processing feedback document with keys: ['_id', 'target_id', 'target_type', 'user_feedback', 'detailed_feedback', 'user_id', 'transcription', 'timestamp']
+Refined response: {
+  "refined_user_role": "Boyfriend",
+  "refined_ai_role": "Girlfriend",
+  "refined_situation": "You are on a casual date at a park. You have been dating for a few months. It's a sunny afternoon, and you are sitting on a bench, enjoying the weather.",
+  "response": "Hi! It's such a nice day, isn't it? I'm really happy we could come here."
+}
+Fetching feedback for message_id: 681ecb660afee3ea54d9080f
+Message found: 681ecb660afee3ea54d9080f, checking for feedback_id
+Found feedback_id: 681ecb6a0afee3ea54d90811, retrieving feedback document
+Feedback document structure: dict, keys: ['_id', 'target_id', 'target_type', 'user_feedback', 'detailed_feedback', 'user_id', 'transcription', 'timestamp']
+Processing feedback document with keys: ['_id', 'target_id', 'target_type', 'user_feedback', 'detailed_feedback', 'user_id', 'transcription', 'timestamp']
+Refined response: {
+  "refined_user_role": "Patient",
+  "refined_ai_role": "Doctor",
+  "refined_situation": "The patient is experiencing hemorrhoids due to prolonged sitting while coding.",
+  "response": "Hello. Welcome. I see you're here because you're having some trouble. Can you tell me more about what's happening?"
+}
