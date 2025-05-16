@@ -7,10 +7,10 @@ from typing import Dict, Any, Optional, Tuple
 from fastapi import UploadFile, HTTPException, status
 from bson import ObjectId
 import inspect
-
+from transcription_error_message import TranscriptionErrorMessages
 from app.config.database import db
 from app.models.audio import Audio
-from app.utils.audio_processor import transcribe_audio_local
+from app.utils.audio_processor import transcribe_audio_local,transcribe_audio_with_whisper
 
 # Set up logger
 logger = logging.getLogger(__name__)
@@ -27,6 +27,7 @@ class SpeechService:
     1. Transcribe audio content to text
     2. Save audio files to disk with proper organization
     """
+    FALLBACK_TRANSCRIPTION_ERROR_MESSAGE = "Your speech could not be transcribed. Please try again or check your microphone"
     
     def transcribe_from_upload(self, audio_file: UploadFile, language_code: str = "en-US") -> Tuple[str, Path]:
         """
@@ -70,7 +71,7 @@ class SpeechService:
             # Return the error message and None for the file path
             return self._try_fallback_transcription(Path(""), language_code), None
     
-    def transcribe_audio(self, audio_file: Path, language_code: str = "en-US") -> str:
+    def transcribe_audio(self, audio_file: Path, language_code: str = "en-US", use_whisper: bool = True) -> str:
         """
         Transcribe audio to text using the appropriate service.
         
@@ -85,27 +86,22 @@ class SpeechService:
             TranscriptionError: If transcription fails
         """
         try:
-            # Use local transcription service - returns a dictionary with 'text' and 'confidence'
-            transcription_result = transcribe_audio_local(str(audio_file), language_code)
-            
-            # Extract the text from the result
-            if not transcription_result or not isinstance(transcription_result, dict):
-                logger.warning(f"Invalid transcription result for file: {audio_file}")
-                return self._try_fallback_transcription(audio_file, language_code)
-            
-            # Get the transcription text
-            transcription_text = transcription_result.get("text", "")
-            
-            # Check if text is empty
-            if not transcription_text or not transcription_text.strip():
-                logger.warning(f"Empty transcription for file: {audio_file}")
-                return self._try_fallback_transcription(audio_file, language_code)
+            transcription_text = ""
+            if not use_whisper:
+                # Use local transcription service - returns a dictionary with 'text' and 'confidence'
+                transcription_text = transcribe_audio_local(audio_file, language_code)
+            else:
+                transcription_text = transcribe_audio_with_whisper(audio_file, language_code)
                 
-            return transcription_text
+            return transcription_text if transcription_text else TranscriptionErrorMessages.EMPTY_TRANSCRIPTION.value
+            
         except Exception as e:
             logger.error(f"Error in local transcription: {str(e)}")
             return self._try_fallback_transcription(audio_file, language_code)
     
+    
+        
+        
     def _try_fallback_transcription(self, audio_file: Path, language_code: str = "en-US") -> str:
         """
         Attempt to transcribe using alternative methods when the primary method fails.
@@ -144,7 +140,7 @@ class SpeechService:
         
         # If all else fails, return a default message
         # This prevents downstream processes from failing due to missing transcription
-        return "Audio content could not be transcribed. Please try again with a different file format or check audio quality."
+        return TranscriptionErrorMessages.FALLBACK_ERROR.value
     
     def save_audio_file(self, audio_file: UploadFile, user_id: str) -> Tuple[str, Audio]:
         """
