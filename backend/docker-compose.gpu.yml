@@ -1,0 +1,45 @@
+services:
+  backend:
+    build: 
+      context: .
+      dockerfile: Dockerfile.gpu
+    container_name: speak_ai_backend
+    restart: unless-stopped
+    # Removing host network mode and using explicit port mapping instead
+    # network_mode: host
+    
+    # Explicitly map ports from all network interfaces to allow external connections
+    ports:
+      - "0.0.0.0:8000:8000"
+    
+    volumes:
+      - ./:/app
+      - ./logs:/app/logs
+    environment:
+      # Update this with your externally hosted MongoDB connection string
+      - MONGODB_URL=${MONGODB_URL}
+      - DATABASE_NAME=${DATABASE_NAME:-speak_ai_db}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY:-mysecretkey}
+      - JWT_ALGORITHM=HS256
+      - JWT_ACCESS_TOKEN_EXPIRE_MINUTES=60
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - AZURE_SPEECH_KEY=${AZURE_SPEECH_KEY}
+      - AZURE_SPEECH_REGION=${AZURE_SPEECH_REGION:-eastasia}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    # networks:
+    #   - backend_network
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - capabilities: [gpu]
+
+# networks:
+#   backend_network:
+#     name: speak_ai_backend_network
+#     driver: bridge

@@ -1,0 +1,47 @@
+FROM python:3.11-slim
+
+# Set working directory
+WORKDIR /app
+
+# Install system dependencies including ffmpeg and portaudio for audio processing
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+       gcc \
+       libc6-dev \
+       build-essential \
+       ffmpeg \
+       portaudio19-dev \
+       python3-pyaudio \
+       git \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements and install
+COPY requirements.txt .
+RUN pip install --upgrade pip
+
+# Install PyTorch CPU-only version (much smaller download and faster installation)
+RUN pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+
+# Install dependencies from requirements
+RUN pip install --no-cache-dir -r requirements.txt --timeout=120
+
+# for better performance on CPU-only systems
+RUN pip install git+https://github.com/openai/whisper.git
+
+# Install PyAudio separately after system dependencies
+RUN pip install pyaudio
+
+
+
+# Copy application code
+COPY . .
+
+# Fix potentially corrupted user.py file
+RUN sed -i '/INFO:     Application startup complete./d' /app/app/routes/user.py
+
+# Expose port
+EXPOSE 8000
+
+# Command to run the application
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
