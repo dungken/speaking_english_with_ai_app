@@ -18,18 +18,88 @@ from dotenv import load_dotenv
 import google.generativeai as genai
 from datetime import datetime
 from bson import ObjectId
+import logging
+import whisper
+import torch
+from threading import Lock
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Load environment variables
 load_dotenv()
 
-# Configure Google Generative AI (for feedback generation)
+
+
+
+
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 gemini_model = genai.GenerativeModel("gemini-1.5-flash")
 
 # Initialize logger
 logger = logging.getLogger(__name__)
+class ModelPool:
+    def __init__(self, max_models=3):
+        self.model_size = "base"
+        self.models = {}
+        self.last_used = {}
+        self.max_models = max_models
+        self.lock = Lock()
+  
+    def get_model(self, model_size):
+        
+        # Map 'turbo' to 'large-v3-turbo' for consistency with newer releases
+        device = self.get_device()
+        
+        if device == "cuda":
+            self.model_size = "large-v3-turbo"
+        else:
+            self.model_size = "tiny"
+            
+        with self.lock:
+           
+            key = f"{self.model_size}_{device}"
+            
+            if key in self.models:
+                self.last_used[key] = time.time()
+                return self.models[key]
+            logger.info(f"Loading Whisper {self.model_size} model on {device}...")
+            
+            model = whisper.load_model(self.model_size, device=device)
+                
+            
+            # Remove oldest model if pool is full
+            if len(self.models) >= self.max_models:
+                oldest_key = min(self.last_used.items(), key=lambda x: x[1])[0]
+                del self.models[oldest_key]
+                del self.last_used[oldest_key]
+            
+            self.models[key] = model
+            self.last_used[key] = time.time()
+            
+            return model
+    def get_device():
+        cuda_available = torch.cuda.is_available()
+        
+        if cuda_available:
+            logger.info(f"GPU device: {torch.cuda.get_device_name(0)}")
+            device = "cuda"
+        else:
+            device = "cpu"
+            
+        return device
 
-def transcribe_audio_local(audio_file_path, language_code="en-US"):
+# Tạo global model pool
+try:
+    model = ModelPool(max_models=2)
+except Exception as e:
+    logger.error(f"Error initializing model pool: {str(e)}")
+    model = None
+
+
+
+def transcribe_audio_local(audio_file_path: Path, language_code: str = "en-US"):
     """
     Transcribe audio using local SpeechRecognition library.
     
@@ -51,7 +121,7 @@ def transcribe_audio_local(audio_file_path, language_code="en-US"):
         r = sr.Recognizer()
         
         # Load audio file
-        with sr.AudioFile(audio_file_path) as source:
+        with sr.AudioFile(audio_file_path.name) as source:
             # Read the audio data
             audio_data = r.record(source)
             
@@ -59,24 +129,48 @@ def transcribe_audio_local(audio_file_path, language_code="en-US"):
             # You could also use other recognizers like Sphinx for offline recognition
             text = r.recognize_google(audio_data, language=language_code)
             
-            return {
-                "text": text,
-                "confidence": 0.8  # Default confidence since Google doesn't always provide one
-            }
+            return text
     
     except ImportError:
         logger.error("SpeechRecognition library not installed. Please install it with: pip install SpeechRecognition")
-        return {"text": "", "confidence": 0}
     except sr.UnknownValueError:
         logger.error("Speech recognition could not understand audio")
-        return {"text": "", "confidence": 0}
+
     except sr.RequestError as e:
         logger.error(f"Could not request results from Google Web Speech API; {str(e)}")
-        return {"text": "", "confidence": 0}
     except Exception as e:
         logger.error(f"Error in local transcription: {str(e)}")
-        return {"text": "", "confidence": 0}
+    return text
 
+def transcribe_audio_with_whisper(audio_file_path: Path, language_code: str = "en-US"):
+    """
+    Transcribe audio using Whisper model.
+    This function uses the Whisper model to transcribe spoken words in an audio file into text.
+    It handles various exceptions that may occur during the transcription process.
+    """
+    try:
+        model.get_model(model.model_size)
+        logger.info(f"Model used: {model.model_size}")
+       
+        if 'us' in language_code.lower():
+            language_code = "en"
+        else:
+            language_code = "vi"
+            
+        transcribe_options = {
+        "language": language_code,
+        "task": "transcribe",
+        }
+        result = model.transcribe(str(audio_file_path), language=language_code)
+        return result["text"]
+    except Exception as e:
+        logger.error(f"Error in local transcription: {str(e)}")
+        return None
+    
+    
+ 
+    
+    
 def generate_feedback(user_text: str, reference_text: Optional[str] = None) -> Tuple[Dict[str, Any], None]:
     """
     Generate language feedback for a piece of text.
