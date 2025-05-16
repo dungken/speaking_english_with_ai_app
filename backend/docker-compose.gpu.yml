@@ -15,6 +15,7 @@ services:
     volumes:
       - ./:/app
       - ./logs:/app/logs
+      - C:\Users\admin\.cache\whisper:/root/.cache/whisper 
     environment:
       # Update this with your externally hosted MongoDB connection string
       - MONGODB_URL=${MONGODB_URL}
@@ -37,7 +38,9 @@ services:
       resources:
         reservations:
           devices:
-            - capabilities: [gpu]
+            - driver : nvidia
+              count: 1
+              capabilities: [gpu]
 
 # networks:
 #   backend_network:
