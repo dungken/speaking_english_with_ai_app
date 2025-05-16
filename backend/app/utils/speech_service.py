@@ -7,7 +7,7 @@ from typing import Dict, Any, Optional, Tuple
 from fastapi import UploadFile, HTTPException, status
 from bson import ObjectId
 import inspect
-from transcription_error_message import TranscriptionErrorMessages
+from app.utils.transcription_error_message import TranscriptionErrorMessages
 from app.config.database import db
 from app.models.audio import Audio
 from app.utils.audio_processor import transcribe_audio_local,transcribe_audio_with_whisper
@@ -27,7 +27,6 @@ class SpeechService:
     1. Transcribe audio content to text
     2. Save audio files to disk with proper organization
     """
-    FALLBACK_TRANSCRIPTION_ERROR_MESSAGE = "Your speech could not be transcribed. Please try again or check your microphone"
     
     def transcribe_from_upload(self, audio_file: UploadFile, language_code: str = "en-US") -> Tuple[str, Path]:
         """

@@ -83,8 +83,9 @@ class ModelPool:
         cuda_available = torch.cuda.is_available()
         
         if cuda_available:
-            logger.info(f"GPU device: {torch.cuda.get_device_name(0)}")
             device = "cuda"
+            logger.info(f"GPU device: {torch.cuda.get_device_name(0)}")
+            
         else:
             device = "cpu"
             
