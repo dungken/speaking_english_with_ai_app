@@ -6,6 +6,7 @@ from app.models.conversation import Conversation
 from app.models.message import Message
 from app.utils.auth import get_current_user
 from app.utils.gemini import generate_response
+from app.utils.transcription_error_message import TranscriptionErrorMessages
 import json
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form, Body, Query, BackgroundTasks
 from fastapi.responses import JSONResponse
@@ -17,7 +18,6 @@ from pathlib import Path
 from datetime import datetime
 import base64
 import logging
-
 from app.config.database import db
 from app.models.audio import Audio
 from app.schemas.audio import (
@@ -212,7 +212,9 @@ async def create_conversation(convo_data: ConversationCreate, current_user: dict
     }
 
 
-
+            
+            
+            
 
 @router.post("/audio2text", response_model=dict)
 async def turn_to_text(
@@ -246,8 +248,7 @@ async def turn_to_text(
     transcription, temp_file_path = speech_service.transcribe_from_upload(audio_file)
     
     # Step 2: Check if transcription was successful
-    transcription_error_message = "Audio content could not be transcribed. Please try again with a different file format or check audio quality."
-    transcription_successful = transcription != transcription_error_message and transcription.strip() != ""
+    transcription_successful = transcription != TranscriptionErrorMessages.DEFAULT_FALLBACK_ERROR.value and transcription != TranscriptionErrorMessages.EMPTY_TRANSCRIPTION.value
     
     # Step 3: If transcription was successful, save the file permanently
     if transcription_successful:
@@ -296,7 +297,7 @@ async def turn_to_text(
         # Return error response with consistent format
         return {
             "audio_id": None,
-            "transcription": transcription_error_message,
+            "transcription": transcription,
             "success": False
         }
         
