@@ -5,8 +5,8 @@ from fastapi.openapi.models import SecurityScheme
 from fastapi.security import OAuth2PasswordBearer
 from typing import Dict
 from app.utils.event_handler import event_handler
-
-# Create FastAPI app with metadata
+from app.utils.audio_processor import model
+import logging
 app = FastAPI(
     title="Speak AI API",
     description="""
@@ -125,3 +125,8 @@ async def shutdown_event():
     """
     # Stop the event handler
     event_handler.stop()
+    
+
+
+model.get_model()
+

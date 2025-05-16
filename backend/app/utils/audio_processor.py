@@ -41,13 +41,13 @@ gemini_model = genai.GenerativeModel("gemini-1.5-flash")
 logger = logging.getLogger(__name__)
 class ModelPool:
     def __init__(self, max_models=3):
-        self.model_size = "base"
+        self.model_size = "tiny"
         self.models = {}
         self.last_used = {}
         self.max_models = max_models
         self.lock = Lock()
   
-    def get_model(self, model_size):
+    def get_model(self):
         
         # Map 'turbo' to 'large-v3-turbo' for consistency with newer releases
         device = self.get_device()
@@ -79,7 +79,7 @@ class ModelPool:
             self.last_used[key] = time.time()
             
             return model
-    def get_device():
+    def get_device(self):
         cuda_available = torch.cuda.is_available()
         
         if cuda_available:
@@ -90,12 +90,8 @@ class ModelPool:
             
         return device
 
-# Tạo global model pool
-try:
-    model = ModelPool(max_models=2)
-except Exception as e:
-    logger.error(f"Error initializing model pool: {str(e)}")
-    model = None
+
+model = ModelPool(max_models=2)
 
 
 
@@ -149,7 +145,7 @@ def transcribe_audio_with_whisper(audio_file_path: Path, language_code: str = "e
     It handles various exceptions that may occur during the transcription process.
     """
     try:
-        model.get_model(model.model_size)
+        model.get_model()
         logger.info(f"Model used: {model.model_size}")
        
         if 'us' in language_code.lower():
