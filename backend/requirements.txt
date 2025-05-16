@@ -11,11 +11,15 @@ PyJWT==2.8.0
 requests==2.31.0
 pydantic==2.5.2
 azure-cognitiveservices-speech==1.35.0
-python-jose==3.3.0
 email-validator==2.1.0
 
 # Local speech recognition (optional)
 # These packages are optional and may require system dependencies
 # Use pip install SpeechRecognition PyAudio if running locally
 SpeechRecognition>=3.10.0
-# PyAudio>=0.2.13  # Requires portaudio system dependencies
+
+numpy==1.24.4
+pydub==0.25.1
+typer==0.9.0
+more-itertools==10.1.0
+anyio>=4.8.0,<5.0.0
