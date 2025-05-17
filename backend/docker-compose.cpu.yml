@@ -3,7 +3,8 @@ services:
     build: 
       context: .
       dockerfile: Dockerfile.cpu
-    container_name: speak_ai_backend
+    image: speak_ai_backend:cpu 
+    container_name: speak_ai_backend_cpu
     restart: unless-stopped
     # Removing host network mode and using explicit port mapping instead
     # network_mode: host

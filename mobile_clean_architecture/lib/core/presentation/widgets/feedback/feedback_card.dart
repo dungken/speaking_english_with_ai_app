@@ -12,7 +12,7 @@ class FeedbackCard extends StatelessWidget {
   final String? actionLabel;
   final bool isDismissible;
   final VoidCallback? onDismiss;
-  
+
   const FeedbackCard({
     Key? key,
     required this.title,
@@ -23,11 +23,11 @@ class FeedbackCard extends StatelessWidget {
     this.isDismissible = false,
     this.onDismiss,
   }) : super(key: key);
-  
+
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    
+
     final card = Container(
       width: double.infinity,
       margin: const EdgeInsets.only(bottom: 16),
@@ -61,7 +61,9 @@ class FeedbackCard extends StatelessWidget {
                 Expanded(
                   child: Text(
                     title,
-                    style: TextStyles.h3(context, isDarkMode: isDarkMode, color: _getTextColor(isDarkMode)),
+                    style: TextStyles.h3(context,
+                        isDarkMode: isDarkMode,
+                        color: _getTextColor(isDarkMode)),
                   ),
                 ),
                 if (isDismissible)
@@ -76,7 +78,7 @@ class FeedbackCard extends StatelessWidget {
               ],
             ),
           ),
-          
+
           // Content
           Padding(
             padding: EdgeInsets.symmetric(
@@ -84,10 +86,11 @@ class FeedbackCard extends StatelessWidget {
             ),
             child: Text(
               content,
-              style: TextStyles.body(context, isDarkMode: isDarkMode, color: _getTextColor(isDarkMode)),
+              style: TextStyles.body(context,
+                  isDarkMode: isDarkMode, color: _getTextColor(isDarkMode)),
             ),
           ),
-          
+
           // Optional action button
           if (actionLabel != null && onActionPressed != null)
             Padding(
@@ -98,14 +101,17 @@ class FeedbackCard extends StatelessWidget {
                   onPressed: onActionPressed,
                   style: TextButton.styleFrom(
                     foregroundColor: _getActionColor(),
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(UIConfig.buttonBorderRadius / 2),
+                      borderRadius: BorderRadius.circular(
+                          UIConfig.buttonBorderRadius / 2),
                     ),
                   ),
                   child: Text(
                     actionLabel!,
-                    style: TextStyles.button(context, isDarkMode: isDarkMode, color: _getActionColor()),
+                    style: TextStyles.button(context,
+                        isDarkMode: isDarkMode, color: _getActionColor()),
                   ),
                 ),
               ),
@@ -115,7 +121,7 @@ class FeedbackCard extends StatelessWidget {
         ],
       ),
     );
-    
+
     // If card is dismissible, wrap it with a dismissible widget
     if (isDismissible && onDismiss != null) {
       return Dismissible(
@@ -137,33 +143,33 @@ class FeedbackCard extends StatelessWidget {
         child: card,
       );
     }
-    
+
     return card;
   }
-  
+
   Color _getBackgroundColor(bool isDarkMode) {
     final baseColor = _getBaseColor();
-    return isDarkMode 
+    return isDarkMode
         ? baseColor.withOpacity(0.15)
         : baseColor.withOpacity(0.08);
   }
-  
+
   Color _getBorderColor() {
     return _getBaseColor().withOpacity(0.3);
   }
-  
+
   Color _getTextColor(bool isDarkMode) {
     return isDarkMode ? Colors.white : Colors.black87;
   }
-  
+
   Color _getIconColor() {
     return _getBaseColor();
   }
-  
+
   Color _getActionColor() {
     return _getBaseColor();
   }
-  
+
   Color _getBaseColor() {
     switch (type) {
       case FeedbackType.success:
@@ -177,7 +183,7 @@ class FeedbackCard extends StatelessWidget {
         return AppColors.info;
     }
   }
-  
+
   IconData _getIcon() {
     switch (type) {
       case FeedbackType.success:

@@ -599,13 +599,7 @@ async def process_speech_feedback(
             logger.error(f"Error generating feedback: {str(e)}", exc_info=True)
             # Create a fallback feedback result
             feedback_result = FeedbackResult(
-                user_feedback="Unable to generate detailed feedback at this time.",
-                detailed_feedback={
-                    "grammar_issues": [],
-                    "vocabulary_issues": [],
-                    "positives": ["Your response was recorded."],
-                    "fluency": ["Keep practicing to improve your English skills."]
-                }
+                user_feedback="Unable to generate detailed feedback at this time."
             )
         
         # Store feedback
@@ -623,12 +617,7 @@ async def process_speech_feedback(
                 {"$set": {"feedback_id": feedback_id}}
             )
             
-            # Trigger background task for mistake extraction
-            event_handler.on_new_feedback(
-                feedback_id,
-                user_id,
-                transcription
-            )
+          
             
     except Exception as e:
         logger.error(f"Error processing speech feedback in background: {str(e)}", exc_info=True)
@@ -665,55 +654,3 @@ async def save_audio_file(file: UploadFile, user_id: str) -> str:
         shutil.copyfileobj(file.file, buffer)
     
     return str(file_path)
-
-# Add this temporary debugging endpoint
-@router.get("/debug/feedback/{feedback_id}", include_in_schema=False)
-async def debug_feedback_structure(
-    feedback_id: str,
-    current_user: dict = Depends(get_current_user)
-):
-    """
-    Debug endpoint to examine the structure of a feedback document.
-    This is a temporary endpoint for debugging purposes.
-    
-    Args:
-        feedback_id (str): ID of the feedback document to examine
-            Path parameter identifying which feedback document to retrieve
-        current_user (dict): The authenticated user's information
-            Fields:
-            - _id: User's ObjectId
-            - email: User's email
-            - role: User's role
-    
-    Returns:
-        dict: Information about the feedback document structure
-            Fields:
-            - document_type: Python type of the feedback document
-            - has_keys: List of keys present in the document
-            - id_type: Type of the document's _id field
-            - user_feedback_type: Type of the user_feedback field if present
-            - detailed_feedback_type: Type of the detailed_feedback field if present
-            - detailed_feedback_keys: Keys within the detailed_feedback object
-            - raw_feedback: The complete feedback document
-            
-            Or in case of error:
-            - error: Error message
-            - traceback: Error traceback information
-    """
-    try:
-        feedback = db.feedback.find_one({"_id": ObjectId(feedback_id)})
-        if not feedback:
-            return {"error": "Feedback not found"}
-            
-        # Return basic info about the document
-        return {
-            "document_type": type(feedback).__name__,
-            "has_keys": list(feedback.keys()),
-            "id_type": type(feedback.get("_id")).__name__,
-            "user_feedback_type": type(feedback.get("user_feedback", None)).__name__ if feedback.get("user_feedback") else None,
-            "detailed_feedback_type": type(feedback.get("detailed_feedback", None)).__name__ if feedback.get("detailed_feedback") else None,
-            "detailed_feedback_keys": list(feedback.get("detailed_feedback", {}).keys()) if isinstance(feedback.get("detailed_feedback"), dict) else None,
-            "raw_feedback": feedback
-        }
-    except Exception as e:
-        return {"error": str(e), "traceback": str(e.__traceback__)}

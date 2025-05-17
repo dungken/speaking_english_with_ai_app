@@ -57,28 +57,28 @@ class ModelPool:
         else:
             self.model_size = "tiny"
             
-        with self.lock:
-           
-            key = f"{self.model_size}_{device}"
-            
-            if key in self.models:
-                self.last_used[key] = time.time()
-                return self.models[key]
-            logger.info(f"Loading Whisper {self.model_size} model on {device}...")
-            
-            model = whisper.load_model(self.model_size, device=device)
-                
-            
-            # Remove oldest model if pool is full
-            if len(self.models) >= self.max_models:
-                oldest_key = min(self.last_used.items(), key=lambda x: x[1])[0]
-                del self.models[oldest_key]
-                del self.last_used[oldest_key]
-            
-            self.models[key] = model
+     
+    
+        key = f"{self.model_size}_{device}"
+        
+        if key in self.models:
             self.last_used[key] = time.time()
+            return self.models[key]
+        logger.info(f"Loading Whisper {self.model_size} model on {device}...")
+        
+        model = whisper.load_model(self.model_size, device=device)
             
-            return model
+        
+        # Remove oldest model if pool is full
+        if len(self.models) >= self.max_models:
+            oldest_key = min(self.last_used.items(), key=lambda x: x[1])[0]
+            del self.models[oldest_key]
+            del self.last_used[oldest_key]
+        
+        self.models[key] = model
+        self.last_used[key] = time.time()
+        
+        return model
     def get_device(self):
         cuda_available = torch.cuda.is_available()
         
@@ -94,6 +94,7 @@ class ModelPool:
 
 model = ModelPool(max_models=2)
 
+loaded_model = model.get_model()
 
 
 def transcribe_audio_local(audio_file_path: Path, language_code: str = "en-US"):
@@ -146,7 +147,6 @@ def transcribe_audio_with_whisper(audio_file_path: Path, language_code: str = "e
     It handles various exceptions that may occur during the transcription process.
     """
     try:
-        model.get_model()
         logger.info(f"Model used: {model.model_size}")
        
         if 'us' in language_code.lower():
@@ -158,7 +158,7 @@ def transcribe_audio_with_whisper(audio_file_path: Path, language_code: str = "e
         "language": language_code,
         "task": "transcribe",
         }
-        result = model.transcribe(str(audio_file_path), language=language_code)
+        result = loaded_model.transcribe(str(audio_file_path), language=language_code)
         return result["text"]
     except Exception as e:
         logger.error(f"Error in local transcription: {str(e)}")

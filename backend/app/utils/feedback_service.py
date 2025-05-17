@@ -96,20 +96,10 @@ class FeedbackService:
             try:
                 response_data = json.loads(cleaned_text)
                 
-                # Validate the response structure
-                if not isinstance(response_data, dict):
-                    raise ValueError("Gemini API response is not a valid JSON object")
-                
-                if "user_feedback" not in response_data:
-                    raise ValueError("Missing 'user_feedback' field in Gemini response")
-                    
-                if "detailed_feedback" not in response_data:
-                    raise ValueError("Missing 'detailed_feedback' field in Gemini response")
-                
+            
                 # Create and return FeedbackResult
                 return FeedbackResult(
                     user_feedback=response_data.get("user_feedback", ""),
-                    detailed_feedback=response_data.get("detailed_feedback", {})
                 )
                 
             except json.JSONDecodeError as e:
@@ -159,14 +149,10 @@ class FeedbackService:
             # Process feedback data based on type
             if isinstance(feedback_data, FeedbackResult):
                 user_feedback = feedback_data.user_feedback
-                detailed_feedback = feedback_data.detailed_feedback.to_dict()
             else:
                 user_feedback = feedback_data.get("user_feedback", "")
-                detailed_feedback = feedback_data.get("detailed_feedback", {})
                 
-            # Access the detailed feedback safely
-            if not isinstance(detailed_feedback, dict):
-                detailed_feedback = {}
+         
             
             # Create feedback model with explicit user_id and transcription
             feedback = Feedback(
@@ -175,8 +161,6 @@ class FeedbackService:
                 target_type="message" if user_message_id else "conversation",
                 transcription=transcription,
                 user_feedback=user_feedback,
-                grammar_issues=detailed_feedback.get("grammar_issues", []),
-                vocabulary_issues=detailed_feedback.get("vocabulary_issues", [])
             )
             
             # Insert feedback into database
@@ -230,8 +214,8 @@ class FeedbackService:
         # Add transcription
         prompt += f"""
         Student's speech: "{transcription}"
-        Note: because user speech is transcribed from audio, it may not contain punctuation. you do not need comment on this. s
-        Generate two types of feedback in JSON format:
+        Note: because user speech is transcribed from audio, it may not contain punctuation. you do not need comment on this. 
+        Generate  feedback in JSON format:
         
         1. user_feedback: Hãy đưa ra nhận xét và hướng dẫn như một người bản xứ nói tiếng Anh có thể sử dụng tiếng Việt để giải thích:
               -Phân tích câu trả lời của người học và chỉ ra các lỗi về ngữ pháp và từ vựng.
@@ -239,18 +223,7 @@ class FeedbackService:
               -Đưa ra phiên bản câu hoàn chỉnh hơn, sát với câu gốc nhưng đúng hơn, phù hợp với trình độ người học.
               -Phân tích cấu trúc ngữ pháp (mental model) của câu ví dụ bạn đưa ra: chỉ ra chủ ngữ, động từ, bổ ngữ, cách dùng mệnh đề phụ (nếu có), và chức năng giao tiếp của từng phần trong câu. ( nhớ so sánh  với câu gốc của người học)
               -Nếu câu trả lời của người học ngắn, chưa rõ ý, hoặc sai lệch hoàn toàn, hãy đưa ra một câu trả lời mẫu đơn giản hơn để họ có thể hình dung cách diễn đạt đúng, nhưng không nâng cấp quá xa so với trình độ hiện tại của họ.
-        2. detailed_feedback: Structured, detailed analysis with these exact fields:
-          - grammar_issues: Array of objects with fields:
-            - issue: The exact problematic text
-            - correction: How it should be corrected
-            - explanation: Why this is an issue
-            - severity: Number 1-5 (1=minor, 5=major)
-          
-          - vocabulary_issues: Array of objects with fields:
-            - original: The word or phrase used
-            - better_alternative: A better word or phrase
-            - reason: Why the alternative is better
-            - example_usage: Example sentence using the better alternative
+       
         
         Return ONLY the JSON object with these two fields, properly formatted. Limit to at most 3 grammar issues and 3 vocabulary issues, focusing on the most important ones.
         """
@@ -269,8 +242,5 @@ class FeedbackService:
         """
         return FeedbackResult(
             user_feedback="Thank you for your response. I had trouble analyzing it in detail, but please continue practicing.",
-            detailed_feedback={
-                "grammar_issues": [],
-                "vocabulary_issues": []
-            }
+          
         ) 

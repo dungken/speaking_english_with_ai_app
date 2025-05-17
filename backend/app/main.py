@@ -1,11 +1,11 @@
 from fastapi import FastAPI, Depends
-from app.routes import user, conversation, feedback, mistake
+from app.routes import user, conversation
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.models import SecurityScheme
 from fastapi.security import OAuth2PasswordBearer
 from typing import Dict
 from app.utils.event_handler import event_handler
-from app.utils.audio_processor import model
+from app.utils.audio_processor import loaded_model
 import logging
 app = FastAPI(
     title="Speak AI API",
@@ -80,19 +80,6 @@ app.include_router(
 )
 
 
-app.include_router(
-    feedback.router,
-    prefix="/api/feedback",
-    tags=["feedback"],
-    responses={401: {"description": "Unauthorized"}}
-)
-
-app.include_router(
-    mistake.router,
-    prefix="/api/mistakes",
-    tags=["mistakes"],
-    responses={401: {"description": "Unauthorized"}}
-)
 
 @app.get("/", tags=["root"])
 async def root():
@@ -128,5 +115,5 @@ async def shutdown_event():
     
 
 
-model.get_model()
+
 

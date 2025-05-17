@@ -22,8 +22,11 @@ RUN pip install --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt --timeout=120
 
 # Install PyTorch with CUDA support
-RUN pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+RUN pip install torch  torchaudio --index-url https://download.pytorch.org/whl/cu121
 
+
+# Install PyAudio separately after system dependencies
+RUN pip install pyaudio
 # Install Whisper directly from GitHub - consider pinning to a specific commit or tag
 # Example: RUN pip install git+https://github.com/openai/whisper.git@v20231117#egg=openai-whisper
 RUN pip install git+https://github.com/openai/whisper.git

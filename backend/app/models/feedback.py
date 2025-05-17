@@ -2,61 +2,6 @@ from datetime import datetime
 from bson import ObjectId
 from typing import Dict, List, Any, Optional
 
-class DetailedFeedback:
-    """
-    Model representing detailed structured feedback on language issues.
-    
-    Attributes:
-        grammar_issues: List of grammar issues detected
-        vocabulary_issues: List of vocabulary improvements suggested
-    """
-    def __init__(
-        self,
-        grammar_issues: Optional[List[Dict[str, Any]]] = None,
-        vocabulary_issues: Optional[List[Dict[str, Any]]] = None
-    ):
-        self.grammar_issues = grammar_issues or []
-        self.vocabulary_issues = vocabulary_issues or []
-        
-    def to_dict(self) -> Dict[str, Any]:
-        """Convert to dictionary for storage"""
-        return {
-            "grammar_issues": self.grammar_issues,
-            "vocabulary_issues": self.vocabulary_issues
-        }
-        
-    def extract_mistakes(self) -> List[Dict[str, Any]]:
-        """
-        Extract mistakes from the detailed feedback.
-        
-        Returns:
-            List of mistakes for tracking and drilling
-        """
-        mistakes = []
-        
-        # Convert grammar issues to mistakes
-        for issue in self.grammar_issues:
-            mistakes.append({
-                "type": "GRAMMAR",
-                "original_text": issue.get("issue", ""),
-                "correction": issue.get("correction", ""),
-                "explanation": issue.get("explanation", ""),
-                "context": "Grammar issue from feedback",
-                "severity": issue.get("severity", 3)
-            })
-            
-        # Convert vocabulary issues to mistakes
-        for issue in self.vocabulary_issues:
-            mistakes.append({
-                "type": "VOCABULARY",
-                "original_text": issue.get("original", ""),
-                "correction": issue.get("better_alternative", ""),
-                "explanation": issue.get("reason", ""),
-                "context": issue.get("example_usage", ""),
-                "severity": 3
-            })
-                    
-        return mistakes
 
 class Feedback:
     """
@@ -77,8 +22,6 @@ class Feedback:
         target_id: ObjectId,
         target_type: str,  # "message", "audio", etc.
         user_feedback: str,
-        grammar_issues: Optional[List[Dict[str, Any]]] = None,
-        vocabulary_issues: Optional[List[Dict[str, Any]]] = None,
         user_id: Optional[ObjectId] = None,
         transcription: Optional[str] = None
     ):
@@ -88,7 +31,6 @@ class Feedback:
         self.user_feedback = user_feedback
         self.user_id = user_id
         self.transcription = transcription
-        self.detailed_feedback = DetailedFeedback(grammar_issues, vocabulary_issues)
         self.timestamp = datetime.utcnow()
 
     def to_dict(self) -> Dict[str, Any]:
@@ -98,21 +40,8 @@ class Feedback:
             "target_id": self.target_id,
             "target_type": self.target_type,
             "user_feedback": self.user_feedback,
-            "detailed_feedback": self.detailed_feedback.to_dict(),
             "user_id": self.user_id,
             "transcription": self.transcription,
             "timestamp": self.timestamp
         }
-        
-    def generate_user_friendly_text(self) -> str:
-        """Generate user-friendly text from feedback"""
-        return self.user_feedback
-        
-    def export_to_mistakes(self) -> List[Dict[str, Any]]:
-        """
-        Export feedback to mistake format for mistake tracking.
-        
-        Returns:
-            List of mistakes for tracking and drilling
-        """
-        return self.detailed_feedback.extract_mistakes()
+ 

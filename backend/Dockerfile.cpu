@@ -21,7 +21,7 @@ COPY requirements.txt .
 RUN pip install --upgrade pip
 
 # Install PyTorch CPU-only version (much smaller download and faster installation)
-RUN pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+RUN pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
 
 # Install dependencies from requirements
 RUN pip install --no-cache-dir -r requirements.txt --timeout=120
