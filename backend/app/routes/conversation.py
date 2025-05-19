@@ -12,6 +12,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File,
 from fastapi.responses import JSONResponse
 from bson import ObjectId
 from typing import List, Optional
+from app.utils.feedback_service import FeedbackService
 import os
 from app.utils.tts_client_service import get_speech_from_tts_service
 import shutil
@@ -305,7 +306,7 @@ async def turn_to_text(
  
 
 @router.post("/conversations/{conversation_id}/message", response_model=dict)
-async def analyze_speech(
+async def add_message_and_get_response (
     conversation_id: str,  
     audio_id: str ,  
     current_user: dict = Depends(get_current_user),
@@ -351,7 +352,7 @@ async def analyze_speech(
         user_id = str(current_user["_id"])
         audio_data = db.audio.find_one({"_id": ObjectId(audio_id)})
         
-      
+        feedback_service = FeedbackService()
         # Verify conversation exists and belongs to the user
         conversation = db.conversations.find_one({
             "_id": ObjectId(conversation_id),
@@ -402,7 +403,7 @@ async def analyze_speech(
         
         # Process feedback in the background without blocking the response
         background_tasks.add_task(
-            process_speech_feedback,
+            feedback_service.process_speech_feedback,
             transcription=audio_data["transcription"],
             user_id=user_id,
             conversation_id=conversation_id,
@@ -527,141 +528,6 @@ async def get_message_feedback(
             detail=f"Failed to get message feedback: {str(e)}"
         )
 
-async def process_speech_feedback(
-    transcription: str,
-    user_id: str,
-    conversation_id: str,
-    audio_id: str,
-    file_path: str,
-    user_message_id: str
-):
-    """
-    Process speech feedback in the background.
-    
-    This function handles the feedback generation and storing part that
-    was separated from the main speech analysis to allow quick responses.
-    
-    Args:
-        transcription (str): The transcribed text from the audio
-            The text content that will be analyzed for feedback
-        user_id (str): ID of the user who submitted the audio
-            Used to associate feedback with the user
-        conversation_id (str): ID of the conversation
-            Used to fetch conversation context for better feedback
-        audio_id (str): ID of the stored audio record
-            References the audio file in the database
-        file_path (str): Path to the saved audio file
-            Location of the audio file on disk
-        user_message_id (str): ID of the user's message
-            Used to link the generated feedback to the message
-    
-    Returns:
-        None: This is a background task that doesn't return a value directly
-        
-    Side Effects:
-        - Creates a feedback record in the database
-        - Updates the user's message with the feedback_id
-        - Triggers mistake extraction for learning purposes
-    """
-    try:
-        # Initialize services
-        from app.utils.feedback_service import FeedbackService
-        from app.utils.event_handler import event_handler
-        from app.models.results.feedback_result import FeedbackResult
-        
-        feedback_service = FeedbackService()
-        
-        # Fetch conversation context
-        context = {}
-        conversation = db.conversations.find_one({"_id": ObjectId(conversation_id)})
-        if conversation:
-            # Fetch messages to build context
-            messages = list(db.messages.find({"conversation_id": ObjectId(conversation_id)})
-                          .sort("timestamp", 1)
-                          .limit(10))
-            
-            # Format previous exchanges
-            previous_exchanges = []
-            for msg in messages:
-                sender = "User" if msg.get("sender") == "user" else "AI"
-                previous_exchanges.append(f"{sender}: {msg.get('content', '')}")
-            
-            context = {
-                "user_role": conversation.get("user_role", "Student"),
-                "ai_role": conversation.get("ai_role", "Teacher"),
-                "situation": conversation.get("situation", "General conversation"),
-                "previous_exchanges": "\n".join(previous_exchanges)
-            }
-        
-        # Generate feedback
-        try:
-            feedback_result = feedback_service.generate_dual_feedback(transcription, context)
-        except Exception as e:
-            logger.error(f"Error generating feedback: {str(e)}", exc_info=True)
-            # Create a fallback feedback result
-            feedback_result = FeedbackResult(
-                user_feedback="Unable to generate detailed feedback at this time."
-            )
-        
-        # Store feedback
-        feedback_id = feedback_service.store_feedback(
-            user_id, 
-            feedback_result, 
-            user_message_id,
-            transcription=transcription
-        )
-        
-        # Link feedback to message
-        if feedback_id:
-            db.messages.update_one(
-                {"_id": ObjectId(user_message_id)},
-                {"$set": {"feedback_id": feedback_id}}
-            )
-            
-          
-            
-    except Exception as e:
-        logger.error(f"Error processing speech feedback in background: {str(e)}", exc_info=True)
-
-async def save_audio_file(file: UploadFile, user_id: str) -> str:
-    """
-    Save an uploaded audio file to the server.
-    
-    Args:
-        file (UploadFile): The audio file to save
-            FastAPI UploadFile object containing the audio data
-        user_id (str): ID of the user
-            Used to create user-specific directories for organization
-        
-    Returns:
-        str: Path to the saved file on disk
-            Absolute file path that can be used to access the file later
-    
-    Side Effects:
-        - Creates a user directory if it doesn't exist
-        - Writes the audio file to disk with a timestamped filename
-    """
-    # Create user directory if it doesn't exist
-    user_dir = UPLOAD_DIR / str(user_id)
-    user_dir.mkdir(exist_ok=True)
-    
-    # Generate unique filename
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    safe_filename = f"{timestamp}_{file.filename.replace(' ', '_')}"
-    file_path = user_dir / safe_filename
-    
-    # Save the file
-    with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
-    
-    return str(file_path)
-
-
-
-
-
-
-
 
 @router.get(
     "/messages/{message_id}/speech",
@@ -728,7 +594,7 @@ async def get_ai_message_as_speech_stream_demo(
 ):
     try:
       
-        conversation_voice_type = "jf_alpha"
+        conversation_voice_type = "af_heart"
      
         default_lang_code = "en-US"     # Example: set to your primary language
         default_model_name = "kokoro"   # From your TTS API example
@@ -759,3 +625,5 @@ async def get_ai_message_as_speech_stream_demo(
         # print(f"ERROR: Unexpected error in get_ai_message_as_speech_stream for message {message_id}: {str(e)}")
         # Consider logging 'e' with exc_info=True for full traceback
         raise HTTPException(status_code=500, detail=f"Failed to generate speech: An internal error occurred.")
+
+
