@@ -11,7 +11,7 @@ import os
 from app.utils.gemini import generate_response
 from app.config.database import db
 from app.models.feedback import Feedback
-from app.models.results.feedback_result import FeedbackResult, DetailedFeedback
+from app.models.results.feedback_result import FeedbackResult
 
 # Create logger with module name
 logger = logging.getLogger(__name__)
@@ -53,8 +53,8 @@ class FeedbackService:
     Service for generating language feedback using Gemini API.
     
     This service provides functionality to:
-    1. Generate dual feedback (user-friendly and detailed) for a user's speech
-    2. Build prompts for Gemini that ask for both types of feedback
+    1. Generate user-friendly feedback for a user's speech
+    2. Build prompts for Gemini that ask for feedback
     3. Parse and validate the response from Gemini
     4. Store feedback in the database
     """
@@ -65,14 +65,14 @@ class FeedbackService:
         context: Optional[Dict[str, Any]] = None
     ) -> FeedbackResult:
         """
-        Generate both user-friendly and detailed feedback in one call to Gemini.
+        Generate user-friendly feedback for speech using Gemini.
         
         Args:
             transcription: Transcribed text from the user's speech
             context: Optional conversation context information
             
         Returns:
-            FeedbackResult containing user_feedback and detailed_feedback
+            FeedbackResult containing user_feedback
         """
         try:
             # Build prompt for dual feedback
@@ -186,7 +186,7 @@ class FeedbackService:
         context: Optional[Dict[str, Any]] = None
     ) -> str:
         """
-        Build prompt for generating both user and detailed feedback.
+        Build prompt for generating user feedback.
         
         Args:
             transcription: Transcribed text from the user's speech
@@ -225,7 +225,7 @@ class FeedbackService:
               -Nếu câu trả lời của người học ngắn, chưa rõ ý, hoặc sai lệch hoàn toàn, hãy đưa ra một câu trả lời mẫu đơn giản hơn để họ có thể hình dung cách diễn đạt đúng, nhưng không nâng cấp quá xa so với trình độ hiện tại của họ.
        
         
-        Return ONLY the JSON object with these two fields, properly formatted. Limit to at most 3 grammar issues and 3 vocabulary issues, focusing on the most important ones.
+        Return ONLY the JSON object with the user_feedback field, properly formatted. Limit to at most 3 grammar issues and 3 vocabulary issues, focusing on the most important ones.
         """
         logger.info(   f"Generated prompt for Gemini: {prompt}")
         return prompt

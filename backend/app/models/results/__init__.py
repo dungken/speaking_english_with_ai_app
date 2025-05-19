@@ -1,3 +1,3 @@
-from app.models.results.feedback_result import FeedbackResult, DetailedFeedback
+from app.models.results.feedback_result import FeedbackResult
 
-__all__ = ['FeedbackResult', 'DetailedFeedback'] 
+__all__ = ['FeedbackResult'] 

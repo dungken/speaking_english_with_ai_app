@@ -1,8 +1,7 @@
-import jwt
 from datetime import datetime, timedelta
 from fastapi import Depends, HTTPException, status, Security
 from fastapi.security import OAuth2PasswordBearer, SecurityScopes
-from jose import JWTError
+from jose import jwt, JWTError
 from typing import Optional
 from app.config.database import db
 from bson import ObjectId
@@ -13,7 +12,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # JWT configuration
-SECRET_KEY = os.getenv("JWT_SECRET_KEY")
+SECRET_KEY = os.getenv("JWT_SECRET_KEY","alksdngaowengoiijoiAJEOIGJAOWIEJGOPAIWJEGIORWJGAAA")
 ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("JWT_ACCESS_TOKEN_EXPIRE_MINUTES", "30"))
 
@@ -95,7 +94,7 @@ async def get_current_user(
             detail="Token has expired",
             headers={"WWW-Authenticate": authenticate_value},
         )
-    except jwt.JWTError:
+    except JWTError:
         raise credentials_exception
     
     # Find the user in the database

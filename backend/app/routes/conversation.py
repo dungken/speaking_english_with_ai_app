@@ -13,6 +13,7 @@ from fastapi.responses import JSONResponse
 from bson import ObjectId
 from typing import List, Optional
 import os
+from app.utils.tts_client_service import get_speech_from_tts_service
 import shutil
 from pathlib import Path
 from datetime import datetime
@@ -305,7 +306,7 @@ async def turn_to_text(
 
 @router.post("/conversations/{conversation_id}/message", response_model=dict)
 async def analyze_speech(
-    conversation_id: str,  # Path parameter, not a Form parameter
+    conversation_id: str,  
     audio_id: str ,  
     current_user: dict = Depends(get_current_user),
     background_tasks: BackgroundTasks = BackgroundTasks()
@@ -654,3 +655,107 @@ async def save_audio_file(file: UploadFile, user_id: str) -> str:
         shutil.copyfileobj(file.file, buffer)
     
     return str(file_path)
+
+
+
+
+
+
+
+
+@router.get(
+    "/messages/{message_id}/speech",
+    summary="Get AI message audio stream",
+    description="Retrieves an AI message's text, converts it to speech via an external TTS service, and streams the audio."
+)
+async def get_ai_message_as_speech_stream( 
+    message_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    try:
+        message_object_id = ObjectId(message_id) # Convert string ID to ObjectId for MongoDB query
+        message = db.messages.find_one({"_id": message_object_id})
+        conversation_voice_type = "af_heart"
+        if not message:
+            raise HTTPException(status_code=404, detail="Message not found")
+
+        # 2. Basic validation (optional but good)
+        if message.get("sender") != "ai":
+            raise HTTPException(status_code=400, detail="Speech can only be generated for AI messages")
+
+        ai_text = message.get("content")
+        if not ai_text:
+            raise HTTPException(status_code=400, detail="AI Message has no text content to synthesize")
+
+        default_lang_code = "en-US"     # Example: set to your primary language
+        default_model_name = "kokoro"   # From your TTS API example
+        default_response_format = "mp3"
+        default_speed = 1.2
+
+        # print(f"DEBUG: Synthesizing speech for AI message ID {message_id}: '{ai_text[:50]}...'")
+        # print(f"DEBUG: Using voice: {default_voice_name}, lang: {default_lang_code}")
+
+
+        # 4. Call the TTS Service via your client function
+        #    This function is expected to return a StreamingResponse
+        return await get_speech_from_tts_service(
+            text_to_speak=ai_text,
+            voice_name=conversation_voice_type,
+            model_name=default_model_name,
+            response_format=default_response_format,
+            speed=default_speed,
+            lang_code=default_lang_code
+        )
+
+    except HTTPException as e:
+        # If HTTPException was raised by us or by get_speech_from_tts_service, re-raise it
+        # print(f"ERROR: HTTPException in get_ai_message_as_speech_stream: {e.detail}")
+        raise e
+    except Exception as e:
+        # Catch any other unexpected errors during DB access or other logic here
+        # print(f"ERROR: Unexpected error in get_ai_message_as_speech_stream for message {message_id}: {str(e)}")
+        # Consider logging 'e' with exc_info=True for full traceback
+        raise HTTPException(status_code=500, detail=f"Failed to generate speech: An internal error occurred.")
+
+
+@router.get(
+    "/messages/{message_id}/demospeech",
+    summary="Get AI message audio stream",
+    description="Retrieves an AI message's text, converts it to speech via an external TTS service, and streams the audio."
+)
+async def get_ai_message_as_speech_stream_demo( 
+    message: str = "Hello, how are you?"
+):
+    try:
+      
+        conversation_voice_type = "jf_alpha"
+     
+        default_lang_code = "en-US"     # Example: set to your primary language
+        default_model_name = "kokoro"   # From your TTS API example
+        default_response_format = "mp3"
+        default_speed = 1.2
+
+        # print(f"DEBUG: Synthesizing speech for AI message ID {message_id}: '{ai_text[:50]}...'")
+        # print(f"DEBUG: Using voice: {default_voice_name}, lang: {default_lang_code}")
+
+
+        # 4. Call the TTS Service via your client function
+        #    This function is expected to return a StreamingResponse
+        return await get_speech_from_tts_service(
+            text_to_speak=message,
+            voice_name=conversation_voice_type,
+            model_name=default_model_name,
+            response_format=default_response_format,
+            speed=default_speed,
+            lang_code=default_lang_code
+        )
+
+    except HTTPException as e:
+        # If HTTPException was raised by us or by get_speech_from_tts_service, re-raise it
+        # print(f"ERROR: HTTPException in get_ai_message_as_speech_stream: {e.detail}")
+        raise e
+    except Exception as e:
+        # Catch any other unexpected errors during DB access or other logic here
+        # print(f"ERROR: Unexpected error in get_ai_message_as_speech_stream for message {message_id}: {str(e)}")
+        # Consider logging 'e' with exc_info=True for full traceback
+        raise HTTPException(status_code=500, detail=f"Failed to generate speech: An internal error occurred.")

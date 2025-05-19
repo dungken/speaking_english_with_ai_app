@@ -88,7 +88,7 @@ pytest
 
 - **FastAPI**: Modern, fast API framework with automatic documentation
 - **MongoDB**: NoSQL database for flexible data storage
-- **Azure Speech Services**: For high-quality speech-to-text and pronunciation assessment
+- ** Speech Services**: For high-quality speech-to-text and pronunciation assessment
 - **Gemini AI**: For generating language feedback and suggestions
 - **Docker**: Containerized deployment for easy setup and scaling
 
@@ -98,7 +98,6 @@ pytest
 
 - Python 3.8+
 - Docker and Docker Compose (for containerized setup)
-- Azure Speech Services account
 - Gemini AI API key
 
 
@@ -119,19 +118,6 @@ pytest
    mongodb://admin:password@localhost:27017/speak_ai_db?authSource=admin
    ```
 
-## Azure Speech Services Integration
-
-This project uses Azure Speech Services for:
-
-1. **Speech-to-Text**: Converting audio to accurate text transcriptions
-2. **Pronunciation Assessment**: Evaluating pronunciation quality and providing detailed feedback
-3. **Comprehensive Analysis**: Combined transcription, pronunciation assessment, and language feedback
-
-### Azure Speech Services Setup
-
-1. Create an Azure account and set up a Speech Services resource
-2. Get your Speech Service key and region 
-3. Add these to your .env file as `AZURE_SPEECH_KEY` and `AZURE_SPEECH_REGION`
 
 ## API Documentation
 

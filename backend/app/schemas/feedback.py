@@ -29,11 +29,6 @@ class PronunciationDetail(BaseModel):
     word_scores: Dict[str, float] = Field({}, description="Per-word pronunciation scores")
     improvement_suggestions: List[str] = Field([], description="Suggestions for pronunciation improvement")
 
-class DetailedFeedback(BaseModel):
-    """Schema for detailed feedback structure"""
-    grammar_issues: List[GrammarIssue] = Field(default_factory=list)
-    vocabulary_issues: List[VocabularyIssue] = Field(default_factory=list)
-
 class FeedbackBase(BaseModel):
     """Base schema for feedback."""
     grammar_issues: List[GrammarIssue] = Field([], description="Grammar issues detected")
@@ -46,7 +41,6 @@ class FeedbackBase(BaseModel):
 class FeedbackResult(BaseModel):
     """Schema for feedback result"""
     user_feedback: str = Field(..., description="User-friendly feedback text")
-    detailed_feedback: DetailedFeedback = Field(..., description="Detailed structured feedback")
     timestamp: datetime = Field(default_factory=datetime.utcnow)
     
     class Config:
@@ -60,7 +54,6 @@ class FeedbackCreate(BaseModel):
     target_id: str = Field(..., description="ID of the entity receiving feedback")
     target_type: str = Field(..., description="Type of entity receiving feedback")
     user_feedback: str = Field(..., description="User-friendly feedback text")
-    detailed_feedback: DetailedFeedback = Field(..., description="Detailed feedback")
 
 class FeedbackResponse(BaseModel):
     """Schema for feedback response."""
@@ -68,7 +61,6 @@ class FeedbackResponse(BaseModel):
     target_id: str = Field(..., description="ID of the entity receiving feedback") 
     target_type: str = Field(..., description="Type of entity receiving feedback")
     user_feedback: str = Field(..., description="User-friendly feedback text")
-    detailed_feedback: DetailedFeedback = Field(..., description="Detailed feedback")
     timestamp: datetime = Field(..., description="Timestamp when the feedback was created")
     
     class Config:

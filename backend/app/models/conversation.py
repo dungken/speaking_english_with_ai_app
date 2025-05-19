@@ -1,6 +1,9 @@
 from datetime import datetime
 from bson import ObjectId
 
+
+
+
 class Conversation:
     def __init__(self, user_id: ObjectId, user_role: str, ai_role: str, situation: str):
         self._id = ObjectId()
@@ -10,7 +13,7 @@ class Conversation:
         self.situation = situation
         self.started_at = datetime.utcnow()
         self.ended_at = None  # Set when the conversation is ended
-
+        self.voice_type = None
     def to_dict(self):
         return {
             "_id": self._id,
@@ -19,9 +22,10 @@ class Conversation:
             "ai_role": self.ai_role,
             "situation": self.situation,
             "started_at": self.started_at,
-            "ended_at": self.ended_at
+            "ended_at": self.ended_at,
+            "voice_type": self.voice_type
         }
-        
+    
     def get_context(self):
         """Returns formatted context for this conversation"""
         return {
