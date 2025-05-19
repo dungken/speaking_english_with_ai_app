@@ -110,7 +110,7 @@ class AnalysisResponse(BaseModel):
     feedback_id: Optional[str] = None
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "transcription": "Hello, my name is John and I am learning English.",
                 "user_feedback": "Great job with your introduction! Your meaning is clear and your sentence structure is correct.",
