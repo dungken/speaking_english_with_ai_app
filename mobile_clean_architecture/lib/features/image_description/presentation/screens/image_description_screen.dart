@@ -88,52 +88,6 @@ class _ImageDescriptionScreenState extends State<ImageDescriptionScreen> with Si
     }
   }
 
-  void _viewSuggestedAnswer() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.5,
-        minChildSize: 0.3,
-        maxChildSize: 0.9,
-        expand: false,
-        builder: (context, scrollController) => SingleChildScrollView(
-          controller: scrollController,
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  margin: const EdgeInsets.only(bottom: 16),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[300],
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
-              Text(
-                'Suggested Description',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                'This is a sample suggested description of the image. It would include details about the objects, people, actions, and context visible in the image.',
-                style: TextStyle(fontSize: 16, height: 1.5),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -255,15 +209,6 @@ class _ImageDescriptionScreenState extends State<ImageDescriptionScreen> with Si
                                 ),
                               ],
                             ),
-                          ),
-                        ),
-                        FloatingActionButton(
-                          heroTag: 'answer',
-                          onPressed: _viewSuggestedAnswer,
-                          backgroundColor: Colors.grey[200],
-                          child: Icon(
-                            Icons.lightbulb_outline,
-                            color: Theme.of(context).primaryColor,
                           ),
                         ),
                       ],
