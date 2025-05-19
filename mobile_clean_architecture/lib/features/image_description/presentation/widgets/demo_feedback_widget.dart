@@ -13,36 +13,6 @@ class DemoFeedbackWidget extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // AppBar substitute
-            Row(
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.arrow_back),
-                  onPressed: () {},
-                ),
-                const SizedBox(width: 8),
-                const Text(
-                  'Photo Mode',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
-                ),
-                const Spacer(),
-                IconButton(
-                  icon: const Icon(Icons.refresh),
-                  onPressed: () {},
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            // Image
-            ClipRRect(
-              borderRadius: BorderRadius.circular(20),
-              child: Image.network(
-                'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=600&q=80',
-                height: 260,
-                width: double.infinity,
-                fit: BoxFit.cover,
-              ),
-            ),
-            const SizedBox(height: 16),
             // Feedback indicator + Next button
             Row(
               children: [
@@ -73,7 +43,7 @@ class DemoFeedbackWidget extends StatelessWidget {
             const SizedBox(height: 16),
             // Feedback
             const Text(
-              'Your feedback',
+              'Your description',
               style: TextStyle(color: Colors.grey, fontWeight: FontWeight.w500),
             ),
             const SizedBox(height: 4),
@@ -139,7 +109,7 @@ class SimpleFeedbackWidget extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'Your feedback',
+            'Your description',
             style: TextStyle(color: Colors.grey, fontWeight: FontWeight.w500),
           ),
           const SizedBox(height: 4),
