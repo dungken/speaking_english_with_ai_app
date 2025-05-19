@@ -12,7 +12,6 @@ class Feedback:
         target_id: ID of the entity receiving feedback (message, audio, etc.)
         target_type: Type of entity receiving feedback ("message", "audio", etc.)
         user_feedback: User-friendly feedback in a free-form text
-        detailed_feedback: Detailed structured feedback
         timestamp: Timestamp of when the feedback was created
         user_id: ID of the user providing feedback
         transcription: Transcription of the speech being analyzed
