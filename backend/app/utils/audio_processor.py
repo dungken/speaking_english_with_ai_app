@@ -40,44 +40,14 @@ gemini_model = genai.GenerativeModel("gemini-1.5-flash")
 # Initialize logger
 logger = logging.getLogger(__name__)
 class ModelPool:
-    def __init__(self, max_models=3):
-        self.model_size = "tiny"
-        self.models = {}
-        self.last_used = {}
-        self.max_models = max_models
-        self.lock = Lock()
+    def __init__(self):
+        self.model_size = "base"
   
     def get_model(self):
-        
-        # Map 'turbo' to 'large-v3-turbo' for consistency with newer releases
-        device = self.get_device()
-        
-        if device == "cuda":
-            self.model_size = "large-v3-turbo"
+        if self.get_device() == "cuda":
+            model = whisper.load_model("large-v3-turbo", device="cuda")
         else:
-            self.model_size = "tiny"
-            
-     
-    
-        key = f"{self.model_size}_{device}"
-        
-        if key in self.models:
-            self.last_used[key] = time.time()
-            return self.models[key]
-        logger.info(f"Loading Whisper {self.model_size} model on {device}...")
-        
-        model = whisper.load_model(self.model_size, device=device)
-            
-        
-        # Remove oldest model if pool is full
-        if len(self.models) >= self.max_models:
-            oldest_key = min(self.last_used.items(), key=lambda x: x[1])[0]
-            del self.models[oldest_key]
-            del self.last_used[oldest_key]
-        
-        self.models[key] = model
-        self.last_used[key] = time.time()
-        
+            model = whisper.load_model("tiny", device="cpu")
         return model
     def get_device(self):
         cuda_available = torch.cuda.is_available()
@@ -92,7 +62,7 @@ class ModelPool:
         return device
 
 
-model = ModelPool(max_models=2)
+model = ModelPool()
 
 loaded_model = model.get_model()
 
