@@ -2,9 +2,11 @@ import 'package:get_it/get_it.dart';
 import 'package:http/http.dart' as http;
 import 'package:internet_connection_checker/internet_connection_checker.dart';
 
+import '../../../core/constants/api_constants.dart';
 import '../../../core/network/network_info.dart';
 import '../../../core/services/audio_services.dart';
 import '../data/datasources/conversation_remote_datasource.dart';
+import 'speech_audio_module.dart';
 import '../data/repositories/conversation_repository_impl.dart';
 import '../domain/repositories/conversation_repository.dart';
 import '../domain/usecases/add_message_usecase.dart';
@@ -63,8 +65,11 @@ void initConversationModule() {
   if (!sl.isRegistered<http.Client>()) {
     sl.registerLazySingleton(() => http.Client());
   }
-  
+
   if (!sl.isRegistered<InternetConnectionChecker>()) {
     sl.registerLazySingleton(() => InternetConnectionChecker());
   }
+
+  // Configure speech audio service
+  configureSpeechAudioService(ApiConstants.baseUrl);
 }
