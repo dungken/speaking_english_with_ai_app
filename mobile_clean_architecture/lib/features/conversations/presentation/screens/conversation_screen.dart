@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/utils/buffer_queue_error_handler.dart';
 import '../../../../core/utils/rendering/buffer_queue_manager.dart';
 import '../../../../core/utils/android_recording_optimizer.dart';
+import '../../data/services/speech_audio_service.dart';
 
 import '../../../../core/presentation/widgets/buttons/primary_button.dart';
 import '../../../../core/presentation/widgets/buttons/secondary_button.dart';
@@ -74,6 +75,21 @@ class _ConversationScreenState extends State<ConversationScreen> {
     super.dispose();
   }
 
+  // Auto-play the latest AI message when it arrives
+  void _autoPlayLatestAiMessage(List<Message> messages) {
+    if (messages.isNotEmpty && messages.last.sender == SenderType.ai) {
+      // Get the latest message (should be AI's response)
+      final latestMessage = messages.last;
+
+      Future.delayed(const Duration(milliseconds: 100), () {
+        SpeechAudioService().playMessageAudio(
+          latestMessage.id,
+          isFirstAppearance: true,
+        );
+      });
+    }
+  }
+
   // Scrolls the message list to the bottom to show the latest messages.
   // This is used after sending a message or when new messages are added.
   void _scrollToBottom() {
@@ -130,16 +146,6 @@ class _ConversationScreenState extends State<ConversationScreen> {
           );
       _scrollToBottom();
     }
-  }
-
-  // Updates the transcription text when the user edits it.
-  // This allows the user to refine their input before sending it.
-  void _editTranscription(String newTranscription) {
-    context.read<ConversationBloc>().add(
-          EditTranscriptionEvent(
-            transcription: newTranscription,
-          ),
-        );
   }
 
   // Requests feedback for a specific message in the conversation.
@@ -233,6 +239,20 @@ class _ConversationScreenState extends State<ConversationScreen> {
   // This displays the conversation history between the user and the AI.
   Widget _buildMessageList(BuildContext context, List<Message> messages) {
     _scrollToBottom();
+
+    // Auto-play latest AI message whenever message list is updated
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Check if this is the latest state update to avoid multiple audio plays
+      final currentMessages =
+          context.read<ConversationBloc>().state.conversation?.messages ?? [];
+      if (messages.isNotEmpty &&
+          currentMessages.isNotEmpty &&
+          messages.last.id == currentMessages.last.id &&
+          messages.last.sender == SenderType.ai) {
+        _autoPlayLatestAiMessage(messages);
+      }
+    });
+
     return Expanded(
       child: ListView.builder(
         controller: _scrollController,
@@ -414,16 +434,6 @@ class _ConversationScreenState extends State<ConversationScreen> {
     );
   }
 
-  // Builds a loading screen while the conversation is being loaded.
-  // This provides feedback to the user during data fetching.
-  Widget _buildLoadingScreen() {
-    return const Scaffold(
-      body: Center(
-        child: CircularProgressIndicator(),
-      ),
-    );
-  }
-
   // Builds an error screen when the conversation fails to load.
   // This informs the user about issues and prevents a blank screen.
   Widget _buildErrorScreen(String message) {
@@ -537,12 +547,17 @@ class _ConversationScreenState extends State<ConversationScreen> {
                   builder: (context, showFeedbackOverlay) {
                     if (showFeedbackOverlay) {
                       return BlocSelector<ConversationBloc, ConversationState,
-                          String?>(
-                        selector: (state) => state.activeFeedback?.userFeedback,
+                          String>(
+                        selector: (state) {
+                          // Make sure we handle the feedback properly
+                          final feedbackText =
+                              state.activeFeedback?.userFeedback ?? '';
+                          return feedbackText;
+                        },
                         builder: (context, feedbackText) {
                           return Positioned.fill(
                             child: SimpleFeedbackPanel(
-                              feedback: feedbackText ?? '',
+                              feedback: feedbackText,
                               onClose: _closeFeedback,
                               isOverlay: true,
                             ),
