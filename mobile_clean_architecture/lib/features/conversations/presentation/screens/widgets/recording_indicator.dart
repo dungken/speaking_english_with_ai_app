@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'dart:math' as math;
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/text_styles.dart';
-import '../../../../core/utils/responsive_layout.dart';
+import '../../../../../core/theme/app_colors.dart';
+import '../../../../../core/theme/text_styles.dart';
+import '../../../../../core/utils/responsive_layout.dart';
 
 class RecordingIndicator extends StatefulWidget {
   final VoidCallback onCancel;
