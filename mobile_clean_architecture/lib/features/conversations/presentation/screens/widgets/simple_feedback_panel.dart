@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:developer' as developer;
 
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/text_styles.dart';
@@ -21,6 +22,9 @@ class SimpleFeedbackPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Log the feedback type for debugging
+    developer.log('Feedback type: ${feedback.runtimeType}, value: $feedback');
+
     final panel = Container(
       decoration: BoxDecoration(
         color: AppColors.getSurfaceColor(false),
