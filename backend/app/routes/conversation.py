@@ -148,24 +148,59 @@ async def create_conversation(convo_data: ConversationCreate, current_user: dict
         Situation: {convo_data.situation}
         """
     # generate the refined response
-    refined_reponse = generate_response(promt_to_refine_roles_and_situation)
+    refined_response = generate_response(promt_to_refine_roles_and_situation)
 
-
-    # Clean the response text by removing markdown formatting
-    cleaned_text = refined_reponse.strip()
-    if cleaned_text.startswith("```json"):
-        cleaned_text = cleaned_text[7:]  # Remove ```json prefix
-    if cleaned_text.endswith("```"):
-        cleaned_text = cleaned_text[:-3]  # Remove ``` suffix
-    cleaned_text = cleaned_text.strip()
-    logger.info(f"Refined response: {cleaned_text}")
-    # parse the json
-    data_json = json.loads(cleaned_text)
+    # Clean the response text by removing markdown formatting and extracting JSON
+    cleaned_text = refined_response.strip()
     
-    refined_user_role = data_json["refined_user_role"]
-    refined_ai_role = data_json["refined_ai_role"]
-    refined_situation = data_json["refined_situation"]
-    ai_first_response = data_json["response"]
+    # Extract JSON content from the response
+    try:
+        # Find JSON content between triple backticks if present
+        if "```json" in cleaned_text:
+            start_idx = cleaned_text.find("```json") + 7
+            end_idx = cleaned_text.find("```", start_idx)
+            if end_idx != -1:
+                cleaned_text = cleaned_text[start_idx:end_idx]
+        elif "```" in cleaned_text:
+            start_idx = cleaned_text.find("```") + 3
+            end_idx = cleaned_text.find("```", start_idx)
+            if end_idx != -1:
+                cleaned_text = cleaned_text[start_idx:end_idx]
+                
+        cleaned_text = cleaned_text.strip()
+        
+        # Parse JSON
+        data_json = json.loads(cleaned_text)
+        
+        # Validate required fields
+        required_fields = ["refined_user_role", "refined_ai_role", "refined_situation", "response"]
+        missing_fields = [field for field in required_fields if field not in data_json]
+        if missing_fields:
+            raise ValueError(f"Missing required fields in response: {', '.join(missing_fields)}")
+            
+        refined_user_role = data_json["refined_user_role"]
+        refined_ai_role = data_json["refined_ai_role"]
+        refined_situation = data_json["refined_situation"]
+        ai_first_response = data_json["response"]
+        
+    except json.JSONDecodeError as e:
+        logger.error(f"Failed to parse JSON response: {e}\nResponse text: {cleaned_text}")
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to process AI response format"
+        )
+    except ValueError as e:
+        logger.error(f"Invalid response format: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=str(e)
+        )
+    except Exception as e:
+        logger.error(f"Unexpected error processing response: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail="An unexpected error occurred while processing the response"
+        )
 
     # Get user ID from the current_user dictionary
     user_id = current_user.get("_id")
@@ -176,7 +211,8 @@ async def create_conversation(convo_data: ConversationCreate, current_user: dict
         user_id=ObjectId(user_id),
         user_role=refined_user_role,
         ai_role=refined_ai_role,
-        situation=refined_situation
+        situation=refined_situation,
+        voice_type="tmp"
     )
     result = db.conversations.insert_one(new_convo.to_dict())
     conversation_id = result.inserted_id
@@ -470,7 +506,6 @@ async def get_message_feedback(
     """
     try:
         # Log the entry point with message ID for tracking
-        logger.info(f"Fetching feedback for message_id: {message_id}")
         
         user_id = str(current_user["_id"])
         # Find the message
@@ -479,7 +514,6 @@ async def get_message_feedback(
             logger.warning(f"Message not found: {message_id}")
             raise HTTPException(status_code=404, detail="Message not found")
         
-        logger.info(f"Message found: {message_id}, checking for feedback_id")
         
         # Check if message has associated feedback
         feedback_id = message.get("feedback_id")
@@ -506,7 +540,6 @@ async def get_message_feedback(
         # Handle feedback document safely
         try:
             # Create a safe copy with only the fields we need
-            logger.info(f"Processing feedback document with keys: {list(feedback.keys())}")
             
             feedback_dict = {
                 "id": str(feedback.get("_id", "")),
@@ -515,7 +548,7 @@ async def get_message_feedback(
             }
             
             # Add detailed feedback if available
-          
+            logger.info(f"Feedback document: {feedback_dict}")
             return {"user_feedback": feedback_dict, "is_ready": True}
         except Exception as e:
             logger.error(f"Error processing feedback document: {str(e)}", exc_info=True)
@@ -539,9 +572,10 @@ async def get_ai_message_as_speech_stream(
     current_user: dict = Depends(get_current_user)
 ):
     try:
+        logger.info(f"Getting AI message audio stream for message_id: {message_id}")
         message_object_id = ObjectId(message_id) # Convert string ID to ObjectId for MongoDB query
         message = db.messages.find_one({"_id": message_object_id})
-        conversation_voice_type = "af_heart"
+        conversation_voice_type = "hm_omega"
         if not message:
             raise HTTPException(status_code=404, detail="Message not found")
 
@@ -556,7 +590,7 @@ async def get_ai_message_as_speech_stream(
         default_lang_code = "en-US"     # Example: set to your primary language
         default_model_name = "kokoro"   # From your TTS API example
         default_response_format = "mp3"
-        default_speed = 1.2
+        default_speed = 1.3
 
         # print(f"DEBUG: Synthesizing speech for AI message ID {message_id}: '{ai_text[:50]}...'")
         # print(f"DEBUG: Using voice: {default_voice_name}, lang: {default_lang_code}")
@@ -574,7 +608,7 @@ async def get_ai_message_as_speech_stream(
         )
 
     except HTTPException as e:
-        # If HTTPException was raised by us or by get_speech_from_tts_service, re-raise it
+        # If HTTPException was raised by us or  by get_speech_from_tts_service, re-raise it
         # print(f"ERROR: HTTPException in get_ai_message_as_speech_stream: {e.detail}")
         raise e
     except Exception as e:
@@ -594,12 +628,12 @@ async def get_ai_message_as_speech_stream_demo(
 ):
     try:
       
-        conversation_voice_type = "af_heart"
+        conversation_voice_type = "hm_omega"
      
         default_lang_code = "en-US"     # Example: set to your primary language
         default_model_name = "kokoro"   # From your TTS API example
         default_response_format = "mp3"
-        default_speed = 1.2
+        default_speed = 1.3
 
         # print(f"DEBUG: Synthesizing speech for AI message ID {message_id}: '{ai_text[:50]}...'")
         # print(f"DEBUG: Using voice: {default_voice_name}, lang: {default_lang_code}")
@@ -615,7 +649,6 @@ async def get_ai_message_as_speech_stream_demo(
             speed=default_speed,
             lang_code=default_lang_code
         )
-
     except HTTPException as e:
         # If HTTPException was raised by us or by get_speech_from_tts_service, re-raise it
         # print(f"ERROR: HTTPException in get_ai_message_as_speech_stream: {e.detail}")
