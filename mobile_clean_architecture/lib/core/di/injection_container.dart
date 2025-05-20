@@ -5,7 +5,6 @@ import 'package:hive/hive.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
 import '../../features/authentication/data/models/user_model.dart';
-import '../../features/authentication/di/auth_module.dart';
 import '../../features/authentication/data/datasources/auth_local_datasource.dart';
 import '../../features/authentication/data/datasources/auth_remote_datasource.dart';
 import '../../features/authentication/data/repositories/auth_repository_impl.dart';
