@@ -229,12 +229,12 @@ class FeedbackService:
             # Parse JSON response
             
             try:
-                response_data = json.loads(cleaned_text)
+               
                 
             
                 # Create and return FeedbackResult
                 return FeedbackResult(
-                    user_feedback=response_data.get("user_feedback", ""),
+                    user_feedback=cleaned_text
                 )
                 
             except json.JSONDecodeError as e:
