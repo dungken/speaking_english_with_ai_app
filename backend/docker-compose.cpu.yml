@@ -6,18 +6,12 @@ services:
     image: speak_ai_backend:cpu 
     container_name: speak_ai_backend_cpu
     restart: unless-stopped
-    # Removing host network mode and using explicit port mapping instead
-    # network_mode: host
-    
-    # Explicitly map ports from all network interfaces to allow external connections
     ports:
       - "0.0.0.0:8000:8000"
-    
     volumes:
       - ./:/app
       - ./logs:/app/logs
     environment:
-      # Update this with your externally hosted MongoDB connection string
       - MONGODB_URL=${MONGODB_URL}
       - DATABASE_NAME=${DATABASE_NAME:-speak_ai_db}
       - JWT_SECRET_KEY=${JWT_SECRET_KEY:-mysecretkey}
@@ -29,11 +23,21 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-    # networks:
-    #   - backend_network
+    networks:
+      - kokoro_network
     command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
 
-# networks:
-#   backend_network:
-#     name: speak_ai_backend_network
-#     driver: bridge
+  tts_kokoro:
+    image: ghcr.io/remsky/kokoro-fastapi-cpu:latest
+    container_name: tts_kokoro
+    ports:
+      - "8880:8880"
+    networks:
+      - kokoro_network
+    restart: unless-stopped
+
+networks:
+  kokoro_network:
+    name: kokoro_network
+    driver: bridge
+    
