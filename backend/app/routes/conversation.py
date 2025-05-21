@@ -16,7 +16,7 @@ from typing import List, Optional
 from app.utils.feedback_service import FeedbackService
 import os
 import time
-from app.utils.tts_client_service import get_speech_from_tts_service
+from app.utils.tts_client_service import get_speech_from_tts_service,pick_suitable_voice_name
 import shutil
 from pathlib import Path
 from datetime import datetime
@@ -43,6 +43,7 @@ from app.utils.audio_processor import (
     generate_feedback
 )
 from app.utils.error_handler import get_not_found_exception, handle_general_exception
+feedback_service = FeedbackService()
 
 router = APIRouter()
 
@@ -142,6 +143,7 @@ async def create_conversation(convo_data: ConversationCreate, current_user: dict
         "refined_ai_role": "[your refined AI role]",
         "refined_situation": "[your refined situation]",
         "response": "[your first  response as refined_ai_role to the user regardless of the situation]"
+        "ai_gender": "[decide female or male base on the refined_ai_role,refined_situation ]" ]"
         }}
 
         Here are the inputs:
@@ -151,42 +153,24 @@ async def create_conversation(convo_data: ConversationCreate, current_user: dict
         """
     # generate the refined response
     refined_response = generate_response(promt_to_refine_roles_and_situation)
+    cleaned_response = refined_response.strip("```json\n").strip("\n```")
 
-    # Clean the response text by removing markdown formatting and extracting JSON
-    cleaned_text = refined_response.strip()
     
-    # Extract JSON content from the response
     try:
-        # Find JSON content between triple backticks if present
-        if "```json" in cleaned_text:
-            start_idx = cleaned_text.find("```json") + 7
-            end_idx = cleaned_text.find("```", start_idx)
-            if end_idx != -1:
-                cleaned_text = cleaned_text[start_idx:end_idx]
-        elif "```" in cleaned_text:
-            start_idx = cleaned_text.find("```") + 3
-            end_idx = cleaned_text.find("```", start_idx)
-            if end_idx != -1:
-                cleaned_text = cleaned_text[start_idx:end_idx]
-                
-        cleaned_text = cleaned_text.strip()
-        
-        # Parse JSON
-        data_json = json.loads(cleaned_text)
-        
-        # Validate required fields
-        required_fields = ["refined_user_role", "refined_ai_role", "refined_situation", "response"]
+        data_json = json.loads(cleaned_response)
+        required_fields = ["refined_user_role", "refined_ai_role", "refined_situation", "response","ai_gender"]
         missing_fields = [field for field in required_fields if field not in data_json]
         if missing_fields:
             raise ValueError(f"Missing required fields in response: {', '.join(missing_fields)}")
-            
+       
+        voice_type =   pick_suitable_voice_name(data_json["ai_gender"] )    
         refined_user_role = data_json["refined_user_role"]
         refined_ai_role = data_json["refined_ai_role"]
         refined_situation = data_json["refined_situation"]
         ai_first_response = data_json["response"]
         
     except json.JSONDecodeError as e:
-        logger.error(f"Failed to parse JSON response: {e}\nResponse text: {cleaned_text}")
+        logger.error(f"Failed to parse JSON response: {e}\nResponse text: {cleaned_response}")
         raise HTTPException(
             status_code=500,
             detail="Failed to process AI response format"
@@ -214,7 +198,7 @@ async def create_conversation(convo_data: ConversationCreate, current_user: dict
         user_role=refined_user_role,
         ai_role=refined_ai_role,
         situation=refined_situation,
-        voice_type="tmp"
+        voice_type=voice_type
     )
     result = db.conversations.insert_one(new_convo.to_dict())
     conversation_id = result.inserted_id
@@ -385,88 +369,97 @@ async def add_message_and_get_response (
             - content: The message text
             - timestamp: When the message was created
             - additional fields like audio_path, transcription (for user messages)
-    """
+    """   
     try:
-        user_id = str(current_user["_id"])
-        audio_task =  asyncio.create_task(db.audio.find_one({"_id": ObjectId(audio_id)}))
+                user_id = str(current_user["_id"])
+                
+                # MongoDB find_one is not a coroutine, we need to wrap these in async functions
+                async def get_audio():
+                    return db.audio.find_one({"_id": ObjectId(audio_id)})
+                    
+                async def get_conversation():
+                    return db.conversations.find_one({
+                        "_id": ObjectId(conversation_id),
+                        "user_id": ObjectId(user_id)
+                    })
+         
+                # Step 1: Fetch the audio and conversation data    
+                # Now create tasks from the async functions
+                audio_task = asyncio.create_task(get_audio())
+                conversation_task = asyncio.create_task(get_conversation())
+                
+                # Gather the results
+                audio_data, conversation = await asyncio.gather(audio_task, conversation_task)
 
-        # Verify conversation exists and belongs to the user
-        conversation_task =  asyncio.create_task(db.conversations.find_one({
-            "_id": ObjectId(conversation_id),
-            "user_id": ObjectId(user_id)
-        }) )
-        audio_data , conversation = await asyncio.gather(audio_task, conversation_task)
-        feedback_service = FeedbackService()
-
-        if not conversation:
-            raise HTTPException(status_code=404, detail="Conversation not found")
-        
-    
-      
-        # Step 3: Store user's message with transcribed content
-        user_message = Message(
-            conversation_id=ObjectId(conversation_id),
-            sender="user",
-            content=audio_data["transcription"],
-            audio_path=audio_data["file_path"],
-            transcription=audio_data["transcription"]
-        )
-        db.messages.insert_one(user_message.to_dict())
-        
-        # Fetch conversation history
-        messages = list(db.messages.find({"conversation_id": ObjectId(conversation_id)}).sort("timestamp", 1))
-        
-        # Include context in the prompt 
-        prompt = (
-        f"You are playing the role of {conversation['ai_role']} and the user is {conversation['user_role']}. "
-        f"The situation is: {conversation['situation']}. "
-        f"Stay fully in character as {conversation['ai_role']}. "
-        f"Use natural, simple English that new and intermediate learners can easily understand. "
-        f"Keep your response short and friendly (1 to 3 sentences). "
-        f"Avoid special characters like brackets or symbols. "
-        f"Do not refer to the user with any placeholder like a name in brackets. "
-        f"Ask an open-ended question that fits the situation and encourages the user to speak more."
-        f"\nHere is the conversation so far:\n" +
-        "\n".join([f"{msg['sender']}: {msg['content']}" for msg in messages]) +
-        f"\nNow respond as {conversation['ai_role']}."
-        )
+                if not conversation:
+                    raise HTTPException(status_code=404, detail="Conversation not found")
+                
+            
+            
+                # Step 3: Store user's message with transcribed content
+                user_message = Message(
+                    conversation_id=ObjectId(conversation_id),
+                    sender="user",
+                    content=audio_data["transcription"],
+                    audio_path=audio_data["file_path"],
+                    transcription=audio_data["transcription"]
+                )
+                db.messages.insert_one(user_message.to_dict())
+                
+                # Fetch conversation history
+                messages = list(db.messages.find({"conversation_id": ObjectId(conversation_id)}).sort("timestamp", 1))
+                
+                # Include context in the prompt 
+                prompt = (
+                f"You are playing the role of {conversation['ai_role']} and the user is {conversation['user_role']}. "
+                f"The situation is: {conversation['situation']}. "
+                f"Stay fully in character as {conversation['ai_role']}. "
+                f"Use natural, simple English that new and intermediate learners can easily understand. "
+                f"Keep your response short and friendly (1 to 3 sentences). "
+                f"Avoid special characters like brackets or symbols. "
+                f"Do not refer to the user with any placeholder like a name in brackets. "
+                f"Ask an open-ended question that fits the situation and encourages the user to speak more."
+                f"\nHere is the conversation so far:\n" +
+                "\n".join([f"{msg['sender']}: {msg['content']}" for msg in messages]) +
+                f"\nNow respond as {conversation['ai_role']}."
+                )
 
 
-        
-        # Generate AI response
-        ai_text = generate_response(prompt)
-        
-        # Store AI response
-        ai_message = Message(conversation_id=ObjectId(conversation_id), sender="ai", content=ai_text)
-        db.messages.insert_one(ai_message.to_dict())
-        
-        # Process feedback in the background without blocking the response
-        background_tasks.add_task(
-            feedback_service.process_speech_feedback,
-            transcription=audio_data["transcription"],
-            user_id=user_id,
-            conversation_id=conversation_id,
-            audio_id=audio_data["_id"],
-            file_path=audio_data["file_path"],
-            user_message_id=str(user_message._id)
-        )
-        
-        # Return AI response in MessageResponse format
-        ai_message_dict = ai_message.to_dict()
-        ai_message_dict["id"] = str(ai_message_dict["_id"])
-        ai_message_dict["conversation_id"] = str(ai_message_dict["conversation_id"])
-        del ai_message_dict["_id"]
-        
-        user_message_dict = user_message.to_dict()
-        user_message_dict["id"] = str(user_message_dict["_id"])
-        user_message_dict["conversation_id"] = str(user_message_dict["conversation_id"])
-        del user_message_dict["_id"]
-        
-        return {
-            "user_message": MessageResponse(**user_message_dict),
-            "ai_message": MessageResponse(**ai_message_dict)
-        }
-    
+                
+                # Generate AI response
+                ai_text = generate_response(prompt)
+                
+                # Store AI response
+                ai_message = Message(conversation_id=ObjectId(conversation_id), sender="ai", content=ai_text)
+                db.messages.insert_one(ai_message.to_dict())
+                
+                # Process feedback in the background without blocking the response
+                background_tasks.add_task(
+                    feedback_service.process_speech_feedback,
+                    transcription=audio_data["transcription"],
+                    user_id=user_id,
+                    conversation_id=conversation_id,
+                    audio_id=audio_data["_id"],
+                    file_path=audio_data["file_path"],
+                    user_message_id=str(user_message._id)
+                )
+                
+                # Return AI response in MessageResponse format
+                ai_message_dict = ai_message.to_dict()
+                ai_message_dict["id"] = str(ai_message_dict["_id"])
+                ai_message_dict["conversation_id"] = str(ai_message_dict["conversation_id"])
+                del ai_message_dict["_id"]
+                
+                user_message_dict = user_message.to_dict()
+                user_message_dict["id"] = str(user_message_dict["_id"])
+                user_message_dict["conversation_id"] = str(user_message_dict["conversation_id"])
+                del user_message_dict["_id"]
+                
+                return {
+                    "user_message": MessageResponse(**user_message_dict),
+                    "ai_message": MessageResponse(**ai_message_dict)
+                }
+            
        
     except Exception as e:
         logger.error(f"Error /conversations/{conversation_id}/speechtomessage: {str(e)}", exc_info=True)
@@ -575,10 +568,15 @@ async def get_ai_message_as_speech_stream(
     current_user: dict = Depends(get_current_user)
 ):
     try:
+        start = time.time()
+        
         logger.info(f"Getting AI message audio stream for message_id: {message_id}")
         message_object_id = ObjectId(message_id) # Convert string ID to ObjectId for MongoDB query
         message = db.messages.find_one({"_id": message_object_id})
-        conversation_voice_type = "hm_omega"
+        Conversation = db.conversations.find_one({"_id": message["conversation_id"]})
+        conversation_voice_type = Conversation["voice_type"]
+        end = time.time()
+        logger.info(f"Time taken to fetch message and conversation: {end - start} seconds")
         if not message:
             raise HTTPException(status_code=404, detail="Message not found")
 
@@ -595,12 +593,6 @@ async def get_ai_message_as_speech_stream(
         default_response_format = "mp3"
         default_speed = 1.3
 
-        # print(f"DEBUG: Synthesizing speech for AI message ID {message_id}: '{ai_text[:50]}...'")
-        # print(f"DEBUG: Using voice: {default_voice_name}, lang: {default_lang_code}")
-
-
-        # 4. Call the TTS Service via your client function
-        #    This function is expected to return a StreamingResponse
         return await get_speech_from_tts_service(
             text_to_speak=ai_text,
             voice_name=conversation_voice_type,
@@ -630,22 +622,16 @@ async def get_ai_message_as_speech_stream_demo(
     message: str = "Hello, how are you?"
 ):
     try:
-      
         conversation_voice_type = "hm_omega"
-     
         default_lang_code = "en-US"     # Example: set to your primary language
         default_model_name = "kokoro"   # From your TTS API example
         default_response_format = "mp3"
         default_speed = 1.3
 
-        # print(f"DEBUG: Synthesizing speech for AI message ID {message_id}: '{ai_text[:50]}...'")
-        # print(f"DEBUG: Using voice: {default_voice_name}, lang: {default_lang_code}")
-
-
         # 4. Call the TTS Service via your client function
         #    This function is expected to return a StreamingResponse
         start = time.time()
-        temp =  await get_speech_from_tts_service(
+        stream_response = await get_speech_from_tts_service(
             text_to_speak=message,
             voice_name=conversation_voice_type,
             model_name=default_model_name,
@@ -655,8 +641,10 @@ async def get_ai_message_as_speech_stream_demo(
         )
         end = time.time()
         
+        # Add timing information as a header instead of trying to return it with the stream
+        stream_response.headers["X-Processing-Time"] = str(end - start)
         
-        return {"time": str(end - start) , "temp": temp}
+        return stream_response
     except HTTPException as e:
         # If HTTPException was raised by us or by get_speech_from_tts_service, re-raise it
         # print(f"ERROR: HTTPException in get_ai_message_as_speech_stream: {e.detail}")
@@ -666,5 +654,97 @@ async def get_ai_message_as_speech_stream_demo(
         # print(f"ERROR: Unexpected error in get_ai_message_as_speech_stream for message {message_id}: {str(e)}")
         # Consider logging 'e' with exc_info=True for full traceback
         raise HTTPException(status_code=500, detail=f"Failed to generate speech: An internal error occurred.")
+
+@router.get(
+    "/messages/{message_id}/voice_context",
+    summary="Get conversation voice type and latest AI message",
+    description="Retrieves the conversation voice type and latest AI message based on the provided message ID."
+)
+async def get_voice_context(
+    message_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Get conversation voice type and latest AI message for the conversation containing the specified message.
+    
+    This endpoint is particularly useful for audio playback in the mobile app, as it provides
+    both the voice type to use and the latest AI message that might need to be played.
+    
+    Args:
+        message_id (str): ID of the message to use as a reference
+            Path parameter used to identify which conversation to retrieve data from
+        current_user (dict): Authenticated user information
+            Fields:
+            - _id: User's ObjectId
+            - email: User's email
+            - role: User's role
+        
+    Returns:
+        dict: Voice context information
+            Fields:
+            - voice_type: The voice type to be used for TTS (e.g., "hm_omega", "jf_alpha")
+            - latest_ai_message: Object containing the most recent AI message in the conversation
+              - id: Message ID
+              - content: Message text content
+              - timestamp: When the message was created
+            - is_latest: Boolean indicating if the referenced message is the latest AI message
+            
+    Raises:
+        HTTPException 404: If the message or conversation is not found
+        HTTPException 500: If any error occurs during processing
+    """
+    try:
+        # Convert string ID to ObjectId for MongoDB query
+        message_object_id = ObjectId(message_id)
+        
+        # Find the message
+        message = db.messages.find_one({"_id": message_object_id})
+        if not message:
+            logger.warning(f"Message not found: {message_id}")
+            raise HTTPException(status_code=404, detail="Message not found")
+        
+        # Get the conversation
+        conversation_id = message["conversation_id"]
+        conversation = db.conversations.find_one({"_id": conversation_id})
+        if not conversation:
+            logger.warning(f"Conversation not found for message: {message_id}")
+            raise HTTPException(status_code=404, detail="Conversation not found")
+        
+        # Get the voice type from the conversation
+        voice_type = conversation.get("voice_type", "hm_omega")  # Default to hm_omega if not found
+        
+        # Find the latest AI message in the conversation
+        latest_ai_message = db.messages.find(
+            {"conversation_id": conversation_id, "sender": "ai"}
+        ).sort("timestamp", -1).limit(1)
+        
+        latest_ai_message_list = list(latest_ai_message)
+        latest_ai_message_data = None
+        is_latest = False
+        
+        if latest_ai_message_list:
+            latest_msg = latest_ai_message_list[0]
+            latest_ai_message_data = {
+                "id": str(latest_msg["_id"]),
+                "content": latest_msg.get("content", ""),
+                "timestamp": latest_msg.get("timestamp", datetime.now().isoformat())
+            }
+            
+        
+       
+        return {
+            "voice_type": voice_type,
+            "latest_ai_message": latest_ai_message_data,
+        }
+        
+    except HTTPException as e:
+        # Re-raise HTTP exceptions
+        raise e
+    except Exception as e:
+        logger.error(f"Error getting voice context: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get voice context: {str(e)}"
+        )
 
 
