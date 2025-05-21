@@ -59,13 +59,20 @@ class AppColors {
 
   static Color getCefrLevelColor(String level) {
     switch (level.toUpperCase()) {
-      case 'A1': return cefrA1;
-      case 'A2': return cefrA2;
-      case 'B1': return cefrB1;
-      case 'B2': return cefrB2;
-      case 'C1': return cefrC1;
-      case 'C2': return cefrC2;
-      default: return cefrA1;
+      case 'A1':
+        return cefrA1;
+      case 'A2':
+        return cefrA2;
+      case 'B1':
+        return cefrB1;
+      case 'B2':
+        return cefrB2;
+      case 'C1':
+        return cefrC1;
+      case 'C2':
+        return cefrC2;
+      default:
+        return cefrA1;
     }
   }
 

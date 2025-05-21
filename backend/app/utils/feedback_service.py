@@ -6,15 +6,21 @@ from bson import ObjectId
 import logging
 from logging.handlers import RotatingFileHandler
 import os
-
+from pathlib import Path
+import shutil
+from fastapi import UploadFile, File
 # Import Gemini client
 from app.utils.gemini import generate_response
 from app.config.database import db
 from app.models.feedback import Feedback
 from app.models.results.feedback_result import FeedbackResult
 
-# Create logger with module name
 logger = logging.getLogger(__name__)
+
+
+UPLOAD_DIR = Path("app/uploads")
+UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+VALID_AUDIO_EXTENSIONS = ['.mp3', '.wav', '.m4a', '.aac', '.ogg', '.flac']
 
 # Only configure if not already configured
 if not logger.handlers:
@@ -58,7 +64,136 @@ class FeedbackService:
     3. Parse and validate the response from Gemini
     4. Store feedback in the database
     """
-    
+        
+    async def process_speech_feedback(
+        self,
+        transcription: str,
+        user_id: str,
+        conversation_id: str,
+        audio_id: str,
+        file_path: str,
+        user_message_id: str
+    ):
+        """
+        Process speech feedback in the background.
+        
+        This function handles the feedback generation and storing part that
+        was separated from the main speech analysis to allow quick responses.
+        
+        Args:
+            transcription (str): The transcribed text from the audio
+                The text content that will be analyzed for feedback
+            user_id (str): ID of the user who submitted the audio
+                Used to associate feedback with the user
+            conversation_id (str): ID of the conversation
+                Used to fetch conversation context for better feedback
+            audio_id (str): ID of the stored audio record
+                References the audio file in the database
+            file_path (str): Path to the saved audio file
+                Location of the audio file on disk
+            user_message_id (str): ID of the user's message
+                Used to link the generated feedback to the message
+        
+        Returns:
+            None: This is a background task that doesn't return a value directly
+            
+        Side Effects:
+            - Creates a feedback record in the database
+            - Updates the user's message with the feedback_id
+            - Triggers mistake extraction for learning purposes
+        """
+        try:
+            # Initialize services
+            from app.utils.feedback_service import FeedbackService
+            from app.utils.event_handler import event_handler
+            from app.models.results.feedback_result import FeedbackResult
+            
+            
+            # Fetch conversation context
+            context = {}
+            conversation = db.conversations.find_one({"_id": ObjectId(conversation_id)})
+            if conversation:
+                # Fetch messages to build context
+                messages = list(db.messages.find({"conversation_id": ObjectId(conversation_id)})
+                            .sort("timestamp", 1)
+                            .limit(10))
+                
+                # Format previous exchanges
+                previous_exchanges = []
+                for msg in messages:
+                    sender = "User" if msg.get("sender") == "user" else "AI"
+                    previous_exchanges.append(f"{sender}: {msg.get('content', '')}")
+                
+                context = {
+                    "user_role": conversation.get("user_role", "Student"),
+                    "ai_role": conversation.get("ai_role", "Teacher"),
+                    "situation": conversation.get("situation", "General conversation"),
+                    "previous_exchanges": "\n".join(previous_exchanges)
+                }
+            
+            # Generate feedback
+            try:
+                feedback_result = self.generate_dual_feedback(transcription, context)
+            except Exception as e:
+                logger.error(f"Error generating feedback: {str(e)}", exc_info=True)
+                # Create a fallback feedback result
+                feedback_result = FeedbackResult(
+                    user_feedback="Unable to generate detailed feedback at this time."
+                )
+            
+            # Store feedback
+            feedback_id = self.store_feedback(
+                user_id, 
+                feedback_result, 
+                user_message_id,
+                transcription=transcription
+            )
+            
+            # Link feedback to message
+            if feedback_id:
+                db.messages.update_one(
+                    {"_id": ObjectId(user_message_id)},
+                    {"$set": {"feedback_id": feedback_id}}
+                )
+                
+            
+                
+        except Exception as e:
+            logger.error(f"Error processing speech feedback in background: {str(e)}", exc_info=True)
+
+    async def save_audio_file(self,file: UploadFile, user_id: str) -> str:
+        """
+        Save an uploaded audio file to the server.
+        
+        Args:
+            file (UploadFile): The audio file to save
+                FastAPI UploadFile object containing the audio data
+            user_id (str): ID of the user
+                Used to create user-specific directories for organization
+            
+        Returns:
+            str: Path to the saved file on disk
+                Absolute file path that can be used to access the file later
+        
+        Side Effects:
+            - Creates a user directory if it doesn't exist
+            - Writes the audio file to disk with a timestamped filename
+        """
+        # Create user directory if it doesn't exist
+        user_dir = UPLOAD_DIR / str(user_id)
+        user_dir.mkdir(exist_ok=True)
+        
+        # Generate unique filename
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        safe_filename = f"{timestamp}_{file.filename.replace(' ', '_')}"
+        file_path = user_dir / safe_filename
+        
+        # Save the file
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+        
+        return str(file_path)
+
     def generate_dual_feedback(
         self, 
         transcription: str, 
@@ -77,11 +212,11 @@ class FeedbackService:
         try:
             # Build prompt for dual feedback
             prompt = self._build_dual_feedback_prompt(transcription, context)
- 
-    
+
+
             # Call Gemini API   
             gemini_response = generate_response(prompt)
-                       # Clean the response text by removing markdown formatting
+                        # Clean the response text by removing markdown formatting
             cleaned_text = gemini_response.strip()
             if cleaned_text.startswith("```json"):
                 cleaned_text = cleaned_text[7:]  # Remove ```json prefix
@@ -90,7 +225,7 @@ class FeedbackService:
             cleaned_text = cleaned_text.strip()
             # parse the json
             
-  
+
             # Parse JSON response
             
             try:
@@ -111,7 +246,7 @@ class FeedbackService:
         except Exception as e:
             logger.error(f"Error generating feedback: {str(e)}")
             return self._generate_fallback_feedback(transcription)
-    
+
     def store_feedback(
         self, 
         user_id: str, 
@@ -152,7 +287,7 @@ class FeedbackService:
             else:
                 user_feedback = feedback_data.get("user_feedback", "")
                 
-         
+            
             
             # Create feedback model with explicit user_id and transcription
             feedback = Feedback(
@@ -179,7 +314,7 @@ class FeedbackService:
         except Exception as e:
             logger.error(f"Error storing feedback: {str(e)}")
             raise Exception(f"Failed to store feedback: {str(e)}")
-    
+
     def _build_dual_feedback_prompt(
         self, 
         transcription: str, 
@@ -213,23 +348,22 @@ class FeedbackService:
         
         # Add transcription
         prompt += f"""
-        Student's speech: "{transcription}"
+        Current student's speech: "{transcription}"
+        you are an expert English teacher providing feedback on a student's speech. this feedback will be showned when user click feedback button, dont greet the user or say anything else.
         Note: because user speech is transcribed from audio, it may not contain punctuation. you do not need comment on this. 
-        Generate  feedback in JSON format:
+        Generate  feedback in string format:
+        Hãy đưa ra nhận xét và hướng dẫn như một người bản xứ nói tiếng Anh có thể sử dụng tiếng Việt để giải thích:
+                -Phân tích câu trả lời của người học và chỉ ra các lỗi về ngữ pháp và từ vựng.
+                -Cung cấp gợi ý hoặc ví dụ về cách dùng từ/cụm từ tốt hơn để diễn đạt tự nhiên hơn
+                -Đưa ra phiên bản câu hoàn chỉnh hơn, sát với câu gốc nhưng đúng hơn, phù hợp với trình độ người học.
+                -Phân tích cấu trúc ngữ pháp (mental model) của câu ví dụ bạn đưa ra: chỉ ra chủ ngữ, động từ, bổ ngữ, cách dùng mệnh đề phụ (nếu có), và chức năng giao tiếp của từng phần trong câu. ( nhớ so sánh  với câu gốc của người học)
+                -Nếu câu trả lời của người học ngắn, chưa rõ ý, hoặc sai lệch hoàn toàn, hãy đưa ra một câu trả lời mẫu đơn giản hơn để họ có thể hình dung cách diễn đạt đúng, nhưng không nâng cấp quá xa so với trình độ hiện tại của họ.
+            
+        Return only the feedback string, no other text. 
         
-        1. user_feedback: Hãy đưa ra nhận xét và hướng dẫn như một người bản xứ nói tiếng Anh có thể sử dụng tiếng Việt để giải thích:
-              -Phân tích câu trả lời của người học và chỉ ra các lỗi về ngữ pháp và từ vựng.
-              -Cung cấp gợi ý hoặc ví dụ về cách dùng từ/cụm từ tốt hơn để diễn đạt tự nhiên hơn
-              -Đưa ra phiên bản câu hoàn chỉnh hơn, sát với câu gốc nhưng đúng hơn, phù hợp với trình độ người học.
-              -Phân tích cấu trúc ngữ pháp (mental model) của câu ví dụ bạn đưa ra: chỉ ra chủ ngữ, động từ, bổ ngữ, cách dùng mệnh đề phụ (nếu có), và chức năng giao tiếp của từng phần trong câu. ( nhớ so sánh  với câu gốc của người học)
-              -Nếu câu trả lời của người học ngắn, chưa rõ ý, hoặc sai lệch hoàn toàn, hãy đưa ra một câu trả lời mẫu đơn giản hơn để họ có thể hình dung cách diễn đạt đúng, nhưng không nâng cấp quá xa so với trình độ hiện tại của họ.
-       
-        
-        Return ONLY the JSON object with the user_feedback field, properly formatted. Limit to at most 3 grammar issues and 3 vocabulary issues, focusing on the most important ones.
         """
-        logger.info(   f"Generated prompt for Gemini: {prompt}")
         return prompt
-    
+
     def _generate_fallback_feedback(self, transcription: str) -> FeedbackResult:
         """
         Generate fallback feedback when the API call fails.

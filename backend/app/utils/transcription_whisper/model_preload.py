@@ -18,7 +18,7 @@ def preload_model():
     if torch.cuda.is_available():
         torch.cuda.empty_cache()
     device = get_device()
-    model = model_pool.get_model("turbo")
+    
     return model
 
 

@@ -1,15 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/text_styles.dart';
+import '../../../data/services/speech_audio_service.dart';
 import '../../../domain/entities/message.dart';
+import '../../bloc/conversation_bloc.dart';
+import '../../bloc/conversation_state.dart';
 
 /// Widget that displays a message bubble in the conversation
 ///
 /// Shows different styling for user and AI messages,
 /// and provides a button to request feedback for user messages
-class MessageBubble extends StatelessWidget {
+class MessageBubble extends StatefulWidget {
   final Message message;
   final VoidCallback? onFeedbackRequest;
 
@@ -20,9 +24,15 @@ class MessageBubble extends StatelessWidget {
   }) : super(key: key);
 
   @override
+  State<MessageBubble> createState() => _MessageBubbleState();
+}
+
+class _MessageBubbleState extends State<MessageBubble> {
+  @override
   Widget build(BuildContext context) {
-    final isUserMessage = message.sender == SenderType.user;
-    final hasAudio = message.audioPath != null && message.audioPath!.isNotEmpty;
+    final isUserMessage = widget.message.sender == SenderType.user;
+    final hasAudio = widget.message.audioPath != null &&
+        widget.message.audioPath!.isNotEmpty;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
@@ -58,7 +68,7 @@ class MessageBubble extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        message.content,
+                        widget.message.content,
                         style: TextStyles.body(
                           context,
                           color: isUserMessage ? Colors.white : null,
@@ -67,9 +77,10 @@ class MessageBubble extends StatelessWidget {
                       const SizedBox(height: 4),
                       Row(
                         mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            _formatTime(message.timestamp),
+                            _formatTime(widget.message.timestamp),
                             style: TextStyles.caption(
                               context,
                               color: isUserMessage
@@ -79,10 +90,10 @@ class MessageBubble extends StatelessWidget {
                           ),
                           if (isUserMessage &&
                               hasAudio &&
-                              onFeedbackRequest != null) ...[
+                              widget.onFeedbackRequest != null) ...[
                             const SizedBox(width: 8),
                             InkWell(
-                              onTap: onFeedbackRequest,
+                              onTap: widget.onFeedbackRequest,
                               borderRadius: BorderRadius.circular(12),
                               child: Padding(
                                 padding: const EdgeInsets.all(4.0),
@@ -112,7 +123,7 @@ class MessageBubble extends StatelessWidget {
                     ],
                   ),
                 ),
-                if (message.feedbackId != null && !isUserMessage)
+                if (widget.message.feedbackId != null && !isUserMessage)
                   Padding(
                     padding: const EdgeInsets.only(top: 4),
                     child: Text(

@@ -98,4 +98,12 @@ class TextStyles {
       decoration: TextDecoration.underline,
     );
   }
+
+  /// Heading 6 text style
+  static TextStyle h6(BuildContext context, {bool isDarkMode = false}) {
+    return Theme.of(context).textTheme.titleLarge!.copyWith(
+          color: isDarkMode ? Colors.white : Colors.black87,
+          fontWeight: FontWeight.w500,
+        );
+  }
 }

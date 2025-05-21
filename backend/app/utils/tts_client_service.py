@@ -96,8 +96,7 @@ async def get_speech_from_tts_service(
                     await client_to_close.aclose()
 
         media_type = response_stream.headers.get("content-type", "audio/mpeg" if response_format == "mp3" else "application/octet-stream")
-        logger.info(f"DEBUG: Determined media_type for streaming: {media_type}")
-        
+           
         return StreamingResponse(generator_func(response_stream, client), media_type=media_type)
 
     except (httpx.TimeoutException, httpx.RequestError) as e:

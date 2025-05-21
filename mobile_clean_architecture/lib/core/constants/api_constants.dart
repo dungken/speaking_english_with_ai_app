@@ -5,13 +5,9 @@ class ApiConstants {
   // static const String baseUrl = 'http://10.0.2.2:8000';
 
   // Production URL - using the deployed API
-<<<<<<< Updated upstream
-  static const String baseUrl = 'http://192.168.1.9:8000';
-=======
-  static const String baseUrl = 'http://192.168.1.143:8000';
->>>>>>> Stashed changes
+  static const String baseUrl = 'http://192.168.1.10:8000';
 
-  /// Authentication endpoints~
+  /// Authentication endpoints
   static const String loginEndpoint = '/api/users/login';
   static const String registerEndpoint = '/api/users/register';
 
@@ -20,6 +16,7 @@ class ApiConstants {
   static const String messageEndpoint =
       '/api/conversations/{conversation_id}/message';
   static const String feedbackEndpoint = '/api/messages/{message_id}/feedback';
+  static const String speechEndpoint = '/api/messages/{message_id}/speech';
 
   /// Audio processing endpoint
   static const String audioToTextEndpoint = '/api/audio2text';

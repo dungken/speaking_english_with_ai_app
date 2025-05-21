@@ -217,12 +217,29 @@ class ConversationRemoteDataSourceImpl implements ConversationRemoteDataSource {
             );
           } else if (feedbackData is Map<String, dynamic>) {
             // Full feedback object
-            return FeedbackModel.fromJson(feedbackData);
+            try {
+              return FeedbackModel.fromJson(feedbackData);
+            } catch (e) {
+              // In case there's an error parsing the feedback structure
+              // Extract the user_feedback field specifically
+              if (feedbackData.containsKey('user_feedback') &&
+                  feedbackData['user_feedback'] is String) {
+                return FeedbackModel(
+                  id: feedbackData['id'] ?? messageId,
+                  userFeedback: feedbackData['user_feedback'],
+                  createdAt: feedbackData['created_at'] != null
+                      ? DateTime.parse(feedbackData['created_at'])
+                      : DateTime.now(),
+                  detailedFeedback: null,
+                );
+              } else {
+                throw FormatException('Invalid feedback format: $feedbackData');
+              }
+            }
           } else {
             throw FormatException('Unexpected feedback format: $feedbackData');
           }
         } else {
-          // Feedback not ready yet
           throw const FeedbackProcessingException(
             message:
                 'Feedback is still being generated. Please try again in a moment.',
