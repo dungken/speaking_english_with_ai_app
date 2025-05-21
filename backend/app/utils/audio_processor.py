@@ -44,10 +44,8 @@ class ModelPool:
         self.model_size = "base"
   
     def get_model(self):
-        if self.get_device() == "cuda":
-            model = whisper.load_model("large-v3-turbo", device="cuda")
-        else:
-            model = whisper.load_model("tiny", device="cpu")
+        device = self.get_device()
+        model = whisper.load_model(self.model_size, device=device)
         return model
     def get_device(self):
         cuda_available = torch.cuda.is_available()
