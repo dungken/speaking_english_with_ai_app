@@ -8,12 +8,14 @@ from app.utils.auth import get_current_user
 from app.utils.gemini import generate_response
 from app.utils.transcription_error_message import TranscriptionErrorMessages
 import json
+import asyncio
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form, Body, Query, BackgroundTasks
 from fastapi.responses import JSONResponse
 from bson import ObjectId
 from typing import List, Optional
 from app.utils.feedback_service import FeedbackService
 import os
+import time
 from app.utils.tts_client_service import get_speech_from_tts_service
 import shutil
 from pathlib import Path
@@ -386,15 +388,16 @@ async def add_message_and_get_response (
     """
     try:
         user_id = str(current_user["_id"])
-        audio_data = db.audio.find_one({"_id": ObjectId(audio_id)})
-        
-        feedback_service = FeedbackService()
+        audio_task =  asyncio.create_task(db.audio.find_one({"_id": ObjectId(audio_id)}))
+
         # Verify conversation exists and belongs to the user
-        conversation = db.conversations.find_one({
+        conversation_task =  asyncio.create_task(db.conversations.find_one({
             "_id": ObjectId(conversation_id),
             "user_id": ObjectId(user_id)
-        })
-   
+        }) )
+        audio_data , conversation = await asyncio.gather(audio_task, conversation_task)
+        feedback_service = FeedbackService()
+
         if not conversation:
             raise HTTPException(status_code=404, detail="Conversation not found")
         
@@ -619,7 +622,7 @@ async def get_ai_message_as_speech_stream(
 
 
 @router.get(
-    "/messages/{message_id}/demospeech",
+    "/messages/demospeech",
     summary="Get AI message audio stream",
     description="Retrieves an AI message's text, converts it to speech via an external TTS service, and streams the audio."
 )
@@ -641,7 +644,8 @@ async def get_ai_message_as_speech_stream_demo(
 
         # 4. Call the TTS Service via your client function
         #    This function is expected to return a StreamingResponse
-        return await get_speech_from_tts_service(
+        start = time.time()
+        temp =  await get_speech_from_tts_service(
             text_to_speak=message,
             voice_name=conversation_voice_type,
             model_name=default_model_name,
@@ -649,6 +653,10 @@ async def get_ai_message_as_speech_stream_demo(
             speed=default_speed,
             lang_code=default_lang_code
         )
+        end = time.time()
+        
+        
+        return {"time": str(end - start) , "temp": temp}
     except HTTPException as e:
         # If HTTPException was raised by us or by get_speech_from_tts_service, re-raise it
         # print(f"ERROR: HTTPException in get_ai_message_as_speech_stream: {e.detail}")
