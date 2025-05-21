@@ -7,7 +7,6 @@ services:
     restart: unless-stopped
     ports:
       - "0.0.0.0:8000:8000"
-    
     volumes:
       - ./:/app
       - ./logs:/app/logs
@@ -42,7 +41,8 @@ services:
     container_name: tts_kokoro_service
     restart: unless-stopped
     ports:
-      - "127.0.0.1:8880:8880"
+      - "0.0.0.0:8880:8880"
+
     deploy: 
       resources:
         reservations:
