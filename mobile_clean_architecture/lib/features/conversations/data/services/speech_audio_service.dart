@@ -179,11 +179,11 @@ class SpeechAudioService {
     } catch (e) {
       debugPrint('Error playing audio: $e');
       _currentlyPlayingMessageId = null;
-      if (e.toString().contains('503') || e.toString().contains('504')) {
-        throw Exception(
-            'AI voice is temporarily unavailable. Please try again later.');
-      }
-      rethrow;
+      // if (e.toString().contains('503') || e.toString().contains('504')) {
+      //   throw Exception(
+      //       'AI voice is temporarily unavailable. Please try again later.');
+      // }
+      // rethrow;
     }
   }
 
@@ -333,7 +333,7 @@ class SpeechAudioService {
       'voice': voiceName,
       'response_format': 'mp3',
       'download_format': 'mp3',
-      'speed': 1.3, // Matching the speed used in backend
+      'speed': 0.7, // Matching the speed used in backend
       'stream': false, // We can't handle streaming directly in Flutter HTTP
       'return_download_link': false,
       'lang_code': 'en-US',
@@ -458,7 +458,7 @@ class SpeechAudioService {
       'voice': voiceName,
       'response_format': 'mp3',
       'download_format': 'mp3',
-      'speed': 1,
+      'speed': 0.7,
       'stream': true, // Enable streaming from TTS service
       'return_download_link': false,
       'lang_code': 'en-US',
