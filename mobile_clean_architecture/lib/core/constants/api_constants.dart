@@ -4,12 +4,14 @@ class ApiConstants {
   // Local backend URL (commented out)
   // static const String baseUrl = 'http://10.0.2.2:8000';
 
-  // Production URL - using the deployed API
+  // chạy 2 lệnh trên cmd này kết nối với đt qua usb
 
-  static const String baseUrl = 'http://192.168.1.7:8000';
-  static const String ttsBaseUrl = 'http://192.168.1.7:8880';
+// adb reverse tcp:8000 tcp:8000
+// adb reverse tcp:8880 tcp:8880
+  static const String ip = 'localhost';
+  static const String baseUrl = 'http://$ip:8000';
+  static const String ttsBaseUrl = 'http://$ip:8880';
 
-  /// Authentication endpoints
   static const String loginEndpoint = '/api/users/login';
   static const String registerEndpoint = '/api/users/register';
 
@@ -20,6 +22,12 @@ class ApiConstants {
   static const String feedbackEndpoint = '/api/messages/{message_id}/feedback';
   static const String speechEndpoint = '/api/messages/{message_id}/speech';
   static const String voice_context = '/messages/{message_id}/voice_context';
+
+  /// Image practice endpoints
+  static const String imagesBaseEndpoint = '/api/images';
+  static const String imagesPracticeEndpoint = '/api/images/practice';
+  static const String imageByIdEndpoint = '/api/images/{image_id}';
+  static const String imageFeedbackEndpoint = '/api/images/feedback';
 
   /// Audio processing endpoint
   static const String audioToTextEndpoint = '/api/audio2text';
