@@ -10,6 +10,13 @@ import '../../features/authentication/data/datasources/auth_remote_datasource.da
 import '../../features/authentication/data/repositories/auth_repository_impl.dart';
 import '../../features/authentication/domain/repositories/auth_repository.dart';
 import '../../features/authentication/presentation/bloc/auth_bloc.dart';
+import '../../features/image_description/data/datasources/image_remote_data_source.dart';
+import '../../features/image_description/data/repositories/image_repository_impl.dart';
+import '../../features/image_description/domain/repositories/image_repository.dart';
+import '../../features/image_description/domain/usecases/get_image_feedback.dart';
+import '../../features/image_description/domain/usecases/get_image_url.dart';
+import '../../features/image_description/domain/usecases/get_practice_images.dart';
+import '../../features/image_description/presentation/cubit/image_description_cubit.dart';
 import '../network/network_info.dart';
 
 /// Global ServiceLocator instance
@@ -39,6 +46,34 @@ Future<void> init() async {
 
   sl.registerLazySingleton<AuthLocalDataSource>(
     () => AuthLocalDataSourceImpl(box: sl()),
+  );
+
+  // Features - Image Description
+  // Cubit
+  sl.registerFactory(
+    () => ImageDescriptionCubit(
+      getPracticeImages: sl(),
+      getImageUrl: sl(),
+      getImageFeedback: sl(),
+    ),
+  );
+
+  // Use cases
+  sl.registerLazySingleton(() => GetPracticeImages(sl()));
+  sl.registerLazySingleton(() => GetImageUrl(sl()));
+  sl.registerLazySingleton(() => GetImageFeedback(sl()));
+
+  // Repository
+  sl.registerLazySingleton<ImageRepository>(
+    () => ImageRepositoryImpl(
+      remoteDataSource: sl(),
+      networkInfo: sl(),
+    ),
+  );
+
+  // Data sources
+  sl.registerLazySingleton<ImageRemoteDataSource>(
+    () => ImageRemoteDataSourceImpl(client: sl()),
   );
 
   // Core
