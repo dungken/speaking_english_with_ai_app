@@ -496,8 +496,7 @@ class SpeechAudioService {
     bool hasStartedPlaying = false;
     bool hasError = false;
     int bytesReceived = 0;
-    const initialBufferSize =
-        24576; // ~24KB initial buffer before starting playback
+    const initialBufferSize = 12288;
 
     try {
       // Create the request
