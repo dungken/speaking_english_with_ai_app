@@ -396,7 +396,6 @@ async def add_message_and_get_response (
                 
             
             
-                # Step 3: Store user's message with transcribed content
                 user_message = Message(
                     conversation_id=ObjectId(conversation_id),
                     sender="user",
@@ -404,8 +403,17 @@ async def add_message_and_get_response (
                     audio_path=audio_data["file_path"],
                     transcription=audio_data["transcription"]
                 )
-                db.messages.insert_one(user_message.to_dict())
                 
+                db.messages.insert_one(user_message.to_dict())
+                background_tasks.add_task(
+                    feedback_service.process_speech_feedback,
+                    transcription=audio_data["transcription"],
+                    user_id=user_id,
+                    conversation_id=conversation_id,
+                    audio_id=audio_data["_id"],
+                    file_path=audio_data["file_path"],
+                    user_message_id=str(user_message._id)
+                )
                 # Fetch conversation history
                 messages = list(db.messages.find({"conversation_id": ObjectId(conversation_id)}).sort("timestamp", 1))
                 
@@ -415,7 +423,7 @@ async def add_message_and_get_response (
                 f"The situation is: {conversation['situation']}. "
                 f"Stay fully in character as {conversation['ai_role']}. "
                 f"Use natural, simple English that new and intermediate learners can easily understand. "
-                f"Keep your response short and friendly (1 to 3 sentences). "
+                f"Keep your response short and litterly alike the role you are in (1 to 3 sentences). "
                 f"Avoid special characters like brackets or symbols. "
                 f"Do not refer to the user with any placeholder like a name in brackets. "
                 f"Ask an open-ended question that fits the situation and encourages the user to speak more."
@@ -430,19 +438,11 @@ async def add_message_and_get_response (
                 ai_text = generate_response(prompt)
                 
                 # Store AI response
-                ai_message = Message(conversation_id=ObjectId(conversation_id), sender="ai", content=ai_text)
+                ai_message =  Message(conversation_id=ObjectId(conversation_id), sender="ai", content=ai_text)
                 db.messages.insert_one(ai_message.to_dict())
                 
                 # Process feedback in the background without blocking the response
-                background_tasks.add_task(
-                    feedback_service.process_speech_feedback,
-                    transcription=audio_data["transcription"],
-                    user_id=user_id,
-                    conversation_id=conversation_id,
-                    audio_id=audio_data["_id"],
-                    file_path=audio_data["file_path"],
-                    user_message_id=str(user_message._id)
-                )
+              
                 
                 # Return AI response in MessageResponse format
                 ai_message_dict = ai_message.to_dict()

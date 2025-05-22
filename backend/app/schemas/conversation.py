@@ -7,6 +7,7 @@ class ConversationCreate(BaseModel):
     user_role: str
     ai_role: str
     situation: str
+    
 
 class ConversationResponse(BaseModel):
     id: str
