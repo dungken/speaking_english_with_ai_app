@@ -423,9 +423,9 @@ async def add_message_and_get_response (
                 f"The situation is: {conversation['situation']}. "
                 f"Stay fully in character as {conversation['ai_role']}. "
                 f"Use natural, simple English that new and intermediate learners can easily understand. "
-                f"Keep your response short and litterly alike the role you are in (1 to 3 sentences). "
+                f"Keep your response short and litterly alike the role you are in (1 to 4 sentences). "
                 f"Avoid special characters like brackets or symbols. "
-                f"Do not refer to the user with any placeholder like a name in brackets. "
+                f"Do not refer to the user with any placeholder like a name in brackets. Dont include asterisk in your response. "
                 f"Ask an open-ended question that fits the situation and encourages the user to speak more."
                 f"\nHere is the conversation so far:\n" +
                 "\n".join([f"{msg['sender']}: {msg['content']}" for msg in messages]) +
