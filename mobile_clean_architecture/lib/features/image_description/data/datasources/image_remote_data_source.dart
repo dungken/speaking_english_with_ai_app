@@ -53,7 +53,6 @@ class ImageRemoteDataSourceImpl implements ImageRemoteDataSource {
     return ApiConstants.baseUrl +
         ApiConstants.imageByIdEndpoint.replaceFirst('{image_id}', imageId);
   }
-
   @override
   Future<ImageFeedbackModel> getImageFeedback(
       ImageFeedbackRequest request) async {
@@ -65,13 +64,16 @@ class ImageRemoteDataSourceImpl implements ImageRemoteDataSource {
             headers: ApiConstants.authHeaders,
             body: json.encode(request.toJson()),
           )
-          .timeout(const Duration(seconds: ApiConstants.timeoutDuration));      if (response.statusCode != 200) {
-        throw ServerException(message: 'Failed to load practice images', statusCode: response.statusCode);
+          .timeout(const Duration(seconds: ApiConstants.timeoutDuration));
+          
+      if (response.statusCode != 200) {
+        throw ServerException(message: 'Failed to get image feedback', statusCode: response.statusCode);
       }
 
       final Map<String, dynamic> jsonData = json.decode(response.body);
-      return ImageFeedbackModel.fromJson(jsonData);    } catch (e) {
-      throw ServerException(message: 'Failed to load practice images: ${e.toString()}');
+      return ImageFeedbackModel.fromJson(jsonData);
+    } catch (e) {
+      throw ServerException(message: 'Failed to get image feedback: ${e.toString()}');
     }
   }
 }
