@@ -1,5 +1,6 @@
 from fastapi import FastAPI, Depends
-from app.routes import user, conversation
+from fastapi.staticfiles import StaticFiles
+from app.routes import user, conversation, image_description
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.models import SecurityScheme
 from fastapi.security import OAuth2PasswordBearer
@@ -7,6 +8,8 @@ from typing import Dict
 from app.utils.event_handler import event_handler
 from app.utils.audio_processor import loaded_model
 import logging
+from pathlib import Path
+
 app = FastAPI(
     title="Speak AI API",
     description="""
@@ -79,7 +82,16 @@ app.include_router(
     responses={401: {"description": "Unauthorized"}}
 )
 
+app.include_router(
+    image_description.router,
+    prefix="/api/images",
+    tags=["images"],
+    responses={401: {"description": "Unauthorized"}}
+)
 
+# Mount the uploads directory for serving images
+uploads_path = Path(__file__).parent / "uploads"
+app.mount("/uploads", StaticFiles(directory=str(uploads_path)), name="uploads")
 
 @app.get("/", tags=["root"])
 async def root():
@@ -112,7 +124,7 @@ async def shutdown_event():
     """
     # Stop the event handler
     event_handler.stop()
-    
+
 
 
 
