@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException
+from fastapi.responses import FileResponse
 from typing import List, Dict, Optional
 import os
 import random
@@ -109,10 +110,10 @@ async def get_practice_images():
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.get("/{image_id}", response_model=dict)
+@router.get("/{image_id}")
 async def get_image_by_id(image_id: str):
     """
-    Returns a specific image by its ID
+    Returns the actual image file by its ID
     """
     try:
         # Load existing image data
@@ -121,7 +122,20 @@ async def get_image_by_id(image_id: str):
         # Find the image with the matching ID
         for image in saved_images:
             if image["id"] == image_id:
-                return image
+                # Extract filename from the image URL (stored in "name" field)
+                # The URL format is "/uploads/images/{filename}"
+                image_url = image["name"]
+                filename = os.path.basename(image_url)
+                
+                # Construct the full path to the image file
+                image_path = IMAGES_DIR / filename
+                
+                # Check if the file exists
+                if not image_path.exists():
+                    raise HTTPException(status_code=404, detail="Image file not found on server")
+                
+                # Return the actual image file as a response
+                return FileResponse(image_path)
         
         # If no image is found with the given ID, raise 404 error
         raise HTTPException(status_code=404, detail="Image not found")
@@ -191,6 +205,7 @@ async def provide_feedback(feedback_request: ImageFeedbackRequest):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
 
 
 
