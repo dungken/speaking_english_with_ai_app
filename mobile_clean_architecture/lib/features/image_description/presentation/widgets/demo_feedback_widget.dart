@@ -1,96 +1,153 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/text_styles.dart';
+import '../../../../core/utils/responsive_layout.dart';
+import '../cubit/image_description_cubit.dart';
+import '../../domain/entities/feedback_entity.dart';
 
-class DemoFeedbackWidget extends StatelessWidget {
-  const DemoFeedbackWidget({super.key});
+/// Widget that displays user's transcription feedback with improvements
+class FeedbackDisplayWidget extends StatelessWidget {
+  final String userTranscription;
+  final ImageFeedbackEntity? feedback;
+  final VoidCallback? onNext;
+
+  const FeedbackDisplayWidget({
+    super.key,
+    required this.userTranscription,
+    this.feedback,
+    this.onNext,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
     return SingleChildScrollView(
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: EdgeInsets.all(ResponsiveLayout.getCardPadding(context)),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // AppBar substitute
-            // Feedback indicator + Next button
+            // Header with next button
             Row(
               children: [
                 Container(
                   width: 16,
                   height: 16,
                   decoration: const BoxDecoration(
-                    color: Color(0xFFFFA726), // Orange
+                    color: AppColors.warning,
                     shape: BoxShape.circle,
                   ),
                 ),
-                const SizedBox(width: 16),
                 const Spacer(),
-                ElevatedButton(
-                  onPressed: () {},
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                if (onNext != null)
+                  ElevatedButton(
+                    onPressed: onNext,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      padding: EdgeInsets.symmetric(
+                        horizontal:
+                            ResponsiveLayout.getCardPadding(context) * 2,
+                        vertical: 12,
+                      ),
                     ),
-                    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                    child: Text(
+                      'Next',
+                      style: TextStyles.button(context),
+                    ),
                   ),
-                  child: const Text('Next', style: TextStyle(fontWeight: FontWeight.bold)),
-                ),
               ],
             ),
-            const SizedBox(height: 16),
-            // Feedback
-            const Text(
+            SizedBox(height: ResponsiveLayout.getSectionSpacing(context)),
+
+            // User's description
+            Text(
               'Your description',
-              style: TextStyle(color: Colors.grey, fontWeight: FontWeight.w500),
+              style: TextStyles.secondary(context, isDarkMode: isDarkMode),
             ),
-            const SizedBox(height: 4),
-            // User description
-            const Text(
-              'So basically what I see is that he\'s holding something really closely. So he\'s holding the tools which help him to look at the super details on something.',
-              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+            SizedBox(height: ResponsiveLayout.getElementSpacing(context)),
+            Text(
+              userTranscription.isNotEmpty
+                  ? userTranscription
+                  : 'No transcription available',
+              style: TextStyles.body(context, isDarkMode: isDarkMode)
+                  .copyWith(fontWeight: FontWeight.w600),
             ),
-            const SizedBox(height: 16),
-            // Corrected message
-            const Text(
-              'Corrected message',
-              style: TextStyle(color: Colors.grey, fontWeight: FontWeight.w500),
-            ),
-            const SizedBox(height: 4),
-            const Text(
-              'So basically, what I see is that he\'s holding something very closely. He\'s holding tools that help him look at the super details of something.',
-              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
-            ),
-            const SizedBox(height: 16),
-            // Explanation box
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(18),
-              decoration: BoxDecoration(
-                color: const Color(0xFFFFA726),
-                borderRadius: BorderRadius.circular(18),
+            SizedBox(height: ResponsiveLayout.getSectionSpacing(context)),
+
+            // Feedback content
+            if (feedback != null) ...[
+              // Better version
+              Text(
+                'Improved version',
+                style: TextStyles.secondary(context, isDarkMode: isDarkMode),
               ),
-              child: const Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Explanation',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
+              SizedBox(height: ResponsiveLayout.getElementSpacing(context)),
+              Text(
+                feedback!.betterVersion,
+                style: TextStyles.body(context, isDarkMode: isDarkMode)
+                    .copyWith(fontWeight: FontWeight.w600),
+              ),
+              SizedBox(height: ResponsiveLayout.getSectionSpacing(context)),
+
+              // Explanation
+              Container(
+                width: double.infinity,
+                padding:
+                    EdgeInsets.all(ResponsiveLayout.getCardPadding(context)),
+                decoration: BoxDecoration(
+                  color: AppColors.warning,
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Explanation',
+                      style: TextStyles.h3(context, color: Colors.white),
                     ),
-                  ),
-                  SizedBox(height: 8),
-                  Text(
-                    'A comma is needed after "So basically" as an introductory phrase. "Very closely" is more appropriate than "really closely" for describing the manner of holding. "The tools" should be "tools" because it\'s not specified which tools exactly. "Which" should be changed to "that" to introduce a defining clause. The phrase "help him to look at" can be simplified to "help him look at." "Super details on something" should be "super details of something" to use the correct preposition.',
-                    style: TextStyle(color: Colors.white, fontSize: 15, height: 1.5),
-                  ),
-                ],
+                    SizedBox(
+                        height: ResponsiveLayout.getElementSpacing(context)),
+                    Text(
+                      feedback!.explanation,
+                      style: TextStyles.body(context, color: Colors.white)
+                          .copyWith(height: 1.5),
+                    ),
+                  ],
+                ),
               ),
-            ),
+            ] else ...[
+              // Loading state for feedback
+              Container(
+                width: double.infinity,
+                padding:
+                    EdgeInsets.all(ResponsiveLayout.getCardPadding(context)),
+                decoration: BoxDecoration(
+                  color: AppColors.getSurfaceColor(isDarkMode),
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(
+                    color: AppColors.primary.withOpacity(0.3),
+                    width: 1,
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    const CircularProgressIndicator(),
+                    SizedBox(
+                        height: ResponsiveLayout.getSectionSpacing(context)),
+                    Text(
+                      'Generating feedback...',
+                      style: TextStyles.body(context, isDarkMode: isDarkMode),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ],
         ),
       ),
@@ -98,64 +155,58 @@ class DemoFeedbackWidget extends StatelessWidget {
   }
 }
 
-class SimpleFeedbackWidget extends StatelessWidget {
-  const SimpleFeedbackWidget({super.key});
+/// Error widget for feedback display
+class FeedbackErrorWidget extends StatelessWidget {
+  final String errorMessage;
+  final VoidCallback? onRetry;
+
+  const FeedbackErrorWidget({
+    super.key,
+    required this.errorMessage,
+    this.onRetry,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
     return Padding(
-      padding: const EdgeInsets.all(16.0),
+      padding: EdgeInsets.all(ResponsiveLayout.getCardPadding(context)),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Text(
-            'Your description',
-            style: TextStyle(color: Colors.grey, fontWeight: FontWeight.w500),
+          Icon(
+            Icons.error_outline,
+            size: 64,
+            color: AppColors.error,
           ),
-          const SizedBox(height: 4),
-          const Text(
-            'So basically what I see is that he\'s holding something really closely. So he\'s holding the tools which help him to look at the super details on something.',
-            style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+          SizedBox(height: ResponsiveLayout.getSectionSpacing(context)),
+          Text(
+            'Feedback Error',
+            style: TextStyles.h2(context, isDarkMode: isDarkMode),
           ),
-          const SizedBox(height: 16),
-          const Text(
-            'Corrected message',
-            style: TextStyle(color: Colors.grey, fontWeight: FontWeight.w500),
+          SizedBox(height: ResponsiveLayout.getElementSpacing(context)),
+          Text(
+            errorMessage,
+            style: TextStyles.body(context, isDarkMode: isDarkMode),
+            textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 4),
-          const Text(
-            'So basically, what I see is that he\'s holding something very closely. He\'s holding tools that help him look at the super details of something.',
-            style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
-          ),
-          const SizedBox(height: 16),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(18),
-            decoration: BoxDecoration(
-              color: const Color(0xFFFFA726),
-              borderRadius: BorderRadius.circular(18),
+          if (onRetry != null) ...[
+            SizedBox(height: ResponsiveLayout.getSectionSpacing(context)),
+            ElevatedButton(
+              onPressed: onRetry,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+              ),
+              child: Text(
+                'Try Again',
+                style: TextStyles.button(context),
+              ),
             ),
-            child: const Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Explanation',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                ),
-                SizedBox(height: 8),
-                Text(
-                  'A comma is needed after "So basically" as an introductory phrase. "Very closely" is more appropriate than "really closely" for describing the manner of holding. "The tools" should be "tools" because it\'s not specified which tools exactly. "Which" should be changed to "that" to introduce a defining clause. The phrase "help him to look at" can be simplified to "help him look at." "Super details on something" should be "super details of something" to use the correct preposition.',
-                  style: TextStyle(color: Colors.white, fontSize: 15, height: 1.5),
-                ),
-              ],
-            ),
-          ),
+          ],
         ],
       ),
     );
   }
-} 
+}
