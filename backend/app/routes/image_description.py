@@ -13,7 +13,7 @@ from pydantic import BaseModel
 router = APIRouter(prefix="/api/images", tags=["images"])
 # i want to prototype this feature quickly so use  json file to store record
 # Get the absolute paths
-IMAGES_DIR = Path(__file__).parent.parent / "uploads" / "images"
+IMAGES_DIR = Path(__file__).parent / "uploads" / "images"
 FAKE_DB_DIR = Path(__file__).parent.parent / "uploads" / "fake-db"
 JSON_FILE = FAKE_DB_DIR / "image_descriptions.json"
 FEEDBACK_FILE = FAKE_DB_DIR / "image_feedback.json"
