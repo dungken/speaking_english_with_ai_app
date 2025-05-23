@@ -84,7 +84,7 @@ app.include_router(
 
 app.include_router(
     image_description.router,
-    prefix="/api/images",
+    prefix="/api",
     tags=["images"],
     responses={401: {"description": "Unauthorized"}}
 )

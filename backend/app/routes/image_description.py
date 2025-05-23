@@ -10,7 +10,7 @@ from app.utils.image_description import get_image_description
 from app.utils.gemini import generate_response
 from pydantic import BaseModel
 
-router = APIRouter(prefix="/api/images", tags=["images"])
+router = APIRouter(prefix="/images", tags=["images"])
 # i want to prototype this feature quickly so use  json file to store record
 # Get the absolute paths
 IMAGES_DIR = Path(__file__).parent.parent / "uploads" / "images"

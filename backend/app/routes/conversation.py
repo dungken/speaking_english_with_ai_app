@@ -142,7 +142,7 @@ async def create_conversation(convo_data: ConversationCreate, current_user: dict
         "refined_user_role": "[your refined user role]",
         "refined_ai_role": "[your refined AI role]",
         "refined_situation": "[your refined situation]",
-        "response": "[your first  response as refined_ai_role to the user regardless of the situation]"
+        "response": "[your first  response as refined_ai_role to the user regardless of the situation  you can use a random name for the user and yourself]"
         "ai_gender": "[decide female or male base on the refined_ai_role,refined_situation ]" ]"
         }}
 
