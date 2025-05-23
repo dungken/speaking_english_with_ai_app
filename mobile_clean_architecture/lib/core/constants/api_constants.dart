@@ -1,13 +1,9 @@
 /// API constants used throughout the application
 class ApiConstants {
-  /// Base URL for API requests
-  // Local backend URL (commented out)
-  // static const String baseUrl = 'http://10.0.2.2:8000';
-
   // chạy 2 lệnh trên cmd này kết nối với đt qua usb
-
 // adb reverse tcp:9000 tcp:9000
 // adb reverse tcp:8880 tcp:8880
+
   static const String ip = 'localhost';
   static const String baseUrl = 'http://$ip:9000';
   static const String ttsBaseUrl = 'http://$ip:8880';
