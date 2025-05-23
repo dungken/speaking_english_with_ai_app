@@ -7,8 +7,7 @@ import '../data/services/speech_audio_service.dart';
 /// is properly configured before it's used.
 void configureSpeechAudioService(String baseApiUrl) {
   // Configure the base URL for the audio streaming endpoint
-  SpeechAudioService().configureBaseUrl(baseApiUrl);
-  
+
   // Perform any additional setup like cache cleanup
   SpeechAudioService().cleanupCache();
 }

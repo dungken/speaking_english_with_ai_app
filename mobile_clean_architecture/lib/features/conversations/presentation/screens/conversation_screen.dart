@@ -70,6 +70,7 @@ class _ConversationScreenState extends State<ConversationScreen> {
   void dispose() {
     // Stop buffer monitoring when the screen is disposed
     BufferQueueManager.stopMonitoring();
+    SpeechAudioService().stop();
     _scrollController.dispose();
     _transcriptionEditController.dispose();
     super.dispose();
@@ -82,10 +83,13 @@ class _ConversationScreenState extends State<ConversationScreen> {
       final latestMessage = messages.last;
 
       Future.delayed(const Duration(milliseconds: 100), () {
-        SpeechAudioService().playMessageAudio(
-          latestMessage.id,
-          isFirstAppearance: true,
-        );
+        if (mounted) {
+          // Only play if widget is still mounted
+          SpeechAudioService().playMessageAudio(
+            latestMessage.id,
+            isFirstAppearance: true,
+          );
+        }
       });
     }
   }

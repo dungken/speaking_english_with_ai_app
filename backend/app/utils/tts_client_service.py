@@ -3,17 +3,22 @@ import httpx
 from fastapi import HTTPException
 from fastapi.responses import StreamingResponse
 import os
+import random
 import logging
 logging.basicConfig(level=logging.INFO)
 
 logger = logging.getLogger(__name__)
-TTS_BACKEND_BASE_URL: str =  os.getenv("TTS_BACKEND_BASE_URL")# Mặc định nếu không có biến môi trường
-# Giả sử endpoint TTS là /v1/audio/speech
+# Update to use the container name with correct port in the Docker network
+TTS_BACKEND_BASE_URL = os.getenv("TTS_BACKEND_BASE_URL", "http://tts_kokoro:8880")
+# Path for the TTS endpoint
+TTS_ENDPOINT_PATH = "/v1/audio/speech"
+TTS_MODEL_NAME = "kokoro"  # Default TTS model
+TTS_VOICE_NAME = "af_heart"  # Default voice
 
-TTS_ENDPOINT_PATH: str =  "/v1/audio/speech"
-TTS_MODEL_NAME: str =  "kokoro"# Model TTS mặc định
-TTS_VOICE_NAME: str = "af_heart" # Giọng nói mặc định
 
+    
+MALE = ["im_nicola", "am_echo", "am_eric", "am_fenrir", "am_liam", "am_michael", "am_onyx", "am_puck", "am_v0adam", "hm_omega", "bm_daniel", "bm_fable", "bm_george", "bm_lewis", "bm_v0george", "bm_v0lewis"]
+FEMALE = ["af_aoede", "af_heart", "bf_v0isabella", "jf_alpha"]
 
 
 
@@ -119,3 +124,20 @@ async def get_speech_from_tts_service(
 
 
 
+def pick_suitable_voice_name(gender:str) -> str:
+    """   
+    Returns a random voice name based on the specified gender.
+    
+    Args:
+        gender (str): Gender indicator ('f' for female, any other value for male)
+        
+    Returns:
+        str: A randomly selected voice name from the appropriate list
+    """
+    if "f" in gender.lower():
+        return random.choice(FEMALE)
+    else:
+        return random.choice(MALE)
+
+        # Choose a
+        
