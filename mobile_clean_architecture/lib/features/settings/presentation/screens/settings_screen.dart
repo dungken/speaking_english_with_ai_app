@@ -55,9 +55,9 @@ class _SettingsScreenState extends State<SettingsScreen>
   Widget build(BuildContext context) {
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) {
-        // Redirect to authentication screen if user is not authenticated
+        // Redirect to onboarding screen if user is not authenticated
         if (state is Unauthenticated) {
-          context.go('/auth');
+          context.go('/onboarding');
         }
       },
       child: Consumer<ThemeProvider>(
@@ -297,9 +297,9 @@ class _SettingsScreenState extends State<SettingsScreen>
                                     Navigator.pop(context);
                                     context
                                         .read<AuthBloc>()
-                                        .add(SignOutRequested());
-                                    // Navigate back to login screen after sign out
-                                    context.go('/auth');
+                                        .add(SignOutEvent());
+                                    // Navigate back to onboarding screen after sign out
+                                    context.go('/onboarding');
                                   },
                                   child: const Text('Sign Out',
                                       style: TextStyle(color: Colors.red)),

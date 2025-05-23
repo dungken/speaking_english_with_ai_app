@@ -14,8 +14,8 @@ class HomePage extends StatelessWidget {
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) {
         if (state is Unauthenticated) {
-          // Navigate to login when user logs out
-          context.go('/login');
+          // Navigate to onboarding when user logs out
+          context.go('/onboarding');
         }
       },
       child: BlocBuilder<AuthBloc, AuthState>(
@@ -44,8 +44,28 @@ class HomePage extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () {
-              // Dispatch sign out event to AuthBloc
-              context.read<AuthBloc>().add(SignOutEvent());
+              // Show confirmation dialog before signing out
+              showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: const Text('Sign Out'),
+                  content: const Text('Are you sure you want to sign out?'),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('Cancel'),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                        // Dispatch sign out event to AuthBloc
+                        context.read<AuthBloc>().add(SignOutEvent());
+                      },
+                      child: const Text('Sign Out', style: TextStyle(color: Colors.red)),
+                    ),
+                  ],
+                ),
+              );
             },
             tooltip: 'Log out',
           ),
