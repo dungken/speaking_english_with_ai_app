@@ -21,6 +21,7 @@ import '../../features/practice_mistakes/presentation/screens/practice_mistakes_
 import '../../features/profile/presentation/screens/profile_screen.dart';
 import '../../features/settings/presentation/screens/settings_screen.dart';
 import '../utils/buffer_queue_error_handler.dart';
+import '../../features/Pronunciation/pronunciation_screen.dart';
 
 /// Central router configuration for the application
 ///
@@ -41,6 +42,7 @@ class AppRouter {
   /// - /profile: Profile screen
   /// - /practice-mistakes: Practice mistakes screen
   /// - /settings: Settings screen
+  /// - /pronunciation: Pronunciation screen
   static final GoRouter router = GoRouter(
     initialLocation: '/onboarding',
     routes: [
@@ -104,6 +106,10 @@ class AppRouter {
       GoRoute(
         path: '/settings',
         builder: (context, state) => const SettingsScreen(),
+      ),
+      GoRoute(
+        path: '/pronunciation',
+        builder: (context, state) => const PronunciationScreen(),
       ),
     ],
   );
