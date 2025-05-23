@@ -11,7 +11,7 @@ from app.utils.gemini import generate_response
 from pydantic import BaseModel
 
 router = APIRouter(prefix="/api/images", tags=["images"])
-
+# i want to prototype this feature quickly so use  json file to store record
 # Get the absolute paths
 IMAGES_DIR = Path(__file__).parent.parent / "uploads" / "images"
 FAKE_DB_DIR = Path(__file__).parent.parent / "uploads" / "fake-db"
@@ -154,34 +154,43 @@ async def provide_feedback(feedback_request: ImageFeedbackRequest):
         
         # Generate a unique ID for the new feedback entry
         feedback_id = str(random.randint(1000, 9999))
-        
-        # Prepare the prompt for Gemini
+          # Prepare the prompt for Gemini
         image_data = next((img for img in load_image_data() if img["id"] == feedback_request.image_id), None)
         
-        if image_data:
-            prompt = f"Detail description of image: '{image_data['detail_description']}'. User description : '{feedback_request.user_transcription}'."
-        else:
-            prompt = f"""Detail description of image: '{image_data['detail_description']}'.
-        User description : '{feedback_request.user_transcription}'.
+        if not image_data:
+            raise HTTPException(status_code=404, detail="Image not found")
+        
+        detail_description = image_data.get('detail_description', 'No description available')
+        
+        prompt = f"""Detail description of image: '{detail_description}'.
+User description: '{feedback_request.user_transcription}'.
 
-        Based on the 'Detail description of image' (which serves as a correct and comprehensive reference) and the 'User description' provided above, your task is to analyze user description and then generate a JSON object as a string.
-        better_version will be the improved version of the user description that is grammatically correct, coherent, and more descriptive.
-        explanation will be a brief explanation of the changes made to the user description, highlighting the improvements and clarifications.
-        This JSON object must have the following exact structure:
-        
-        {{
-        "better_version": "<generated_description>",
-        "explanation": "<generated_explanation>"
-        }}
-        """
-        
-        # Get the improved description from Gemini
-        gemini_response = generate_response(prompt)
-        cleaned_response = gemini_response.strip("```json\n").strip("\n```")
-        data = json.loads(cleaned_response)
-        # Extract the better version and explanation from Gemini's response
-        better_version = data.get("better_version","")
-        explanation = data.get("explanation")
+Based on the 'Detail description of image' (which serves as a correct and comprehensive reference) and the 'User description' provided above, your task is to analyze the user description and then generate a JSON object as a string.
+better_version will be the improved version of the user description that is grammatically correct, coherent, and more descriptive.
+explanation will be a brief explanation of the changes made to the user description, highlighting the improvements and clarifications.
+This JSON object must have the following exact structure:
+
+{{
+"better_version": "<generated_description>",
+"explanation": "<generated_explanation>"
+}}
+"""
+          # Get the improved description from Gemini
+        try:
+            gemini_response = generate_response(prompt)
+            cleaned_response = gemini_response.strip("```json\n").strip("\n```").strip("```")
+            data = json.loads(cleaned_response)
+            # Extract the better version and explanation from Gemini's response
+            better_version = data.get("better_version", "")
+            explanation = data.get("explanation", "")
+        except json.JSONDecodeError as e:
+            # Fallback if JSON parsing fails
+            better_version = "Could not generate improved version"
+            explanation = "There was an error processing the feedback"
+        except Exception as e:
+            # General fallback
+            better_version = "Could not generate improved version"
+            explanation = f"Error: {str(e)}"
         
         # Create a new feedback entry
         new_feedback = {

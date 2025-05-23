@@ -12,6 +12,7 @@ import '../../features/authentication/domain/repositories/auth_repository.dart';
 import '../../features/authentication/presentation/bloc/auth_bloc.dart';
 import '../../features/image_description/data/datasources/image_remote_data_source.dart';
 import '../../features/image_description/data/repositories/image_repository_impl.dart';
+import '../../features/image_description/data/services/audio_recording_service.dart';
 import '../../features/image_description/domain/repositories/image_repository.dart';
 import '../../features/image_description/domain/usecases/get_image_feedback.dart';
 import '../../features/image_description/domain/usecases/get_image_url.dart';
@@ -49,12 +50,18 @@ Future<void> init() async {
   );
 
   // Features - Image Description
+  // Services
+  sl.registerLazySingleton<AudioRecordingService>(
+    () => AudioRecordingService(),
+  );
+
   // Cubit
   sl.registerFactory(
     () => ImageDescriptionCubit(
       getPracticeImages: sl(),
       getImageUrl: sl(),
       getImageFeedback: sl(),
+      audioService: sl(),
     ),
   );
 

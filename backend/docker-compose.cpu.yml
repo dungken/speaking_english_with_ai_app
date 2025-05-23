@@ -7,7 +7,7 @@ services:
     container_name: speak_ai_backend_cpu
     restart: unless-stopped
     ports:
-      - "0.0.0.0:8000:8000"
+      - "0.0.0.0:9000:8000"
     volumes:
       - ./:/app
       - ./logs:/app/logs
